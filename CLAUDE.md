@@ -407,7 +407,8 @@ src
     │       └── persistence
     │
     └── resources
-        ├── application.yml
+        ├── 
+        ication.yml
         ├── application-local.yml
         ├── application-dev.yml
         └── data.sql

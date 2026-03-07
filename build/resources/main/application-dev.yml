@@ -16,3 +16,7 @@ spring:
 logging:
   level:
     com.armystartup: INFO
+
+cors:
+  allowed-origins:
+    - ${FRONTEND_URL:http://localhost:3000}
