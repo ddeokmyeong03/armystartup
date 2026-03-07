@@ -26,7 +26,8 @@ springdoc:
 
 cors:
   allowed-origins:
-    - ${FRONTEND_URL}
+    - ${FRONTEND_URL:https://armystartup01.netlify.app}
+    - https://armystartup01.netlify.app
 
 logging:
   level:
