@@ -23,6 +23,9 @@ cors:
     - http://localhost:3000
     - http://localhost:5173
     - http://localhost:5174
+    - http://localhost:8080
+    - https://literate-doodle-7vvp5xgvjgr73pjr7-5174.app.github.dev
+    - https://literate-doodle-7vvp5xgvjgr73pjr7-5174.app.github.dev
     - https://literate-doodle-7vvp5xgvjgr73pjr7-5174.app.github.dev
 
 logging:
