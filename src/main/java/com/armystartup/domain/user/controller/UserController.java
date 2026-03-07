@@ -2,6 +2,7 @@ package com.armystartup.domain.user.controller;
 
 import com.armystartup.domain.user.dto.request.LoginRequest;
 import com.armystartup.domain.user.dto.request.SignUpRequest;
+import com.armystartup.domain.user.dto.request.UserUpdateRequest;
 import com.armystartup.domain.user.dto.response.LoginResponse;
 import com.armystartup.domain.user.dto.response.UserResponse;
 import com.armystartup.domain.user.service.AuthService;
@@ -46,5 +47,14 @@ public class UserController {
         Long userId = SecurityUtils.getCurrentUserId();
         UserResponse response = userService.getUser(userId);
         return ResponseEntity.ok(ApiResponse.success("사용자 정보를 조회했습니다.", response));
+    }
+
+    @Operation(summary = "내 정보 수정", description = "닉네임, 전화번호를 수정합니다. null인 필드는 변경하지 않습니다.")
+    @PatchMapping("/users/me")
+    public ResponseEntity<ApiResponse<UserResponse>> updateMyInfo(
+            @Valid @RequestBody UserUpdateRequest request) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        UserResponse response = userService.updateUser(userId, request);
+        return ResponseEntity.ok(ApiResponse.success("사용자 정보가 수정되었습니다.", response));
     }
 }

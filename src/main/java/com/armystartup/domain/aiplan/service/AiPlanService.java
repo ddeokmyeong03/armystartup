@@ -1,6 +1,7 @@
 package com.armystartup.domain.aiplan.service;
 
 import com.armystartup.domain.aiplan.dto.request.AiPlanAdjustRequest;
+import com.armystartup.domain.aiplan.dto.request.AiPlanBatchApplyRequest;
 import com.armystartup.domain.aiplan.dto.request.AiPlanRecommendRequest;
 import com.armystartup.domain.aiplan.dto.response.AiPlanResponse;
 import com.armystartup.domain.aiplan.entity.AiPlan;
@@ -90,6 +91,20 @@ public class AiPlanService {
         AiPlan plan = findAndVerifyOwner(userId, planId);
         plan.apply();
         return AiPlanResponse.from(plan);
+    }
+
+    /**
+     * 추천 계획 일괄 적용 (RECOMMENDED → APPLIED)
+     */
+    @Transactional
+    public List<AiPlanResponse> applyBatch(Long userId, AiPlanBatchApplyRequest request) {
+        return request.getPlanIds().stream()
+                .map(planId -> {
+                    AiPlan plan = findAndVerifyOwner(userId, planId);
+                    plan.apply();
+                    return AiPlanResponse.from(plan);
+                })
+                .toList();
     }
 
     /**

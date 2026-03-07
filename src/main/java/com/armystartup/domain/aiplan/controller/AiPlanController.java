@@ -1,6 +1,7 @@
 package com.armystartup.domain.aiplan.controller;
 
 import com.armystartup.domain.aiplan.dto.request.AiPlanAdjustRequest;
+import com.armystartup.domain.aiplan.dto.request.AiPlanBatchApplyRequest;
 import com.armystartup.domain.aiplan.dto.request.AiPlanRecommendRequest;
 import com.armystartup.domain.aiplan.dto.response.AiPlanResponse;
 import com.armystartup.domain.aiplan.service.AiPlanService;
@@ -50,6 +51,15 @@ public class AiPlanController {
         Long userId = SecurityUtils.getCurrentUserId();
         AiPlanResponse response = aiPlanService.apply(userId, planId);
         return ResponseEntity.ok(ApiResponse.success("계획이 적용되었습니다.", response));
+    }
+
+    @Operation(summary = "AI 계획 일괄 적용", description = "추천된 여러 계획을 한 번에 적용합니다. (RECOMMENDED → APPLIED)")
+    @PostMapping("/apply-batch")
+    public ResponseEntity<ApiResponse<List<AiPlanResponse>>> applyBatch(
+            @Valid @RequestBody AiPlanBatchApplyRequest request) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        List<AiPlanResponse> response = aiPlanService.applyBatch(userId, request);
+        return ResponseEntity.ok(ApiResponse.success("계획이 일괄 적용되었습니다.", response));
     }
 
     @Operation(summary = "AI 계획 시간 조정", description = "적용된 계획의 시간을 수동으로 조정합니다.")
