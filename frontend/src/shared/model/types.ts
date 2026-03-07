@@ -38,3 +38,14 @@ export type UserModel = {
   avatarUrl?: string;
   message?: string;
 };
+
+export type WeeklyDayModel = CalendarDayModel & {
+  dayLabel: string; // '일', '월', '화', ...
+};
+
+export type AiChatMessage = {
+  id: string;
+  role: 'user' | 'ai';
+  content: string;
+  timestamp: string;
+};

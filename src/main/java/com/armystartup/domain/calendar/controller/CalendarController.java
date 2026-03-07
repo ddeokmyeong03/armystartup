@@ -2,6 +2,7 @@ package com.armystartup.domain.calendar.controller;
 
 import com.armystartup.domain.calendar.dto.response.DailyCalendarDetailResponse;
 import com.armystartup.domain.calendar.dto.response.MonthlyCalendarSummaryResponse;
+import com.armystartup.domain.calendar.dto.response.WeeklyCalendarSummaryResponse;
 import com.armystartup.domain.calendar.service.CalendarQueryService;
 import com.armystartup.global.common.ApiResponse;
 import com.armystartup.global.util.SecurityUtils;
@@ -21,6 +22,16 @@ import java.time.LocalDate;
 public class CalendarController {
 
     private final CalendarQueryService calendarQueryService;
+
+    @Operation(summary = "주간 캘린더 요약 조회",
+            description = "startDate가 속한 주(일~토)의 날짜별 일정/AI계획 정보를 반환합니다.")
+    @GetMapping("/weekly-summary")
+    public ResponseEntity<ApiResponse<WeeklyCalendarSummaryResponse>> getWeeklySummary(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        WeeklyCalendarSummaryResponse response = calendarQueryService.getWeeklySummary(userId, startDate);
+        return ResponseEntity.ok(ApiResponse.success("주간 캘린더 요약을 조회했습니다.", response));
+    }
 
     @Operation(summary = "월간 캘린더 요약 조회",
             description = "해당 월의 날짜별 일정/AI계획 존재 여부 및 개수를 반환합니다.")

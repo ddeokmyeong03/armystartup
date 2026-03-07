@@ -6,7 +6,7 @@ spring:
     open-in-view: false
 
 jwt:
-  secret: ${JWT_SECRET:armystartup-secret-key-must-be-at-least-256-bits-long-for-hs256}
+  secret: aBQwIbBXTkXqsaKcPWNoZvS/GeBeVok+xRXo4jXgmYeju8tg1BIBHhJ3oBtnG0bI
   access-token-expiration: 3600000       # 1시간 (ms)
   refresh-token-expiration: 604800000    # 7일 (ms)
 
@@ -15,3 +15,7 @@ springdoc:
     path: /swagger-ui.html
   api-docs:
     path: /api-docs
+
+openai:
+  api-key: ${OPENAI_API_KEY:}
+  model: gpt-4o-mini

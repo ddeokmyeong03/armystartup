@@ -1,5 +1,34 @@
 import dayjs from 'dayjs';
-import type { CalendarDayModel } from '../model/types';
+import type { CalendarDayModel, WeeklyDayModel } from '../model/types';
+
+const DAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'];
+
+export function buildWeeklyDays(
+  weekStart: string, // 'YYYY-MM-DD' (항상 일요일 기준)
+  selectedDate: string,
+  scheduleDates: Set<string>,
+  aiPlanDates: Set<string>,
+  scheduleCountMap: Record<string, number>,
+): WeeklyDayModel[] {
+  const today = dayjs().format('YYYY-MM-DD');
+  const start = dayjs(weekStart);
+
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = start.add(i, 'day');
+    const dateStr = d.format('YYYY-MM-DD');
+    return {
+      date: dateStr,
+      dayNumber: d.date(),
+      dayLabel: DAY_LABELS[i],
+      isCurrentMonth: true,
+      isToday: dateStr === today,
+      isSelected: dateStr === selectedDate,
+      hasSchedule: scheduleDates.has(dateStr),
+      hasAiPlan: aiPlanDates.has(dateStr),
+      scheduleCount: scheduleCountMap[dateStr] ?? 0,
+    };
+  });
+}
 
 export function buildCalendarDays(
   yearMonth: string, // 'YYYY-MM'
