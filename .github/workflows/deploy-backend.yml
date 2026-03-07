@@ -64,8 +64,7 @@ jobs:
             --allow-unauthenticated \
             --add-cloudsql-instances api-gen-485407:us-central1:armyproject \
             --set-env-vars "SPRING_PROFILES_ACTIVE=prod" \
-            --set-env-vars "CLOUD_SQL_INSTANCE=api-gen-485407:us-central1:armyproject" \
-            --set-env-vars "DB_NAME=armystartup" \
+            --set-secrets "DB_URL=DB_URL:latest" \
             --set-secrets "DB_USERNAME=DB_USERNAME:latest" \
             --set-secrets "DB_PASSWORD=DB_PASSWORD:latest" \
             --set-secrets "JWT_SECRET=JWT_SECRET:latest" \

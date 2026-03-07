@@ -5,6 +5,9 @@ spring:
   jpa:
     open-in-view: false
 
+server:
+  port: ${PORT:8080}
+
 jwt:
   secret: aBQwIbBXTkXqsaKcPWNoZvS/GeBeVok+xRXo4jXgmYeju8tg1BIBHhJ3oBtnG0bI
   access-token-expiration: 3600000       # 1시간 (ms)
