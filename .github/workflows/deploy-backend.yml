@@ -1,0 +1,83 @@
+name: Deploy Backend to Cloud Run
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/**'
+      - 'build.gradle'
+      - 'settings.gradle'
+      - 'Dockerfile'
+
+env:
+  PROJECT_ID: api-gen-485407
+  REGION: us-central1
+  SERVICE_NAME: armystartup-api
+  IMAGE: gcr.io/api-gen-485407/armystartup-api
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Google Auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for GCR
+        run: gcloud auth configure-docker --quiet
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Grant execute permission to gradlew
+        run: chmod +x gradlew
+
+      - name: Build JAR
+        run: ./gradlew bootJar -x test --no-daemon -q
+
+      - name: Build Docker Image
+        run: docker build -t $IMAGE:${{ github.sha }} -t $IMAGE:latest .
+
+      - name: Push Docker Image
+        run: |
+          docker push $IMAGE:${{ github.sha }}
+          docker push $IMAGE:latest
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy $SERVICE_NAME \
+            --image $IMAGE:${{ github.sha }} \
+            --region $REGION \
+            --platform managed \
+            --allow-unauthenticated \
+            --add-cloudsql-instances api-gen-485407:us-central1:armyproject \
+            --set-env-vars "SPRING_PROFILES_ACTIVE=prod" \
+            --set-env-vars "CLOUD_SQL_INSTANCE=api-gen-485407:us-central1:armyproject" \
+            --set-env-vars "DB_NAME=armystartup" \
+            --set-secrets "DB_USERNAME=DB_USERNAME:latest" \
+            --set-secrets "DB_PASSWORD=DB_PASSWORD:latest" \
+            --set-secrets "JWT_SECRET=JWT_SECRET:latest" \
+            --set-secrets "FRONTEND_URL=FRONTEND_URL:latest" \
+            --memory 512Mi \
+            --cpu 1 \
+            --min-instances 0 \
+            --max-instances 3 \
+            --port 8080
+
+      - name: Show Service URL
+        run: |
+          gcloud run services describe $SERVICE_NAME \
+            --region $REGION \
+            --format "value(status.url)"

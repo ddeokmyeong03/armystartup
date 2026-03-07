@@ -1,0 +1,11 @@
+.gradle/
+build/
+frontend/
+.env
+.env.*
+cloud-sql-proxy
+*.md
+.git/
+.gitignore
+.idea/
+*.iml

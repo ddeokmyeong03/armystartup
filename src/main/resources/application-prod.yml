@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    # Cloud Run은 Cloud SQL 통합 시 unix socket으로 연결
+    url: jdbc:mysql:///${DB_NAME:armystartup}?socketFactory=com.google.cloud.sql.mysql.SocketFactory&cloudSqlInstance=${CLOUD_SQL_INSTANCE}&ipTypes=PUBLIC,PRIVATE
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+springdoc:
+  swagger-ui:
+    enabled: false   # prod에서는 Swagger UI 비활성화
+  api-docs:
+    enabled: false
+
+cors:
+  allowed-origins:
+    - ${FRONTEND_URL}
+
+logging:
+  level:
+    com.armystartup: INFO

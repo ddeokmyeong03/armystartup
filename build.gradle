@@ -31,6 +31,9 @@ dependencies {
     // Database
     runtimeOnly 'com.mysql:mysql-connector-j'
 
+    // Google Cloud SQL 커넥터 (Cloud Run 배포 시 unix socket 연결용)
+    implementation 'com.google.cloud.sql:mysql-socket-factory-connector-j-8:1.21.0'
+
     // JWT
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
