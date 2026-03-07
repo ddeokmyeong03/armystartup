@@ -13,7 +13,7 @@ env:
   PROJECT_ID: api-gen-485407
   REGION: us-central1
   SERVICE_NAME: armystartup-api
-  IMAGE: gcr.io/api-gen-485407/armystartup-api
+  IMAGE: us-central1-docker.pkg.dev/api-gen-485407/armystartup-api/backend
 
 jobs:
   deploy:
@@ -32,8 +32,8 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Configure Docker for GCR
-        run: gcloud auth configure-docker --quiet
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
