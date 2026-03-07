@@ -1,23 +1,29 @@
 spring:
   datasource:
-    url: jdbc:mysql://127.0.0.1:3306/${DB_NAME:armystartup}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
-    username: ${DB_USERNAME:army}
-    password: ${DB_PASSWORD:031021}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:h2:mem:armystartup;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create-drop
     show-sql: true
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.MySQLDialect
+        dialect: org.hibernate.dialect.H2Dialect
+
+  h2:
+    console:
+      enabled: true
 
 cors:
   allowed-origins:
     - http://localhost:3000
     - http://localhost:5173
+    - http://localhost:5174
+    - https://literate-doodle-7vvp5xgvjgr73pjr7-5174.app.github.dev
 
 logging:
   level:

@@ -30,6 +30,7 @@ dependencies {
 
     // Database
     runtimeOnly 'com.mysql:mysql-connector-j'
+    runtimeOnly 'com.h2database:h2'
 
     // Google Cloud SQL 커넥터 (Cloud Run 배포 시 unix socket 연결용)
     implementation 'com.google.cloud.sql:mysql-socket-factory-connector-j-8:1.21.0'

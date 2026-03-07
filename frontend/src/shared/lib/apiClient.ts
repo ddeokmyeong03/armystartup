@@ -2,7 +2,8 @@ import axios from 'axios';
 
 // 로컬(dev): VITE_API_BASE_URL 없으면 빈 문자열 → vite proxy가 /api를 8080으로 전달
 // Netlify(prod): VITE_API_BASE_URL=https://your-backend.run.app 형태로 주입
-const baseURL = import.meta.env.VITE_API_BASE_URL ?? '';
+// Codespaces: localhost:8080 직접 사용
+const baseURL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
 
 const apiClient = axios.create({
   baseURL,
