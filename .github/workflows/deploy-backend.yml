@@ -1,6 +1,5 @@
 name: Deploy Backend to Cloud Run
 
-
 on:
   push:
     branches: [ main ]
@@ -15,6 +14,7 @@ env:
   PROJECT_ID: api-gen-485407
   REGION: europe-west1
   SERVICE_NAME: armystartup-git
+  IMAGE: europe-west1-docker.pkg.dev/api-gen-485407/cloud-run-source-deploy/armystartup-git
 
 jobs:
   deploy:
@@ -33,6 +33,9 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker europe-west1-docker.pkg.dev --quiet
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -45,10 +48,18 @@ jobs:
       - name: Build JAR
         run: ./gradlew bootJar -x test --no-daemon -q
 
-      - name: Deploy to Cloud Run (source)
+      - name: Build Docker image
+        run: docker build -t $IMAGE:$GITHUB_SHA -t $IMAGE:latest .
+
+      - name: Push Docker image
+        run: |
+          docker push $IMAGE:$GITHUB_SHA
+          docker push $IMAGE:latest
+
+      - name: Deploy to Cloud Run
         run: |
           gcloud run deploy $SERVICE_NAME \
-            --source . \
+            --image $IMAGE:$GITHUB_SHA \
             --region $REGION \
             --platform managed \
             --allow-unauthenticated \
