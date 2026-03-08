@@ -11,9 +11,8 @@ on:
 
 env:
   PROJECT_ID: api-gen-485407
-  REGION: us-central1
-  SERVICE_NAME: armystartup-api
-  IMAGE: us-central1-docker.pkg.dev/api-gen-485407/armystartup-api/backend
+  REGION: europe-west1
+  SERVICE_NAME: armystartup-git
 
 jobs:
   deploy:
@@ -32,9 +31,6 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
 
-      - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -47,18 +43,10 @@ jobs:
       - name: Build JAR
         run: ./gradlew bootJar -x test --no-daemon -q
 
-      - name: Build Docker Image
-        run: docker build -t $IMAGE:${{ github.sha }} -t $IMAGE:latest .
-
-      - name: Push Docker Image
-        run: |
-          docker push $IMAGE:${{ github.sha }}
-          docker push $IMAGE:latest
-
-      - name: Deploy to Cloud Run
+      - name: Deploy to Cloud Run (source)
         run: |
           gcloud run deploy $SERVICE_NAME \
-            --image $IMAGE:${{ github.sha }} \
+            --source . \
             --region $REGION \
             --platform managed \
             --allow-unauthenticated \
