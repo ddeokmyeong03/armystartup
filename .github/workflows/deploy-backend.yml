@@ -1,5 +1,5 @@
 name: Deploy Backend to Cloud Run
-# redeploy after actAs permission fix
+# redeploy to pick up new OPENAI_API_KEY secret
 on:
   push:
     branches: [ main ]
