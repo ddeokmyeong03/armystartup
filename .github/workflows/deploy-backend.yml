@@ -51,6 +51,14 @@ jobs:
             --region $REGION \
             --platform managed \
             --allow-unauthenticated \
+            --add-cloudsql-instances api-gen-485407:us-central1:armyproject \
+            --set-env-vars "SPRING_PROFILES_ACTIVE=prod" \
+            --set-secrets "DB_URL=DB_URL:latest" \
+            --set-secrets "DB_USERNAME=DB_USERNAME:latest" \
+            --set-secrets "DB_PASSWORD=DB_PASSWORD:latest" \
+            --set-secrets "JWT_SECRET=JWT_SECRET:latest" \
+            --set-secrets "FRONTEND_URL=FRONTEND_URL:latest" \
+            --set-secrets "OPENAI_API_KEY=OPENAI_API_KEY:latest" \
             --memory 512Mi \
             --cpu 1 \
             --min-instances 0 \
