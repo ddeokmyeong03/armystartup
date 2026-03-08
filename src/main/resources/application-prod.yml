@@ -1,14 +1,12 @@
 spring:
   datasource:
-    # DB_URL: 전체 JDBC URL을 GCP Secret Manager에서 주입
-    # Cloud SQL unix socket 예시:
-    #   jdbc:mysql:///armystartup?socketFactory=com.google.cloud.sql.mysql.SocketFactory&cloudSqlInstance=PROJECT:REGION:INSTANCE&ipTypes=PUBLIC,PRIVATE
-    # Cloud SQL TCP 예시:
-    #   jdbc:mysql://<host>:3306/armystartup?useSSL=true&serverTimezone=Asia/Seoul
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      connection-timeout: 30000
+      initialization-fail-timeout: -1
 
   jpa:
     hibernate:
