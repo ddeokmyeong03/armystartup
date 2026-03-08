@@ -8,6 +8,7 @@ on:
       - 'build.gradle'
       - 'settings.gradle'
       - 'Dockerfile'
+      - '.github/workflows/**'
 
 env:
   PROJECT_ID: api-gen-485407
