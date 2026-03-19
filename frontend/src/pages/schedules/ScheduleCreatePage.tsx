@@ -6,9 +6,10 @@ import apiClient from '../../shared/lib/apiClient';
 const CATEGORIES = [
   { value: 'DUTY', label: '근무' },
   { value: 'TRAINING', label: '훈련' },
-  { value: 'ROLL_CALL', label: '점호' },
-  { value: 'MEDICAL', label: '의무' },
+  { value: 'ROLLCALL', label: '점호' },
   { value: 'PERSONAL', label: '개인' },
+  { value: 'STUDY', label: '자기개발' },
+  { value: 'REST', label: '휴식' },
   { value: 'OTHER', label: '기타' },
 ];
 

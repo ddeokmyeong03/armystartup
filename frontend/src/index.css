@@ -37,3 +37,11 @@ body {
 #root {
   min-height: 100dvh;
 }
+
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

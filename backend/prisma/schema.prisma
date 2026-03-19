@@ -26,9 +26,11 @@ enum RepeatType {
 }
 
 enum ScheduleCategory {
-  MILITARY
-  SELF_DEV
+  DUTY
+  TRAINING
+  ROLLCALL
   PERSONAL
+  STUDY
   REST
   OTHER
 }

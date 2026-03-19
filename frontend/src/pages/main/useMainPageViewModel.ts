@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import dayjs from 'dayjs';
 import { buildWeeklyDays } from '../../shared/lib/calendar';
-import { mockChips, mockSchedulesByDate, mockAiPlansByDate } from '../../shared/model/mock';
+import { mockSchedulesByDate, mockAiPlansByDate } from '../../shared/model/mock';
 import type { CourseRecommendationModel, UserModel } from '../../shared/model/types';
 import apiClient from '../../shared/lib/apiClient';
 import { getNickname } from '../../shared/lib/auth';
@@ -20,6 +20,9 @@ export function useMainPageViewModel() {
     email: '',
     message: '오늘 하루도 파이팅!',
   };
+
+  // 친구 목록 (추후 API 연동)
+  const friends: Array<{ id: number; nickname: string; avatarUrl?: string }> = [];
 
   // 강의 추천 상태
   const [courseRecommendations, setCourseRecommendations] = useState<CourseRecommendationModel[]>([]);
@@ -164,7 +167,7 @@ export function useMainPageViewModel() {
 
   return {
     user,
-    chips: mockChips,
+    friends,
     weeklyDays,
     weekLabel,
     selectedDate,

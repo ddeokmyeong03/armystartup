@@ -10,6 +10,9 @@ import GoalsPage from './pages/goals/GoalsPage';
 import GoalCreatePage from './pages/goals/GoalCreatePage';
 import AiPage from './pages/ai/AiPage';
 import ScheduleCreatePage from './pages/schedules/ScheduleCreatePage';
+import ScheduleDetailPage from './pages/schedules/ScheduleDetailPage';
+import NotificationsPage from './pages/notifications/NotificationsPage';
+import SettingsPage from './pages/settings/SettingsPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!isLoggedIn()) return <Navigate to="/onboarding" replace />;
@@ -69,15 +72,16 @@ export default function App() {
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
 
         {/* 서브 페이지 */}
-        <Route path="/settings" element={<ProtectedRoute><SubPlaceholderPage title="설정" /></ProtectedRoute>} />
-        <Route path="/notifications" element={<ProtectedRoute><SubPlaceholderPage title="알림" /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
         <Route path="/schedules/new" element={<ProtectedRoute><ScheduleCreatePage /></ProtectedRoute>} />
-        <Route path="/schedules/:id" element={<ProtectedRoute><SubPlaceholderPage title="일정 상세" /></ProtectedRoute>} />
+        <Route path="/schedules/:id" element={<ProtectedRoute><ScheduleDetailPage /></ProtectedRoute>} />
         <Route path="/schedules/:id/edit" element={<ProtectedRoute><SubPlaceholderPage title="일정 수정" /></ProtectedRoute>} />
         <Route path="/goals/new" element={<ProtectedRoute><GoalCreatePage /></ProtectedRoute>} />
         <Route path="/ai/chat" element={<ProtectedRoute><AiPage /></ProtectedRoute>} />
         <Route path="/friends" element={<ProtectedRoute><SubPlaceholderPage title="친구" /></ProtectedRoute>} />
         <Route path="/friends/add" element={<ProtectedRoute><SubPlaceholderPage title="친구 추가" /></ProtectedRoute>} />
+        <Route path="/friends/:id" element={<ProtectedRoute><SubPlaceholderPage title="친구 캘린더" /></ProtectedRoute>} />
 
         <Route path="*" element={<Navigate to={isLoggedIn() ? '/' : '/onboarding'} replace />} />
       </Routes>

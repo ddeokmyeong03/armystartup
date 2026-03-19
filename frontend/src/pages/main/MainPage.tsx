@@ -1,10 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { useMainPageViewModel } from './useMainPageViewModel';
-import TopChipBar from '../../widgets/main-calendar/TopChipBar';
+import FriendBar from '../../widgets/friend-bar/FriendBar';
 import WeeklyCalendarSection from '../../widgets/weekly-calendar/WeeklyCalendarSection';
 import SelectedDatePanel from '../../widgets/daily-plan-panel/SelectedDatePanel';
 import CourseRecommendationSection from '../../widgets/course-recommendation/CourseRecommendationSection';
-import FriendActionSection from '../../widgets/friend/FriendActionSection';
 import BottomNavBar from '../../shared/ui/BottomNavBar';
 import Avatar from '../../shared/ui/Avatar';
 
@@ -12,7 +11,7 @@ export default function MainPage() {
   const navigate = useNavigate();
   const {
     user,
-    chips,
+    friends,
     weeklyDays,
     weekLabel,
     selectedDate,
@@ -51,10 +50,12 @@ export default function MainPage() {
           </div>
         </div>
 
-        {/* 칩 바 */}
-        <div className="pb-1">
-          <TopChipBar chips={chips} />
-        </div>
+        {/* 친구 아바타 바 */}
+        <FriendBar
+          friends={friends}
+          onFriendClick={(f) => navigate(`/friends/${f.id}`)}
+          onAddFriend={() => navigate('/friends/add')}
+        />
 
         {/* 주간 캘린더 */}
         <WeeklyCalendarSection
@@ -87,9 +88,6 @@ export default function MainPage() {
           isLoading={courseLoading}
           onRefresh={onRefreshCourses}
         />
-
-        {/* 친구 섹션 */}
-        <FriendActionSection onGoFriends={() => navigate('/friends')} />
       </div>
 
       {/* 하단 내비게이션 */}

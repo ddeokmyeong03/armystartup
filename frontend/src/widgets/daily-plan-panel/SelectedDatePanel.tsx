@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ko';
 import EmptyState from '../../shared/ui/EmptyState';
@@ -9,9 +10,10 @@ dayjs.locale('ko');
 const CATEGORY_LABELS: Record<string, string> = {
   DUTY: '근무',
   TRAINING: '훈련',
-  ROLL_CALL: '점호',
-  MEDICAL: '의무',
+  ROLLCALL: '점호',
   PERSONAL: '개인',
+  STUDY: '자기개발',
+  REST: '휴식',
   OTHER: '기타',
 };
 
@@ -22,6 +24,7 @@ type SelectedDatePanelProps = {
 };
 
 export default function SelectedDatePanel({ selectedDate, schedules, aiPlans }: SelectedDatePanelProps) {
+  const navigate = useNavigate();
   const dateLabel = dayjs(selectedDate).format('M월 D일 dddd');
   const hasContent = schedules.length > 0 || aiPlans.length > 0;
 
@@ -44,16 +47,17 @@ export default function SelectedDatePanel({ selectedDate, schedules, aiPlans }: 
         <div className="flex flex-col gap-2">
           {/* 일반 일정 */}
           {schedules.map((s) => (
-            <div
+            <button
               key={s.id}
-              className="flex items-center gap-3 bg-white rounded-[14px] px-4 py-3"
+              onClick={() => navigate(`/schedules/${s.id}`)}
+              className="flex items-center gap-3 bg-white rounded-[14px] px-4 py-3 w-full text-left"
             >
               <div className="flex flex-col gap-0.5 flex-1 min-w-0">
                 <p className="text-sm font-medium text-[#111111] truncate">{s.title}</p>
                 <p className="text-xs text-[#8E8E93]">{s.startTime} – {s.endTime}</p>
               </div>
               <Tag label={CATEGORY_LABELS[s.category] ?? s.category} />
-            </div>
+            </button>
           ))}
 
           {/* AI 계획 */}
