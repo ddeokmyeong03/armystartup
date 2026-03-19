@@ -3,7 +3,7 @@ import { useMainPageViewModel } from './useMainPageViewModel';
 import TopChipBar from '../../widgets/main-calendar/TopChipBar';
 import WeeklyCalendarSection from '../../widgets/weekly-calendar/WeeklyCalendarSection';
 import SelectedDatePanel from '../../widgets/daily-plan-panel/SelectedDatePanel';
-import AiGuideSection from '../../widgets/ai-guide/AiGuideSection';
+import CourseRecommendationSection from '../../widgets/course-recommendation/CourseRecommendationSection';
 import FriendActionSection from '../../widgets/friend/FriendActionSection';
 import BottomNavBar from '../../shared/ui/BottomNavBar';
 import Avatar from '../../shared/ui/Avatar';
@@ -18,12 +18,12 @@ export default function MainPage() {
     selectedDate,
     selectedDateSchedules,
     selectedDateAiPlans,
-    aiMessages,
-    aiLoading,
+    courseRecommendations,
+    courseLoading,
     onPrevWeek,
     onNextWeek,
     onSelectDate,
-    onSendAiMessage,
+    onRefreshCourses,
   } = useMainPageViewModel();
 
   return (
@@ -81,11 +81,11 @@ export default function MainPage() {
 
         <div className="h-px bg-[#EFEFEF] mx-5 my-4" />
 
-        {/* AI 가이드 섹션 */}
-        <AiGuideSection
-          messages={aiMessages}
-          isLoading={aiLoading}
-          onSend={onSendAiMessage}
+        {/* AI 추천 강의 섹션 */}
+        <CourseRecommendationSection
+          recommendations={courseRecommendations}
+          isLoading={courseLoading}
+          onRefresh={onRefreshCourses}
         />
 
         {/* 친구 섹션 */}

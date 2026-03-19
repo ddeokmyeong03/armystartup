@@ -1,0 +1,219 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AuthProvider {
+  LOCAL
+  KAKAO
+  APPLE
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum RepeatType {
+  NONE
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum ScheduleCategory {
+  MILITARY
+  SELF_DEV
+  PERSONAL
+  REST
+  OTHER
+}
+
+enum GoalType {
+  STUDY
+  CERTIFICATE
+  EXERCISE
+  READING
+  CODING
+  OTHER
+}
+
+enum AiPlanStatus {
+  RECOMMENDED
+  APPLIED
+  COMPLETED
+  MISSED
+  CANCELED
+}
+
+enum PlanSourceType {
+  AI_GENERATED
+  MANUAL_ADJUSTED
+}
+
+enum PlanIntensity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum CourseSource {
+  JANGBYEONGEEUM
+  DEFENSE_TRANSITION
+  K_MOOC
+  CERTIFICATE
+  OTHER
+}
+
+enum CourseCategory {
+  LANGUAGE
+  IT
+  LEADERSHIP
+  EXERCISE
+  CERTIFICATE
+  OTHER
+}
+
+enum RecommendationStatus {
+  RECOMMENDED
+  SAVED
+  DISMISSED
+}
+
+model User {
+  id          Int          @id @default(autoincrement())
+  email       String       @unique
+  password    String
+  nickname    String
+  phoneNumber String?
+  provider    AuthProvider @default(LOCAL)
+  role        UserRole     @default(USER)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  profile               UserProfile?
+  schedules             Schedule[]
+  goals                 Goal[]
+  aiPlans               AiPlan[]
+  courseRecommendations CourseRecommendation[]
+
+  @@map("users")
+}
+
+model UserProfile {
+  id                     Int           @id @default(autoincrement())
+  userId                 Int           @unique
+  wakeUpTime             String
+  sleepTime              String
+  availableStudyMinutes  Int           @default(60)
+  preferredPlanIntensity PlanIntensity @default(MEDIUM)
+  memo                   String?
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model Schedule {
+  id           Int              @id @default(autoincrement())
+  userId       Int
+  title        String
+  scheduleDate String
+  startTime    String
+  endTime      String
+  repeatType   RepeatType       @default(NONE)
+  category     ScheduleCategory @default(PERSONAL)
+  memo         String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, scheduleDate])
+  @@map("schedules")
+}
+
+model Goal {
+  id                         Int      @id @default(autoincrement())
+  userId                     Int
+  title                      String
+  type                       GoalType @default(STUDY)
+  targetDescription          String?
+  preferredMinutesPerSession Int      @default(60)
+  preferredSessionsPerWeek   Int      @default(3)
+  isActive                   Boolean  @default(true)
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+
+  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  aiPlans               AiPlan[]
+  courseRecommendations CourseRecommendation[]
+
+  @@index([userId])
+  @@map("goals")
+}
+
+model AiPlan {
+  id              Int            @id @default(autoincrement())
+  userId          Int
+  goalId          Int
+  activityTitle   String
+  recommendedDate String
+  startTime       String
+  endTime         String
+  status          AiPlanStatus   @default(RECOMMENDED)
+  sourceType      PlanSourceType @default(AI_GENERATED)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goal Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@index([userId, recommendedDate])
+  @@map("ai_plans")
+}
+
+model Course {
+  id              Int            @id @default(autoincrement())
+  title           String
+  source          CourseSource
+  category        CourseCategory
+  targetGoalType  GoalType?
+  description     String?
+  durationMinutes Int            @default(60)
+  url             String?
+  tags            String[]
+  isActive        Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  recommendations CourseRecommendation[]
+
+  @@index([source, category])
+  @@map("courses")
+}
+
+model CourseRecommendation {
+  id            Int                  @id @default(autoincrement())
+  userId        Int
+  courseId      Int
+  goalId        Int?
+  reason        String
+  priority      Int                  @default(1)
+  status        RecommendationStatus @default(RECOMMENDED)
+  recommendedAt DateTime             @default(now())
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  goal   Goal?   @relation(fields: [goalId], references: [id])
+
+  @@index([userId, status])
+  @@map("course_recommendations")
+}
+

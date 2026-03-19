@@ -49,3 +49,25 @@ export type AiChatMessage = {
   content: string;
   timestamp: string;
 };
+
+export type CourseSource = 'JANGBYEONGEEUM' | 'DEFENSE_TRANSITION' | 'K_MOOC';
+
+export type CourseModel = {
+  id: number;
+  title: string;
+  source: CourseSource;
+  category: string;
+  targetGoalType: string | null;
+  description: string;
+  durationMinutes: number;
+  url: string;
+  tags: string[];
+};
+
+export type CourseRecommendationModel = {
+  id: number;
+  course: CourseModel;
+  reason: string;
+  priority: number;
+  goalTitle: string | null;
+};

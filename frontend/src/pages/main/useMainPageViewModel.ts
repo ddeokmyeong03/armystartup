@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import dayjs from 'dayjs';
 import { buildWeeklyDays } from '../../shared/lib/calendar';
 import { mockChips, mockSchedulesByDate, mockAiPlansByDate } from '../../shared/model/mock';
-import type { AiChatMessage, UserModel } from '../../shared/model/types';
+import type { CourseRecommendationModel, UserModel } from '../../shared/model/types';
 import apiClient from '../../shared/lib/apiClient';
 import { getNickname } from '../../shared/lib/auth';
 
@@ -14,7 +14,6 @@ export function useMainPageViewModel() {
   const [selectedDate, setSelectedDate] = useState(() => dayjs().format('YYYY-MM-DD'));
   const [weekStart, setWeekStart] = useState(() => getSundayOfWeek(dayjs().format('YYYY-MM-DD')));
 
-  // 실제 사용자 닉네임 (로그인 시 저장된 값)
   const user: UserModel = {
     id: 0,
     nickname: getNickname(),
@@ -22,11 +21,11 @@ export function useMainPageViewModel() {
     message: '오늘 하루도 파이팅!',
   };
 
-  // AI 채팅 상태
-  const [aiMessages, setAiMessages] = useState<AiChatMessage[]>([]);
-  const [aiLoading, setAiLoading] = useState(false);
+  // 강의 추천 상태
+  const [courseRecommendations, setCourseRecommendations] = useState<CourseRecommendationModel[]>([]);
+  const [courseLoading, setCourseLoading] = useState(false);
 
-  // 실제 일정 데이터 상태 (API 연동 준비)
+  // 일정 마커 상태
   const [scheduleDates, setScheduleDates] = useState<Set<string>>(() => new Set(Object.keys(mockSchedulesByDate)));
   const [aiPlanDates, setAiPlanDates] = useState<Set<string>>(() => new Set(Object.keys(mockAiPlansByDate)));
   const [scheduleCountMap, setScheduleCountMap] = useState<Record<string, number>>(() => {
@@ -35,7 +34,7 @@ export function useMainPageViewModel() {
     return map;
   });
 
-  // 주간 캘린더 API에서 마커 데이터 갱신
+  // 주간 캘린더 마커 API
   useEffect(() => {
     apiClient
       .get<{
@@ -63,9 +62,7 @@ export function useMainPageViewModel() {
         setAiPlanDates(newAiPlanDates);
         setScheduleCountMap(newCountMap);
       })
-      .catch(() => {
-        // API 실패 시 mock 유지
-      });
+      .catch(() => {});
   }, [weekStart]);
 
   const weeklyDays = useMemo(
@@ -82,7 +79,7 @@ export function useMainPageViewModel() {
     return `${start.format('YYYY.MM.DD')} ~ ${end.format('MM.DD')}`;
   }, [weekStart]);
 
-  // 선택된 날짜의 일정 (API 연동 준비 - 현재 mock)
+  // 선택 날짜 일정
   const [selectedDateSchedules, setSelectedDateSchedules] = useState(
     mockSchedulesByDate[dayjs().format('YYYY-MM-DD')] ?? [],
   );
@@ -108,6 +105,52 @@ export function useMainPageViewModel() {
       });
   }, [selectedDate]);
 
+  // 강의 추천 API 호출
+  const fetchCourseRecommendations = useCallback(async () => {
+    setCourseLoading(true);
+    try {
+      // 1차: AI 추천 (목표 기반)
+      const res = await apiClient.get<{
+        data: { recommendations: CourseRecommendationModel[] };
+      }>('/api/courses/recommend');
+      const recs = res.data.data.recommendations;
+
+      if (recs.length > 0) {
+        setCourseRecommendations(recs);
+      } else {
+        // 목표 없는 경우: 전체 강의를 추천 형식으로 변환
+        await fetchAllCoursesAsFallback();
+      }
+    } catch {
+      await fetchAllCoursesAsFallback();
+    } finally {
+      setCourseLoading(false);
+    }
+  }, []);
+
+  async function fetchAllCoursesAsFallback() {
+    try {
+      const res = await apiClient.get<{
+        data: { courses: CourseRecommendationModel['course'][] };
+      }>('/api/courses');
+      const courses = res.data.data.courses;
+      const asFallback: CourseRecommendationModel[] = courses.map((c, i) => ({
+        id: c.id,
+        course: c,
+        reason: c.description,
+        priority: i + 1,
+        goalTitle: null,
+      }));
+      setCourseRecommendations(asFallback);
+    } catch {
+      setCourseRecommendations([]);
+    }
+  }
+
+  useEffect(() => {
+    fetchCourseRecommendations();
+  }, [fetchCourseRecommendations]);
+
   function onPrevWeek() {
     setWeekStart((prev) => dayjs(prev).subtract(7, 'day').format('YYYY-MM-DD'));
   }
@@ -119,41 +162,6 @@ export function useMainPageViewModel() {
     setWeekStart(getSundayOfWeek(date));
   }
 
-  const onSendAiMessage = useCallback(async (message: string) => {
-    const userMsg: AiChatMessage = {
-      id: `user-${Date.now()}`,
-      role: 'user',
-      content: message,
-      timestamp: dayjs().toISOString(),
-    };
-    setAiMessages((prev) => [...prev, userMsg]);
-    setAiLoading(true);
-
-    try {
-      const res = await apiClient.post<{ data: { reply: string; timestamp: string } }>(
-        '/api/ai/chat',
-        { message },
-      );
-      const aiMsg: AiChatMessage = {
-        id: `ai-${Date.now()}`,
-        role: 'ai',
-        content: res.data.data.reply,
-        timestamp: res.data.data.timestamp,
-      };
-      setAiMessages((prev) => [...prev, aiMsg]);
-    } catch {
-      const errMsg: AiChatMessage = {
-        id: `ai-err-${Date.now()}`,
-        role: 'ai',
-        content: '답변을 불러오지 못했어요. 잠시 후 다시 시도해주세요.',
-        timestamp: dayjs().toISOString(),
-      };
-      setAiMessages((prev) => [...prev, errMsg]);
-    } finally {
-      setAiLoading(false);
-    }
-  }, []);
-
   return {
     user,
     chips: mockChips,
@@ -162,11 +170,11 @@ export function useMainPageViewModel() {
     selectedDate,
     selectedDateSchedules,
     selectedDateAiPlans,
-    aiMessages,
-    aiLoading,
+    courseRecommendations,
+    courseLoading,
     onPrevWeek,
     onNextWeek,
     onSelectDate,
-    onSendAiMessage,
+    onRefreshCourses: fetchCourseRecommendations,
   };
 }
