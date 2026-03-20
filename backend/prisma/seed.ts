@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 async function main() {
   await prisma.course.createMany({
     data: [
-      // 장병e음 강의
+      // ─── 장병e음 강의 (10개) ───────────────────────────────────────────────
       {
         title: '장병e음 토익 집중과정',
         source: 'JANGBYEONGEEUM',
@@ -56,7 +56,58 @@ async function main() {
         url: 'https://www.jbemc.mil.kr',
         tags: ['운동', '체력', '헬스', '코어'],
       },
-      // 국방전직교육원 공고
+      {
+        title: '장병e음 TOEIC Speaking 특강',
+        source: 'JANGBYEONGEEUM',
+        category: 'LANGUAGE',
+        targetGoalType: 'STUDY',
+        description: '토익 스피킹 점수 향상을 위한 실전 말하기 훈련 강의. Level 6~7 목표.',
+        durationMinutes: 60,
+        url: 'https://www.jbemc.mil.kr',
+        tags: ['토익스피킹', '영어회화', '스피킹', '말하기'],
+      },
+      {
+        title: '장병e음 워드프로세서 1급',
+        source: 'JANGBYEONGEEUM',
+        category: 'IT',
+        targetGoalType: 'CERTIFICATE',
+        description: '워드프로세서 1급 자격증 취득을 위한 문서 작성 능력 향상 강의.',
+        durationMinutes: 60,
+        url: 'https://www.jbemc.mil.kr',
+        tags: ['워드프로세서', '자격증', '문서작성', 'OA'],
+      },
+      {
+        title: '장병e음 영어 회화 기초',
+        source: 'JANGBYEONGEEUM',
+        category: 'LANGUAGE',
+        targetGoalType: 'STUDY',
+        description: '전역 후 취업·유학에 대비한 기초 영어 회화 강의. 일상 표현 중심.',
+        durationMinutes: 30,
+        url: 'https://www.jbemc.mil.kr',
+        tags: ['영어회화', '영어', '기초', '생활영어'],
+      },
+      {
+        title: '장병e음 리더십 특강',
+        source: 'JANGBYEONGEEUM',
+        category: 'LEADERSHIP',
+        targetGoalType: 'OTHER',
+        description: '군 조직에서의 리더십 역량 강화를 위한 특강. 팀워크·의사결정 훈련.',
+        durationMinutes: 60,
+        url: 'https://www.jbemc.mil.kr',
+        tags: ['리더십', '조직관리', '팀워크', '의사소통'],
+      },
+      {
+        title: '장병e음 재테크·금융 기초',
+        source: 'JANGBYEONGEEUM',
+        category: 'OTHER',
+        targetGoalType: 'STUDY',
+        description: '군 적금, 적립식 펀드, 절세 등 병사를 위한 실용 금융 기초 강의.',
+        durationMinutes: 45,
+        url: 'https://www.jbemc.mil.kr',
+        tags: ['재테크', '금융', '적금', '투자', '절세'],
+      },
+
+      // ─── 국방전직교육원 (7개) ──────────────────────────────────────────────
       {
         title: '국방전직교육원 취업 특강 — 자기소개서·면접',
         source: 'DEFENSE_TRANSITION',
@@ -87,7 +138,48 @@ async function main() {
         url: 'https://www.kdemtc.or.kr',
         tags: ['IT', '프로그래밍', '코딩', '취업'],
       },
-      // K-MOOC 강의
+      {
+        title: '국방전직교육원 경찰·소방 공무원 준비 과정',
+        source: 'DEFENSE_TRANSITION',
+        category: 'OTHER',
+        targetGoalType: null,
+        description: '전역 후 경찰·소방 공무원 시험을 준비하는 병사를 위한 전문 교육 과정.',
+        durationMinutes: 90,
+        url: 'https://www.kdemtc.or.kr',
+        tags: ['공무원', '경찰', '소방', '시험준비'],
+      },
+      {
+        title: '국방전직교육원 용접·기계 기술 직무교육',
+        source: 'DEFENSE_TRANSITION',
+        category: 'OTHER',
+        targetGoalType: 'CERTIFICATE',
+        description: '용접기능사, 기계조립기능사 등 기술 자격증 취득을 위한 실습 중심 교육.',
+        durationMinutes: 120,
+        url: 'https://www.kdemtc.or.kr',
+        tags: ['용접', '기계', '기능사', '자격증', '기술직'],
+      },
+      {
+        title: '국방전직교육원 드론 조종사 자격 과정',
+        source: 'DEFENSE_TRANSITION',
+        category: 'CERTIFICATE',
+        targetGoalType: 'CERTIFICATE',
+        description: '초경량비행장치 조종자 자격증 취득을 위한 드론 이론 및 실습 교육.',
+        durationMinutes: 90,
+        url: 'https://www.kdemtc.or.kr',
+        tags: ['드론', '자격증', '초경량비행', '조종사'],
+      },
+      {
+        title: '국방전직교육원 요리·바리스타 직무교육',
+        source: 'DEFENSE_TRANSITION',
+        category: 'OTHER',
+        targetGoalType: null,
+        description: '전역 후 외식업·카페 창업을 원하는 병사를 위한 조리·바리스타 실습 과정.',
+        durationMinutes: 180,
+        url: 'https://www.kdemtc.or.kr',
+        tags: ['요리', '바리스타', '카페', '조리', '창업'],
+      },
+
+      // ─── K-MOOC 강의 (8개) ────────────────────────────────────────────────
       {
         title: 'K-MOOC 파이썬 프로그래밍 기초',
         source: 'K_MOOC',
@@ -108,10 +200,70 @@ async function main() {
         url: 'https://www.kmooc.kr',
         tags: ['AI', '인공지능', '윤리', '기초'],
       },
+      {
+        title: 'K-MOOC 데이터 분석 입문',
+        source: 'K_MOOC',
+        category: 'IT',
+        targetGoalType: 'CODING',
+        description: '엑셀·파이썬을 활용한 데이터 분석 기초. 취업·대학원 준비에 유용.',
+        durationMinutes: 60,
+        url: 'https://www.kmooc.kr',
+        tags: ['데이터분석', '통계', '파이썬', '엑셀'],
+      },
+      {
+        title: 'K-MOOC 영어 글쓰기 기초',
+        source: 'K_MOOC',
+        category: 'LANGUAGE',
+        targetGoalType: 'STUDY',
+        description: '영어 에세이·이메일 작성 능력을 키우는 실용 영어 글쓰기 강의.',
+        durationMinutes: 45,
+        url: 'https://www.kmooc.kr',
+        tags: ['영어', '영작문', '글쓰기', '에세이'],
+      },
+      {
+        title: 'K-MOOC 경영학 원론',
+        source: 'K_MOOC',
+        category: 'LEADERSHIP',
+        targetGoalType: 'STUDY',
+        description: '전역 후 취업·창업에 필요한 경영학 기초 개념. 마케팅·회계·인사 포함.',
+        durationMinutes: 60,
+        url: 'https://www.kmooc.kr',
+        tags: ['경영학', '마케팅', '비즈니스', '취업준비'],
+      },
+      {
+        title: 'K-MOOC 심리학 개론',
+        source: 'K_MOOC',
+        category: 'OTHER',
+        targetGoalType: 'READING',
+        description: '인간 행동의 이해를 위한 심리학 기초. 자기 이해와 대인 관계에 도움.',
+        durationMinutes: 45,
+        url: 'https://www.kmooc.kr',
+        tags: ['심리학', '자기계발', '인간관계', '행동과학'],
+      },
+      {
+        title: 'K-MOOC 미래 직업 탐색',
+        source: 'K_MOOC',
+        category: 'LEADERSHIP',
+        targetGoalType: 'OTHER',
+        description: '4차 산업혁명 시대의 유망 직업과 진로를 탐색하는 강의. 전역 준비 병사 추천.',
+        durationMinutes: 30,
+        url: 'https://www.kmooc.kr',
+        tags: ['진로', '직업', '미래', '4차산업'],
+      },
+      {
+        title: 'K-MOOC 수학 기초 (미적분·선형대수)',
+        source: 'K_MOOC',
+        category: 'OTHER',
+        targetGoalType: 'STUDY',
+        description: '공대 진학·AI 공부에 필요한 수학 기초. 미적분·벡터·행렬 핵심 정리.',
+        durationMinutes: 60,
+        url: 'https://www.kmooc.kr',
+        tags: ['수학', '미적분', '선형대수', '공학', 'AI기초'],
+      },
     ],
     skipDuplicates: true,
   });
-  console.log('✅ 강의 시드 데이터 입력 완료 (총 10건)');
+  console.log('✅ 강의 시드 데이터 입력 완료 (총 25건)');
 }
 
 main()

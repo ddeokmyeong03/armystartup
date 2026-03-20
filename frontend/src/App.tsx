@@ -11,6 +11,7 @@ import GoalCreatePage from './pages/goals/GoalCreatePage';
 import AiPage from './pages/ai/AiPage';
 import ScheduleCreatePage from './pages/schedules/ScheduleCreatePage';
 import ScheduleDetailPage from './pages/schedules/ScheduleDetailPage';
+import ScheduleEditPage from './pages/schedules/ScheduleEditPage';
 import NotificationsPage from './pages/notifications/NotificationsPage';
 import SettingsPage from './pages/settings/SettingsPage';
 
@@ -76,7 +77,7 @@ export default function App() {
         <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
         <Route path="/schedules/new" element={<ProtectedRoute><ScheduleCreatePage /></ProtectedRoute>} />
         <Route path="/schedules/:id" element={<ProtectedRoute><ScheduleDetailPage /></ProtectedRoute>} />
-        <Route path="/schedules/:id/edit" element={<ProtectedRoute><SubPlaceholderPage title="일정 수정" /></ProtectedRoute>} />
+        <Route path="/schedules/:id/edit" element={<ProtectedRoute><ScheduleEditPage /></ProtectedRoute>} />
         <Route path="/goals/new" element={<ProtectedRoute><GoalCreatePage /></ProtectedRoute>} />
         <Route path="/ai/chat" element={<ProtectedRoute><AiPage /></ProtectedRoute>} />
         <Route path="/friends" element={<ProtectedRoute><SubPlaceholderPage title="친구" /></ProtectedRoute>} />
