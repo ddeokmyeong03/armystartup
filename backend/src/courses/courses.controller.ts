@@ -5,13 +5,17 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../common/decorators/current-user.decorator';
 import { CoursesService } from './courses.service';
 import { CourseFilterDto } from './dto/course-filter.dto';
+import { KmoocSyncService } from './kmooc-sync.service';
 
 @ApiTags('Courses')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 @Controller('courses')
 export class CoursesController {
-  constructor(private readonly coursesService: CoursesService) {}
+  constructor(
+    private readonly coursesService: CoursesService,
+    private readonly kmoocSyncService: KmoocSyncService,
+  ) {}
 
   @Get()
   @ApiOperation({ summary: '강의 목록 조회 (필터: source, category, goalType)' })
@@ -47,5 +51,15 @@ export class CoursesController {
   @ApiOperation({ summary: '추천 강의 닫기' })
   dismiss(@CurrentUser() user: JwtPayload, @Param('id', ParseIntPipe) id: number) {
     return this.coursesService.dismiss(user.userId, id);
+  }
+
+  @Post('admin/sync-kmooc')
+  @ApiOperation({ summary: '[관리자] K-MOOC 강좌 데이터 동기화' })
+  async syncKmooc() {
+    const result = await this.kmoocSyncService.syncCourses();
+    return {
+      message: `K-MOOC 동기화 완료 — 성공: ${result.synced}건, 실패: ${result.skipped}건`,
+      data: result,
+    };
   }
 }

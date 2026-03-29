@@ -183,6 +183,7 @@ model AiPlan {
 
 model Course {
   id              Int            @id @default(autoincrement())
+  externalId      String?        @unique  // K-MOOC 등 외부 API의 강좌 ID (upsert용)
   title           String
   source          CourseSource
   category        CourseCategory
