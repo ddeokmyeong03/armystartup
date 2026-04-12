@@ -4,6 +4,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   await prisma.course.createMany({
+    skipDuplicates: true,
     data: [
       // ─── 장병e음 강의 (10개) ───────────────────────────────────────────────
       {
