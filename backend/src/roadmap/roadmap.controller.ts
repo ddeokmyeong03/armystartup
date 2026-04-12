@@ -1,10 +1,10 @@
-import { Controller, Get, Post, Body, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../common/decorators/current-user.decorator';
 import { RoadmapService } from './roadmap.service';
-import { GenerateRoadmapDto } from './dto/roadmap.dto';
+import { GenerateRoadmapDto, UpdateStageDto } from './dto/roadmap.dto';
 
 @ApiTags('Roadmap')
 @ApiBearerAuth()
@@ -29,5 +29,15 @@ export class RoadmapController {
   @ApiOperation({ summary: 'Claude API로 로드맵 생성/업데이트' })
   generate(@CurrentUser() user: JwtPayload, @Body() dto: GenerateRoadmapDto) {
     return this.roadmapService.generate(user.userId, dto.goalId);
+  }
+
+  @Patch(':id/stage')
+  @ApiOperation({ summary: '로드맵 단계 상태 업데이트 (직접 체크)' })
+  updateStage(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateStageDto,
+  ) {
+    return this.roadmapService.updateStage(user.userId, id, dto.stageIndex, dto.status);
   }
 }

@@ -12,5 +12,7 @@ export function logout(): void {
 }
 
 export function getNickname(): string {
-  return localStorage.getItem('nickname') ?? '사용자';
+  const stored = localStorage.getItem('nickname');
+  if (!stored || stored === 'undefined' || stored === 'null') return '사용자';
+  return stored;
 }

@@ -4,7 +4,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../common/decorators/current-user.decorator';
 import { UsersService } from './users.service';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserDto, ChangePasswordDto } from './dto/update-user.dto';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -23,5 +23,11 @@ export class UsersController {
   @ApiOperation({ summary: '내 정보 수정' })
   updateMe(@CurrentUser() user: JwtPayload, @Body() dto: UpdateUserDto) {
     return this.usersService.updateMe(user.userId, dto);
+  }
+
+  @Patch('password')
+  @ApiOperation({ summary: '비밀번호 변경' })
+  changePassword(@CurrentUser() user: JwtPayload, @Body() dto: ChangePasswordDto) {
+    return this.usersService.changePassword(user.userId, dto);
   }
 }

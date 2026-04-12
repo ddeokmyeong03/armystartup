@@ -5,9 +5,11 @@ import LoginPage from './pages/auth/LoginPage';
 import SignupPage from './pages/auth/SignupPage';
 import MainPage from './pages/main/MainPage';
 import ProfilePage from './pages/profile/ProfilePage';
+import ProfileEditPage from './pages/profile/ProfileEditPage';
 import TodayPage from './pages/today/TodayPage';
 import GoalsPage from './pages/goals/GoalsPage';
 import GoalCreatePage from './pages/goals/GoalCreatePage';
+import GoalDetailPage from './pages/goals/GoalDetailPage';
 import AiPage from './pages/ai/AiPage';
 import RoadmapPage from './pages/roadmap/RoadmapPage';
 import ScheduleCreatePage from './pages/schedules/ScheduleCreatePage';
@@ -15,6 +17,8 @@ import ScheduleDetailPage from './pages/schedules/ScheduleDetailPage';
 import ScheduleEditPage from './pages/schedules/ScheduleEditPage';
 import NotificationsPage from './pages/notifications/NotificationsPage';
 import SettingsPage from './pages/settings/SettingsPage';
+import ChangePasswordPage from './pages/settings/ChangePasswordPage';
+import CoursesPage from './pages/courses/CoursesPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!isLoggedIn()) return <Navigate to="/onboarding" replace />;
@@ -75,12 +79,16 @@ export default function App() {
         {/* 서브 페이지 */}
         <Route path="/today" element={<ProtectedRoute><TodayPage /></ProtectedRoute>} />
         <Route path="/goals" element={<ProtectedRoute><GoalsPage /></ProtectedRoute>} />
+        <Route path="/goals/new" element={<ProtectedRoute><GoalCreatePage /></ProtectedRoute>} />
+        <Route path="/goals/:id" element={<ProtectedRoute><GoalDetailPage /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+        <Route path="/settings/password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
         <Route path="/schedules/new" element={<ProtectedRoute><ScheduleCreatePage /></ProtectedRoute>} />
         <Route path="/schedules/:id" element={<ProtectedRoute><ScheduleDetailPage /></ProtectedRoute>} />
         <Route path="/schedules/:id/edit" element={<ProtectedRoute><ScheduleEditPage /></ProtectedRoute>} />
-        <Route path="/goals/new" element={<ProtectedRoute><GoalCreatePage /></ProtectedRoute>} />
+        <Route path="/profile/edit" element={<ProtectedRoute><ProfileEditPage /></ProtectedRoute>} />
+        <Route path="/courses" element={<ProtectedRoute><CoursesPage /></ProtectedRoute>} />
         <Route path="/ai/chat" element={<ProtectedRoute><AiPage /></ProtectedRoute>} />
         <Route path="/friends" element={<ProtectedRoute><SubPlaceholderPage title="친구" /></ProtectedRoute>} />
         <Route path="/friends/add" element={<ProtectedRoute><SubPlaceholderPage title="친구 추가" /></ProtectedRoute>} />

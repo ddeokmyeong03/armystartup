@@ -10,7 +10,7 @@ function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
     >
       <span
         className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
-          value ? 'translate-x-5' : 'translate-x-0.5'
+          value ? 'translate-x-[22px]' : 'translate-x-0.5'
         }`}
       />
     </button>
@@ -97,12 +97,12 @@ export default function SettingsPage() {
           <SettingRow
             label="프로필 수정"
             right={chevron}
-            onClick={() => navigate('/profile')}
+            onClick={() => navigate('/profile/edit')}
           />
           <SettingRow
             label="비밀번호 변경"
             right={chevron}
-            onClick={() => {}}
+            onClick={() => navigate('/settings/password')}
           />
         </div>
 

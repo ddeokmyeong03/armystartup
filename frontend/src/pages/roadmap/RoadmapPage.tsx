@@ -50,9 +50,37 @@ const STATUS_CONFIG = {
 
 // ─── 서브컴포넌트 ──────────────────────────────────────────────────────────────
 
-function StageCard({ stage, index }: { stage: RoadmapStage; index: number }) {
+function StageCard({
+  stage,
+  index,
+  roadmapId,
+  onStatusChange,
+}: {
+  stage: RoadmapStage;
+  index: number;
+  roadmapId: number;
+  onStatusChange: (stageIndex: number, status: RoadmapStage['status']) => void;
+}) {
   const [open, setOpen] = useState(stage.status === 'in_progress');
+  const [updating, setUpdating] = useState(false);
   const cfg = STATUS_CONFIG[stage.status];
+
+  async function handleCheck() {
+    const nextStatus: RoadmapStage['status'] =
+      stage.status === 'completed' ? 'pending' : 'completed';
+    setUpdating(true);
+    try {
+      await apiClient.patch(`/api/roadmap/${roadmapId}/stage`, {
+        stageIndex: index,
+        status: nextStatus,
+      });
+      onStatusChange(index, nextStatus);
+    } catch {
+      //
+    } finally {
+      setUpdating(false);
+    }
+  }
 
   return (
     <div className="bg-white rounded-[18px] overflow-hidden">
@@ -89,6 +117,24 @@ function StageCard({ stage, index }: { stage: RoadmapStage; index: number }) {
           <p className="text-[12px] text-[#8E8E93] mt-0.5">{stage.week}</p>
         </div>
 
+        {/* 완료 체크 버튼 */}
+        <button
+          onClick={(e) => { e.stopPropagation(); handleCheck(); }}
+          disabled={updating}
+          className={`shrink-0 w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors disabled:opacity-50 ${
+            stage.status === 'completed'
+              ? 'bg-[#3A7D44] border-[#3A7D44]'
+              : 'border-[#C7C7CC] bg-white'
+          }`}
+          aria-label={stage.status === 'completed' ? '완료 취소' : '완료 표시'}
+        >
+          {stage.status === 'completed' && (
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          )}
+        </button>
+
         <svg
           width="16" height="16" viewBox="0 0 24 24" fill="none"
           stroke="#C7C7CC" strokeWidth="2"
@@ -119,10 +165,12 @@ function RoadmapCard({
   roadmap,
   onGenerate,
   generating,
+  onStageUpdate,
 }: {
   roadmap: Roadmap;
   onGenerate: (goalId: number) => void;
   generating: boolean;
+  onStageUpdate: (roadmapId: number, stageIndex: number, status: RoadmapStage['status']) => void;
 }) {
   const completedCount = roadmap.stages.filter((s) => s.status === 'completed').length;
 
@@ -196,7 +244,13 @@ function RoadmapCard({
       {/* 단계 목록 */}
       <div className="flex flex-col gap-2">
         {roadmap.stages.map((stage, i) => (
-          <StageCard key={i} stage={stage} index={i} />
+          <StageCard
+            key={i}
+            stage={stage}
+            index={i}
+            roadmapId={roadmap.id}
+            onStatusChange={(idx, status) => onStageUpdate(roadmap.id, idx, status)}
+          />
         ))}
       </div>
     </div>
@@ -230,6 +284,20 @@ export default function RoadmapPage() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  function handleStageUpdate(roadmapId: number, stageIndex: number, status: RoadmapStage['status']) {
+    setRoadmaps((prev) =>
+      prev.map((rm) => {
+        if (rm.id !== roadmapId) return rm;
+        const stages = rm.stages.map((s, i) =>
+          i === stageIndex ? { ...s, status } : s,
+        );
+        const completedCount = stages.filter((s) => s.status === 'completed').length;
+        const progressPercent = Math.round((completedCount / stages.length) * 100);
+        return { ...rm, stages, progressPercent };
+      }),
+    );
+  }
 
   async function handleGenerate(goalId: number) {
     setGeneratingGoalId(goalId);
@@ -354,6 +422,7 @@ export default function RoadmapPage() {
                 roadmap={selectedRoadmap}
                 onGenerate={handleGenerate}
                 generating={generatingGoalId === selectedRoadmap.goalId}
+                onStageUpdate={handleStageUpdate}
               />
             )}
 

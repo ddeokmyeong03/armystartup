@@ -513,7 +513,7 @@ export default function AiPage() {
         <button
           onClick={() => setTab('course')}
           className={`flex-1 h-10 rounded-[12px] text-[14px] font-semibold transition-colors ${
-            tab === 'course' ? 'bg-[#111111] text-white' : 'bg-white text-[#8E8E93]'
+            tab === 'course' ? 'bg-[#3A3A3A] text-white' : 'bg-white text-[#8E8E93]'
           }`}
         >
           강의 추천
@@ -521,7 +521,7 @@ export default function AiPage() {
         <button
           onClick={() => setTab('chat')}
           className={`flex-1 h-10 rounded-[12px] text-[14px] font-semibold transition-colors ${
-            tab === 'chat' ? 'bg-[#111111] text-white' : 'bg-white text-[#8E8E93]'
+            tab === 'chat' ? 'bg-[#3A3A3A] text-white' : 'bg-white text-[#8E8E93]'
           }`}
         >
           AI 채팅

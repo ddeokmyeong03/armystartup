@@ -11,7 +11,7 @@ type Goal = {
   targetDescription?: string;
   preferredMinutesPerSession: number;
   preferredSessionsPerWeek: number;
-  active: boolean;
+  isActive: boolean;
 };
 
 const GOAL_TYPE_LABELS: Record<string, string> = {
@@ -54,9 +54,9 @@ export default function GoalsPage() {
   async function handleToggleActive(goal: Goal) {
     setTogglingId(goal.id);
     try {
-      await apiClient.patch(`/api/goals/${goal.id}`, { isActive: !goal.active });
+      await apiClient.patch(`/api/goals/${goal.id}`, { isActive: !goal.isActive });
       setGoals((prev) =>
-        prev.map((g) => (g.id === goal.id ? { ...g, active: !g.active } : g)),
+        prev.map((g) => (g.id === goal.id ? { ...g, isActive: !g.isActive } : g)),
       );
     } catch {
       // ignore
@@ -75,8 +75,8 @@ export default function GoalsPage() {
     }
   }
 
-  const activeGoals = goals.filter((g) => g.active);
-  const inactiveGoals = goals.filter((g) => !g.active);
+  const activeGoals = goals.filter((g) => g.isActive);
+  const inactiveGoals = goals.filter((g) => !g.isActive);
 
   return (
     <div className="min-h-screen bg-[#F8F8F6] flex flex-col">
@@ -169,18 +169,22 @@ type GoalCardProps = {
 };
 
 function GoalCard({ goal, isToggling, onToggle, onDelete }: GoalCardProps) {
+  const navigate = useNavigate();
   const typeColor = GOAL_TYPE_COLORS[goal.type] ?? GOAL_TYPE_COLORS.OTHER;
   const typeLabel = GOAL_TYPE_LABELS[goal.type] ?? goal.type;
 
   return (
-    <div className="bg-white rounded-[16px] px-4 py-4">
+    <div
+      className="bg-white rounded-[16px] px-4 py-4 cursor-pointer active:scale-[0.99] transition-transform"
+      onClick={() => navigate(`/goals/${goal.id}`)}
+    >
       <div className="flex items-start gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${typeColor}`}>
               {typeLabel}
             </span>
-            {!goal.active && (
+            {!goal.isActive && (
               <span className="text-[11px] font-medium text-[#C7C7CC]">일시 중지</span>
             )}
           </div>
@@ -194,17 +198,17 @@ function GoalCard({ goal, isToggling, onToggle, onDelete }: GoalCardProps) {
         </div>
 
         {/* 더보기 메뉴 */}
-        <div className="flex flex-col items-end gap-1 shrink-0">
+        <div className="flex flex-col items-end gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={onToggle}
             disabled={isToggling}
             className={`text-[11px] font-medium px-3 py-1 rounded-full transition-colors disabled:opacity-50 ${
-              goal.active
+              goal.isActive
                 ? 'bg-[#EFEFEF] text-[#8E8E93]'
                 : 'bg-[#111111] text-white'
             }`}
           >
-            {goal.active ? '중지' : '재개'}
+            {goal.isActive ? '중지' : '재개'}
           </button>
           <button
             onClick={onDelete}

@@ -226,6 +226,26 @@ export default function ProfilePage() {
 
   const menuItems = [
     {
+      label: '프로필 수정',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+          <circle cx="12" cy="7" r="4" />
+        </svg>
+      ),
+      onClick: () => navigate('/profile/edit'),
+    },
+    {
+      label: '강의 목록',
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+        </svg>
+      ),
+      onClick: () => navigate('/courses'),
+    },
+    {
       label: '알림 설정',
       icon: (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -261,16 +281,8 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-[#F8F8F6] flex flex-col">
       {/* 헤더 */}
-      <div className="px-5 pt-12 pb-4 flex items-center justify-between">
+      <div className="px-5 pt-12 pb-4">
         <h1 className="text-[20px] font-bold text-[#111111]">내 정보</h1>
-        {!editing && (
-          <button
-            onClick={() => setEditing(true)}
-            className="text-[14px] font-medium text-[#4A7BAF]"
-          >
-            수정
-          </button>
-        )}
       </div>
 
       <div className="flex-1 overflow-y-auto pb-28 px-5 flex flex-col gap-4">
@@ -434,7 +446,15 @@ export default function ProfilePage() {
           </div>
         ) : profile ? (
           <div className="bg-white rounded-[20px] px-5 py-5 flex flex-col gap-3">
-            <p className="text-[13px] font-semibold text-[#111111]">자기개발 설정</p>
+            <div className="flex items-center justify-between">
+              <p className="text-[13px] font-semibold text-[#111111]">자기개발 설정</p>
+              <button
+                onClick={() => setEditing(true)}
+                className="text-[12px] font-medium text-[#4A7BAF]"
+              >
+                수정
+              </button>
+            </div>
             <div className="flex flex-col gap-2.5">
               <ProfileRow label="기상 시간" value={profile.wakeUpTime} />
               <ProfileRow label="취침 시간" value={profile.sleepTime} />

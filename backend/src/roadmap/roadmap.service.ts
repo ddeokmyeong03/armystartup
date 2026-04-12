@@ -152,6 +152,30 @@ export class RoadmapService {
     };
   }
 
+  /** 단계 상태 직접 업데이트 */
+  async updateStage(userId: number, roadmapId: number, stageIndex: number, status: string) {
+    const roadmap = await this.prisma.roadmap.findFirst({ where: { id: roadmapId, userId } });
+    if (!roadmap) throw new NotFoundException('로드맵을 찾을 수 없습니다.');
+
+    const stages: RoadmapStage[] = JSON.parse(roadmap.stages);
+    if (stageIndex < 0 || stageIndex >= stages.length) {
+      throw new NotFoundException('유효하지 않은 단계 인덱스입니다.');
+    }
+
+    stages[stageIndex].status = status as RoadmapStage['status'];
+    const progressPercent = this.calcProgress(stages);
+
+    const updated = await this.prisma.roadmap.update({
+      where: { id: roadmapId },
+      data: { stages: JSON.stringify(stages), progressPercent },
+    });
+
+    return {
+      message: '단계 상태가 업데이트되었습니다.',
+      data: { ...updated, stages },
+    };
+  }
+
   /** 진행률 계산: completed 단계 비율 */
   private calcProgress(stages: RoadmapStage[]): number {
     if (stages.length === 0) return 0;

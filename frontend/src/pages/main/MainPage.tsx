@@ -132,10 +132,22 @@ function AvailableTimeGauge({ available }: { available: AvailableTime }) {
           </div>
           <div className="h-px bg-[#F0F0F0]" />
           <div className="flex items-center justify-between">
-            <span className="text-[12px] text-[#8E8E93]">피로도 수준</span>
-            <span className={`text-[13px] font-semibold ${fatigueLevel.color}`}>
-              {fatigueLevel.label}
-            </span>
+            <span className="text-[12px] text-[#8E8E93]">근무 피로도</span>
+            <div className="flex items-center gap-1.5">
+              {/* 피로도 바 */}
+              <div className="w-16 h-1.5 bg-[#F0F0F0] rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full ${
+                    available.fatigueReductionH >= 1.5 ? 'bg-[#E05C5C]' :
+                    available.fatigueReductionH >= 0.5 ? 'bg-[#B07830]' : 'bg-[#3A7D44]'
+                  }`}
+                  style={{ width: `${Math.min(100, (available.fatigueReductionH / 2) * 100)}%` }}
+                />
+              </div>
+              <span className={`text-[13px] font-semibold ${fatigueLevel.color}`}>
+                {fatigueLevel.label}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -400,7 +412,7 @@ export default function MainPage() {
                     <line x1="3" y1="10" x2="21" y2="10" />
                   </svg>
                 </div>
-                <p className="text-[13px] font-semibold text-[#111111]">일과 추가</p>
+                <p className="text-[13px] font-semibold text-[#111111]">일정 추가</p>
               </button>
               <button
                 onClick={() => navigate('/recommend')}

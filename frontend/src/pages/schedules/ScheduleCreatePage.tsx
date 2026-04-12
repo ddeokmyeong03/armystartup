@@ -31,6 +31,7 @@ export default function ScheduleCreatePage() {
     repeatType: 'NONE',
     memo: '',
   });
+  const [nextDay, setNextDay] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -44,8 +45,8 @@ export default function ScheduleCreatePage() {
     e.preventDefault();
     setError('');
 
-    if (form.startTime >= form.endTime) {
-      setError('종료 시간은 시작 시간보다 늦어야 합니다.');
+    if (!nextDay && form.startTime >= form.endTime) {
+      setError('종료 시간은 시작 시간보다 늦어야 합니다. 자정을 넘기는 경우 "다음날" 체크박스를 선택하세요.');
       return;
     }
 
@@ -142,6 +143,19 @@ export default function ScheduleCreatePage() {
               />
             </div>
           </div>
+
+          {/* 다음날 종료 체크박스 */}
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={nextDay}
+              onChange={(e) => setNextDay(e.target.checked)}
+              className="w-4 h-4 accent-[#111111]"
+            />
+            <span className="text-[13px] font-medium text-[#8E8E93]">
+              종료 시간이 다음날 (자정을 넘기는 근무)
+            </span>
+          </label>
 
           {/* 카테고리 */}
           <div className="flex flex-col gap-2">
