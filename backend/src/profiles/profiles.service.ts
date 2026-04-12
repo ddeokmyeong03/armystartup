@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpsertProfileDto } from './dto/profile.dto';
-import { PlanIntensity } from '@prisma/client';
 
 @Injectable()
 export class ProfilesService {
@@ -10,7 +9,7 @@ export class ProfilesService {
   async upsert(userId: number, dto: UpsertProfileDto) {
     const data = {
       ...dto,
-      preferredPlanIntensity: dto.preferredPlanIntensity as PlanIntensity | undefined,
+      preferredPlanIntensity: dto.preferredPlanIntensity as string | undefined,
     };
     const profile = await this.prisma.userProfile.upsert({
       where: { userId },

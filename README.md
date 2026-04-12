@@ -35,21 +35,32 @@ AI가 **국방 자기개발 사업과 연계된 강의·공고·자격증 과정
 |---|---|
 | 회원가입/로그인 | JWT 기반 인증 |
 | 일정 관리 | 군 생활 일정 CRUD (반복 일정 포함) |
-| 목표 관리 | 자기개발 목표 CRUD (토익, 자격증, 운동 등) |
-| **AI 강의/서비스 추천** | 목표·일정 기반으로 장병e음·국방전직교육원·K-MOOC 강의 자동 추천 |
-| **AI 채팅 가이드** | GPT-4o-mini 기반 자기개발 상담 및 강의 추천 설명 |
+| 목표 관리 | 자기개발 목표 CRUD (자격증, 어학, IT, 체력, 재테크, 학업) |
+| **피로도 기반 가용시간 계산** | 근무 유형·시간대·수면 패턴 기반 일일 피로도(0~10) 계산 → 자기개발 가용시간 자동 도출 |
+| **AI 자기개발 로드맵** | 목표 기반 주차별 학습 경로 생성, 주 1회 AI 자동 업데이트 |
+| **AI 강의/서비스 추천** | 목표·일정·피로도 기반으로 장병e음·국방전직교육원·K-MOOC 강의 자동 추천 |
+| **AI 채팅 가이드** | Claude API 기반 자기개발 상담 및 강의 추천 설명 |
 | 강의 저장/관리 | 추천받은 강의 저장, 닫기, 목록 조회 |
-| 캘린더 조회 | 주간/월간/일별 일정 통합 조회 |
-| 홈 대시보드 | 오늘 일정 요약, 완료율, 활성 목표 수 |
+| 홈 대시보드 | 오늘 가용시간 요약(기본 가용 − 피로도 감소), 일과 시간표, 목표 진행 현황 |
 
 ### 추천 강의 출처
 
 | 출처 | 설명 | 상태 |
 |---|---|---|
-| **장병e음** | 군 복무 중 수강 가능한 자기개발 강의 | MVP 큐레이션 |
-| **국방전직교육원** | 제대 후 취창업 지원 특강·직무교육 공고 | MVP 큐레이션 |
-| **K-MOOC** | 대학 수준 무료 공개 강의 | 확장 큐레이션 |
-| **자격증 과정** | 전공·진로에 맞는 자격증 추천 | 확장 큐레이션 |
+| **장병e음** | 군 복무 중 수강 가능한 자기개발 강의 | 구현 완료 (큐레이션 5건) |
+| **국방전직교육원** | 제대 후 취창업 지원 특강·직무교육 공고 | 구현 완료 (큐레이션 3건) |
+| **K-MOOC** | 대학 수준 무료 공개 강의 | 구현 완료 (큐레이션 2건 + 필터 탭) |
+| **Class 101 등** | 크리에이티브·실무 강의 | 향후 확장 |
+
+### 개발 단계 현황
+
+| 단계 | 내용 | 상태 |
+|---|---|---|
+| **1차 MVP** | 가용시간 계산, 자기개발 목표 기능 | 완료 |
+| **2차 MVP** | Claude API 로드맵, Python 피로도 AI, 콘텐츠 추천 | **진행 중 (현재 단계)** |
+| **프로토타입** | NOSQL DB, 암호화 알고리즘, QA 테스트 | 예정 (26년 5~6월) |
+| **베타 출시** | 시제품 배포, QA 테스트 기반 베타 버전 | 예정 (26년 9월) |
+| **정식 출시** | Android/iOS App 출시, 결제 시스템 | 예정 (26년 10월) |
 
 ---
 
@@ -66,7 +77,8 @@ AI가 **국방 자기개발 사업과 연계된 강의·공고·자격증 과정
 | **Auth** | JWT (passport-jwt) | - |
 | **Validation** | class-validator, class-transformer | - |
 | **API 문서** | Swagger (@nestjs/swagger) | - |
-| **AI** | OpenAI API (gpt-4o-mini) | - |
+| **AI** | Anthropic Claude API (claude-haiku-4-5) | - |
+| **피로도 AI** | Python (FastAPI + Pydantic) | millog-fatigue |
 | **Frontend** | React + TypeScript | 19.x |
 | **Build Tool** | Vite | 7.x |
 | **CSS** | TailwindCSS | 4.x |
@@ -813,13 +825,13 @@ ${courses.map(c => `- ID:${c.id} | ${c.title} | ${c.source} | ${c.durationMinute
 }
 ```
 
-### 6-8. OpenAI 채팅 서비스 (강의 추천 중심)
+### 6-8. Claude 채팅 서비스 (강의 추천 중심)
 
 ```typescript
 // src/ai-chat/ai-chat.service.ts
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 async chat(message: string, userId: number): Promise<string> {
   // 사용자 저장 강의 목록을 컨텍스트로 주입 (선택적)
@@ -833,21 +845,17 @@ async chat(message: string, userId: number): Promise<string> {
     ? `사용자가 저장한 강의: ${savedCourses.map(r => r.course.title).join(', ')}`
     : '';
 
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    messages: [
-      {
-        role: 'system',
-        content: `당신은 군 병사의 자기개발을 돕는 AI 가이드 '밀로그'입니다.
+  const response = await anthropic.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 500,
+    system: `당신은 군 병사의 자기개발을 돕는 AI 가이드 '밀로그'입니다.
 장병e음, 국방전직교육원, K-MOOC 등 국방 자기개발 사업 강의를 중심으로 추천하세요.
 ${savedContext}
 답변은 간결하고 실행 가능하게 한국어로 작성하세요.`,
-      },
-      { role: 'user', content: message },
-    ],
-    max_tokens: 500,
+    messages: [{ role: 'user', content: message }],
   });
-  return response.choices[0].message.content ?? '응답을 생성할 수 없습니다.';
+  const content = response.content[0];
+  return content.type === 'text' ? content.text : '응답을 생성할 수 없습니다.';
 }
 ```
 
@@ -1006,7 +1014,7 @@ npm install -D @tailwindcss/vite
 
 ```tsx
 // 비로그인: /onboarding → /login → /signup
-// 로그인:   / (MainPage) → /today → /goals → /ai → /profile
+// 로그인 후 하단 4탭: / (홈) | /roadmap (로드맵) | /recommend (추천) | /profile (내 정보)
 
 <Routes>
   <Route element={<GuestRoute />}>
@@ -1015,17 +1023,21 @@ npm install -D @tailwindcss/vite
     <Route path="/signup"     element={<SignupPage />} />
   </Route>
   <Route element={<ProtectedRoute />}>
-    <Route path="/"                  element={<MainPage />} />
-    <Route path="/today"             element={<TodayPage />} />
+    <Route path="/"                  element={<MainPage />} />        {/* 홈: 가용시간 대시보드 */}
+    <Route path="/roadmap"           element={<RoadmapPage />} />     {/* 로드맵: AI 학습 경로 */}
+    <Route path="/recommend"         element={<AiPage />} />          {/* 추천: 강의 추천 + 채팅 */}
+    <Route path="/profile"           element={<ProfilePage />} />     {/* 내 정보 */}
     <Route path="/goals"             element={<GoalsPage />} />
     <Route path="/goals/create"      element={<GoalCreatePage />} />
-    <Route path="/ai"                element={<AiPage />} />   {/* 강의 추천 + 채팅 */}
-    <Route path="/profile"           element={<ProfilePage />} />
     <Route path="/schedules/create"  element={<ScheduleCreatePage />} />
+    <Route path="/today"             element={<TodayPage />} />
   </Route>
   <Route path="*" element={<Navigate to="/onboarding" />} />
 </Routes>
 ```
+
+> **[Ver 2 변경]** 하단 네비게이션이 4탭(홈 / 로드맵 / 추천 / 내 정보)으로 재편됩니다.
+> `/ai` → `/recommend`, 새 탭 `/roadmap` 추가 필요.
 
 ### 7-3. 인증 유틸 (auth.ts)
 
@@ -1134,18 +1146,125 @@ export interface ChatMessage {
 }
 ```
 
-### 7-6. /ai 페이지 구조 (AiPage.tsx)
+### 7-6. /recommend 페이지 구조 (AiPage.tsx)
 
 ```tsx
-// /ai 페이지는 두 탭으로 구성
+// /recommend 페이지 (구 /ai) — Ver 2 UI 기준
+// 헤더: "목표 달성 강의 - 콘텐츠 추천"
+// 필터 탭: 전체 | 장병e음 | 국방민군 | K-MOOC  ← K-MOOC 탭 신규 추가
+// AI 챗봇 추천 배너: "피로도 기반으로 최적 강의 선별 중" (클릭 시 채팅 탭 이동)
 // 탭 1: 강의 추천 — GET /api/courses/recommend 호출 후 카드 리스트 표시
 // 탭 2: AI 채팅  — POST /api/ai/chat 채팅 인터페이스
 
 // CourseRecommendationCard 컴포넌트:
-// - 강의명, 출처 뱃지(장병e음/국방전직교육원/K-MOOC), 소요시간, 추천 이유 표시
+// - 강의명, 출처 뱃지(장병e음/국방민군/K-MOOC), 별점, 수강 신청 버튼
 // - [저장] 버튼 → POST /api/courses/recommendations/:id/save
 // - [닫기] 버튼 → POST /api/courses/recommendations/:id/dismiss
-// - [바로가기] 버튼 → course.url 새 탭 열기
+// - [수강 신청] 버튼 → course.url 새 탭 열기
+```
+
+### 7-7. 홈 페이지 Ver 2 명세 (MainPage.tsx)
+
+> 목업: `Main page 1.PNG`, `Main page 2.PNG` 기준
+
+```
+홈 페이지 구성 요소 (위에서 아래 순서):
+1. 헤더
+   - 로고 (Millog)
+   - 인사말: "안녕하세요, {nickname}님"
+   - 날짜: "2025년 4월 9일"
+   - 알림 아이콘, 설정 아이콘
+
+2. 오늘의 가용시간 카드
+   - 원형 게이지: 최종 가용시간 표시 (예: 6.5h)
+   - 우측 수치:
+     - 기본 가용: 8.5h
+     - 피로도 감소: -2h (빨간색)
+     - 최종 가용: 6.5h (굵게)
+   - 하단 탭: [일과 시간표] [피로도 반영] 토글
+
+3. 일과 시간표 (탭 활성 시)
+   - 시간대별 일정 리스트 (타임라인 형태)
+   - 각 항목: 색상 점(파란=가용/빨간=근무/회색=취침) + 제목 + 시간 + 가용시간(h)
+   - 예: 기상~일과 시작 06:00-09:00 (3h), 오전 일과 09:00-12:00 (3h) ...
+
+4. 자기개발 목표 섹션
+   - "자기개발 목표" 제목 + [전체보기 >] 링크
+   - 카테고리 아이콘 가로 스크롤 (자격증/어학/IT·개발/체력/재테크/학업)
+   - 진행 중인 목표 카드 (목표명, 달성률 진행 바, 목표 기간)
+   - 예: 정보처리기사 취득 45%, 토익 800점 달성 30%
+
+5. AI 목표 분석 완료 배너 (하단 고정)
+   - "AI 목표 분석 완료" + 예상 기간 메시지
+   - [확인] 버튼 → /roadmap 이동
+```
+
+### 7-8. 로드맵 페이지 명세 (RoadmapPage.tsx) — 신규
+
+> 목업: `로드맵 page 1.PNG`, `로드맵 page 2.PNG` 기준
+
+```
+로드맵 페이지 구성 요소:
+1. 헤더: "AI 맞춤 학습 경로 - 나의 로드맵"
+
+2. 현재 목표 카드
+   - 목표명 (예: "정보처리기사 취득 플랜")
+   - 업데이트 횟수 뱃지 (예: "3차 업데이트")
+   - 진행률 바 (예: 35%)
+   - 다음 업데이트 날짜 (예: "다음 업데이트: 3일 후")
+   - 통계: 총 기간(12주) / 완료 단계(1/4) / 예상 성공률(78%)
+
+3. 단계별 학습 계획 (아코디언)
+   - 완료: 초록 체크 아이콘 + 단계명 + 세부 항목 목록
+   - 진행중: 보라색 "진행중" 뱃지 + 확장 표시
+   - 예정: 회색 아이콘
+
+4. 주 1회 AI 로드맵 자동 업데이트 배너
+   - "학습 진도와 목표 변화를 반영해 최적화됩니다"
+
+신규 파일: frontend/src/pages/roadmap/RoadmapPage.tsx
+API: GET /api/ai-plans/roadmap → 주차별 학습 계획 반환
+```
+
+### 7-9. 내 정보 페이지 Ver 2 명세 (ProfilePage.tsx)
+
+> 목업: `내 정보 page 1.PNG`, `내 정보 page 2.PNG` 기준
+
+```
+내 정보 페이지 구성 요소:
+1. 프로필 헤더 (다크 배경)
+   - 아바타 아이콘
+   - 이름 + 소속 (예: "육군 제00사단·병장")
+   - 전역 D-day 뱃지 (예: "전역 D-180")
+   - 진행 중인 목표 수 뱃지 (예: "목표 2개 진행중")
+
+2. 나의 활동 요약 카드
+   - 학습 일수 | 완료 강의 | 목표 달성률
+
+3. 설정 메뉴 리스트
+   - 계정 설정 >
+   - 알림 설정 >
+   - 일과 관리 >
+   - 통계 및 분석 >
+   - 보안 정책 >
+   - 도움말 / 문의 >
+
+4. 보안 정책 섹션 (확장 시)
+   - 데이터 암호화: "앱 내부에서 암호화 후 전송"
+   - 안전한 전송: "암호화된 데이터를 내부 API로 전송하여 이중 보안 유지"
+   - 자동 데이터 파기: "가입 후 1개월 이내 자동 파기"
+   - 군 보안 규정 완전 준수 배너
+
+5. 앱 버전 표시: "Millog v1.0.0 · © 2025 Millog"
+```
+
+### 7-10. 하단 네비게이션 (BottomNavBar.tsx) — Ver 2 업데이트
+
+```tsx
+// 현재: [홈] [캘린더] [AI] [프로필] (4탭 but 구조 상이)
+// Ver 2: [홈 /] [로드맵 /roadmap] [추천 /recommend] [내 정보 /profile]
+// 아이콘: 집 아이콘 | 지도 아이콘 | 재생 아이콘 | 사람 아이콘
+// 활성 탭: 파란색 채우기, 비활성: 회색
 ```
 
 ### 7-7. vite.config.ts (개발 프록시)
@@ -1179,8 +1298,8 @@ DATABASE_URL="postgresql://username:password@host:5432/millog?schema=public"
 JWT_SECRET="랜덤-64바이트-Base64-키"
 JWT_EXPIRATION="3600"    # 초 단위 (1시간)
 
-# OpenAI
-OPENAI_API_KEY="sk-..."
+# Anthropic (Claude API)
+ANTHROPIC_API_KEY="sk-ant-..."
 
 # CORS (콤마로 구분하여 여러 도메인 허용)
 FRONTEND_URL="https://millog-frontend.onrender.com,http://localhost:5173"
@@ -1424,7 +1543,7 @@ Start Command:   node dist/main
 DATABASE_URL   = (PostgreSQL Internal URL)
 JWT_SECRET     = (랜덤 64바이트 Base64 키)
 JWT_EXPIRATION = 3600
-OPENAI_API_KEY = (OpenAI API 키)
+ANTHROPIC_API_KEY = (Anthropic API 키 — Claude Haiku 사용)
 FRONTEND_URL   = https://millog-frontend.onrender.com
 NODE_ENV       = production
 PORT           = 3000
@@ -1492,70 +1611,77 @@ VITE_API_BASE_URL = https://millog-api.onrender.com
 ## 11. 구현 순서 로드맵
 
 ### 1단계: 프로젝트 기반 세팅
-- [ ] NestJS 프로젝트 생성 (`nest new backend`)
-- [ ] Prisma + PostgreSQL 연결
-- [ ] 공통 구조: TransformInterceptor, HttpExceptionFilter, CurrentUser 데코레이터
-- [ ] Swagger 설정
-- [ ] 환경변수 `.env` 구성
+- [x] NestJS 프로젝트 생성 (`nest new backend`)
+- [x] Prisma + PostgreSQL 연결
+- [x] 공통 구조: TransformInterceptor, HttpExceptionFilter, CurrentUser 데코레이터
+- [x] Swagger 설정
+- [x] 환경변수 `.env` 구성
 
 ### 2단계: 인증/사용자
-- [ ] `User` Prisma 모델
-- [ ] `AuthModule`: signup, login, JWT 발급
-- [ ] JWT Strategy + JwtAuthGuard
-- [ ] `UsersModule`: 내 정보 조회/수정
+- [x] `User` Prisma 모델
+- [x] `AuthModule`: signup, login, JWT 발급
+- [x] JWT Strategy + JwtAuthGuard
+- [x] `UsersModule`: 내 정보 조회/수정
 
 ### 3단계: 사용자 초기 설정
-- [ ] `UserProfile` Prisma 모델
-- [ ] `ProfilesModule`: upsert, 조회
+- [x] `UserProfile` Prisma 모델 (dischargeDate, unitName, rankName 포함)
+- [x] `ProfilesModule`: upsert, 조회
 
 ### 4단계: 일정 관리
-- [ ] `Schedule` Prisma 모델
-- [ ] `SchedulesModule`: CRUD + 날짜별 조회
+- [x] `Schedule` Prisma 모델
+- [x] `SchedulesModule`: CRUD + 날짜별 조회
 
 ### 5단계: 목표 관리
-- [ ] `Goal` Prisma 모델
-- [ ] `GoalsModule`: CRUD
+- [x] `Goal` Prisma 모델 (progressPercent 포함)
+- [x] `GoalsModule`: CRUD
 
 ### 6단계: 강의 추천 (핵심 기능)
-- [ ] `Course`, `CourseRecommendation` Prisma 모델
-- [ ] 큐레이션 시드 데이터 입력 (`prisma/seed.ts`)
+- [x] `Course`, `CourseRecommendation` Prisma 모델
+- [x] 큐레이션 시드 데이터 입력 (`prisma/seed.ts`)
   - 장병e음 강의 5건
   - 국방전직교육원 공고 3건
-  - K-MOOC 강의 2건
-- [ ] `CourseRecommendationService`: 규칙 기반 필터링 + GPT 추천 이유 생성
-- [ ] `CoursesModule`: 강의 목록/상세/AI추천/저장/닫기 API
+  - K-MOOC 강의 2건 + K-MOOC API 연동 (kmooc-sync.service.ts)
+- [x] `CourseRecommendationService`: 규칙 기반 필터링 + Claude 추천 이유 생성
+- [x] `CoursesModule`: 강의 목록/상세/AI추천/저장/닫기 API
 
 ### 7단계: AI 일정 기반 계획
-- [ ] `AiPlan` Prisma 모델
-- [ ] 규칙 기반 추천 엔진 (빈 시간 계산 알고리즘)
-- [ ] `AiPlansModule`: 추천/적용/조정/완료/일괄적용
+- [x] `AiPlan` Prisma 모델
+- [x] 규칙 기반 추천 엔진 (빈 시간 계산 알고리즘)
+- [x] `AiPlansModule`: 추천/적용/조정/완료/일괄적용
 
 ### 8단계: 캘린더 & 대시보드
-- [ ] `CalendarModule`: weekly-summary, monthly-summary, daily-detail
-- [ ] `DashboardModule`: 홈 요약
-- [ ] `MainHomeModule`: 통합 조회
+- [x] `CalendarModule`: weekly-summary, monthly-summary, daily-detail
+- [x] `DashboardModule`: 홈 요약 (가용시간·피로도·일과 시간표·목표·로드맵 요약)
 
-### 9단계: AI 채팅
-- [ ] OpenAI SDK 연동
-- [ ] `AiChatModule`: GPT-4o-mini 강의 추천 상담 채팅
+### 9단계: AI 채팅 + 로드맵
+- [x] Anthropic SDK 연동 (`@anthropic-ai/sdk`)
+- [x] `AiChatModule`: Claude Haiku 기반 자기개발 상담 채팅
+- [x] `RoadmapModule`: 목표 기반 4단계 주차별 로드맵 AI 생성/업데이트
 
-### 10단계: 프론트엔드
-- [ ] Vite + React + TypeScript 프로젝트 생성
-- [ ] TailwindCSS 설정
-- [ ] 라우팅 구조 (ProtectedRoute, GuestRoute)
-- [ ] 인증 유틸 + Axios 클라이언트
-- [ ] 온보딩 / 로그인 / 회원가입 페이지
-- [ ] 메인 페이지 (주간 캘린더 + 일정 패널 + AI 가이드)
-- [ ] **/ai 페이지**: 강의 추천 탭 (추천 카드 리스트, 저장/닫기) + 채팅 탭
-- [ ] 일정/목표 CRUD 페이지
-- [ ] 프로필 페이지 (로그아웃 포함)
+### 10단계: 피로도 AI (Python)
+- [x] `millog-fatigue` FastAPI 모듈 생성
+- [x] 피로도 공식 구현: `F = clamp(Σ(Di × Ti × hi) × C + P - R, 0, 10)`
+- [x] 5개 테스트 케이스 전체 통과
 
-### 11단계: Render 배포
-- [ ] PostgreSQL 서비스 생성
-- [ ] 백엔드 Web Service 배포 + 환경변수 설정 + 시드 데이터 확인
-- [ ] 프론트엔드 Static Site 배포 + `_redirects` 파일
-- [ ] CORS / 환경변수 최종 확인
-- [ ] E2E 테스트 (Swagger UI + 실제 앱)
+### 11단계: 프론트엔드 (Ver 2 UI 기준)
+- [x] Vite + React + TypeScript 프로젝트 생성
+- [x] TailwindCSS 설정
+- [x] 라우팅 구조 (ProtectedRoute, GuestRoute)
+- [x] 인증 유틸 + Axios 클라이언트
+- [x] 온보딩 / 로그인 / 회원가입 페이지
+- [x] **홈 페이지 (/)**: 가용시간 원형 게이지, 피로도 수준, 오늘 일과 시간표, 로드맵 요약, 목표 진행률 카드
+- [x] **로드맵 페이지 (/roadmap)**: AI 맞춤 학습 경로, 단계별 아코디언, 업데이트 배너, 목표별 탭
+- [x] **/recommend 페이지**: 강의 추천 탭 (AI 추천/저장한 강의) + AI 채팅 탭
+- [x] **내 정보 페이지 (/profile)**: 전역 D-day 배지, 활동 요약 카드, 계급/부대 입력, 보안 정책
+- [x] 하단 4탭 네비게이션 (홈 / 로드맵 / 추천 / 내 정보)
+- [x] 일정/목표 CRUD 페이지
+
+### 12단계: Render 배포
+- [x] `render.yaml` 배포 설정 완료 (PostgreSQL + Web Service + Static Site)
+- [x] `prisma migrate deploy` + `prisma db seed` 자동 실행 설정
+- [ ] PostgreSQL 서비스 생성 후 환경변수 설정
+  - `DATABASE_URL`, `JWT_SECRET`, `ANTHROPIC_API_KEY`, `FRONTEND_URL`
+- [ ] 백엔드/프론트엔드 실제 배포 및 E2E 테스트
 
 ---
 
@@ -1613,6 +1739,63 @@ async syncDefenseTransitionCourses() {
 **K-MOOC 공개 API:**
 K-MOOC는 공공데이터포털(data.go.kr)을 통해 API를 제공하므로,
 추후 API 키 발급 후 자동 동기화 가능.
+
+---
+
+## 13. 수익 구조 (B2P + B2G)
+
+### 13-1. B2P — 장병 구독 모델
+
+| 구분 | 가격 | 기능 |
+|---|---|---|
+| **무료** | 0원 | 가용시간 분석, 분기별 로드맵(1회), 강의 추천(3강좌 이내) |
+| **유료** | 월 2,990원 | 가용시간별 주간/월간 로드맵(월 4회), 강의 추천(무제한), 자기개발 현황 상세 피드백 |
+| **초기 프로모션** | 3개월 무료 | 베타 가입자 대상 전 기능 무료 제공 |
+
+> 시장 규모 추정: 육군 장병 144,594명 × 자기개발 경험 비율 40% × 2,990원 = **약 1.7억 원/월 SOM**
+
+### 13-2. B2G — 국방부 협약
+
+| 단계 | 내용 | 목표 시기 |
+|---|---|---|
+| 사업 협약 | 장병 자기개발 지원사업 홍보 서비스로 MOU 체결 | 27년 하반기 |
+| 인사이트 제공 | 장병 자기개발 데이터 기반 인사이트 제공 | 27년 이후 |
+| 예산 목표 | 26년도 잔여 예산 121억 원의 10% 점유 | 27~28년 |
+
+### 13-3. 진출 전략
+
+| 단계 | 내용 | 시기 |
+|---|---|---|
+| 1단계 | 군 커뮤니티·SNS 기반 WebApp MVP 배포, 트래킹 데이터 확보 | 26년 상반기 |
+| 2단계 | Google Play / App Store 정식 배포, 구독 서비스 이용률 확보 | 26년 하반기 |
+| 3단계 | 국방부 협약을 위한 서비스 고도화, 데이터 확보 | 27년 |
+| 4단계 | 국방부 MOU 체결, 국내 자기개발 시장 진출 | 28년~ |
+
+---
+
+## 14. 보안 정책
+
+### 14-1. 수집 데이터 범위
+
+| 분류 | 항목 | 처리 방식 |
+|---|---|---|
+| **개인정보** | 이름, 나이, 생년월일, 이메일, 휴대폰 번호 | 암호화 저장 |
+| **일정정보** | 훈련, 출타 등 민감 일정 | 암호문으로 관리 |
+| **사용정보** | 트래킹 데이터, API 출입 데이터 | 익명 집계 후 활용 |
+
+### 14-2. 데이터 처리 방침
+
+- **전송**: App 내부에서 암호화 후 내부 API로 전송
+- **저장**: 이미 암호화된 데이터를 저장 (이중 암호화)
+- **파기**: 서비스 유지에 필요한 데이터 외 모든 데이터는 **가입 후 1개월 이내 파기**
+
+### 14-3. 군 보안 규정 준수
+
+> 국방부 정보보호 지침에 따라 운영됩니다.
+
+- 데이터 암호화: 앱 내부에서 암호화 후 전송, 민감한 일정 정보는 암호문으로 관리
+- 안전한 전송: 암호화된 데이터를 내부 API로 전송하여 이중 보안 유지
+- 자동 데이터 파기: 서비스 유지에 필요한 데이터 외 모든 데이터 가입 후 1개월 이내 자동 파기
 
 ---
 

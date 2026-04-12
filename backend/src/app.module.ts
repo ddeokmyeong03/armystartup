@@ -11,6 +11,7 @@ import { AiPlansModule } from './ai-plans/ai-plans.module';
 import { CalendarModule } from './calendar/calendar.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { AiChatModule } from './ai-chat/ai-chat.module';
+import { RoadmapModule } from './roadmap/roadmap.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { AiChatModule } from './ai-chat/ai-chat.module';
     CalendarModule,
     DashboardModule,
     AiChatModule,
+    RoadmapModule,
   ],
   controllers: [],
   providers: [],

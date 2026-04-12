@@ -504,7 +504,7 @@ export default function AiPage() {
               <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
           </div>
-          <h1 className="text-[20px] font-bold text-[#111111]">AI 가이드</h1>
+          <h1 className="text-[20px] font-bold text-[#111111]">강의 추천</h1>
         </div>
       </div>
 

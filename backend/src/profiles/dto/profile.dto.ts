@@ -26,4 +26,19 @@ export class UpsertProfileDto {
   @IsOptional()
   @IsString()
   memo?: string;
+
+  @ApiPropertyOptional({ example: '2025-10-15', description: '전역 예정일 (YYYY-MM-DD)' })
+  @IsOptional()
+  @IsString()
+  dischargeDate?: string;
+
+  @ApiPropertyOptional({ example: '00사단 00대대', description: '소속 부대' })
+  @IsOptional()
+  @IsString()
+  unitName?: string;
+
+  @ApiPropertyOptional({ example: '일병', description: '계급' })
+  @IsOptional()
+  @IsString()
+  rankName?: string;
 }

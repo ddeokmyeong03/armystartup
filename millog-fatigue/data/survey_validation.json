@@ -1,0 +1,72 @@
+[
+    {
+        "id": 1,
+        "description": "불침번 야간 (02:00~04:00)",
+        "duties": [
+            {"duty_type": "admin_work",  "start_hour": 9.0,  "end_hour": 18.0},
+            {"duty_type": "night_watch", "start_hour": 2.0,  "end_hour": 4.0}
+        ],
+        "sleep_blocks": [
+            {"start_hour": 22.0, "end_hour": 2.0},
+            {"start_hour": 4.0,  "end_hour": 6.0}
+        ],
+        "consecutive_duty_days": 1,
+        "actual_fatigue": 8.5,
+        "actual_can_study": "완전 불가능"
+    },
+    {
+        "id": 2,
+        "description": "야간 경계근무 (22:00~02:00)",
+        "duties": [
+            {"duty_type": "admin_work", "start_hour": 9.0,  "end_hour": 18.0},
+            {"duty_type": "guard_post", "start_hour": 22.0, "end_hour": 2.0}
+        ],
+        "sleep_blocks": [
+            {"start_hour": 2.5, "end_hour": 6.0}
+        ],
+        "consecutive_duty_days": 1,
+        "actual_fatigue": 10.0,
+        "actual_can_study": "완전 불가능"
+    },
+    {
+        "id": 3,
+        "description": "주간 CCTV (09:00~12:00)",
+        "duties": [
+            {"duty_type": "cctv_surveillance", "start_hour": 9.0,  "end_hour": 12.0},
+            {"duty_type": "admin_work",         "start_hour": 13.0, "end_hour": 18.0}
+        ],
+        "sleep_blocks": [
+            {"start_hour": 22.0, "end_hour": 6.0}
+        ],
+        "consecutive_duty_days": 1,
+        "actual_fatigue": 2.0,
+        "actual_can_study": "충분히 가능"
+    },
+    {
+        "id": 4,
+        "description": "당직근무 야간 (22:30~08:00)",
+        "duties": [
+            {"duty_type": "guard_duty", "start_hour": 22.5, "end_hour": 8.0}
+        ],
+        "sleep_blocks": [
+            {"start_hour": 8.5, "end_hour": 12.0}
+        ],
+        "consecutive_duty_days": 1,
+        "actual_fatigue": 9.0,
+        "actual_can_study": "완전 불가능"
+    },
+    {
+        "id": 5,
+        "description": "야간 CCTV (22:00~02:00)",
+        "duties": [
+            {"duty_type": "admin_work",         "start_hour": 9.0,  "end_hour": 18.0},
+            {"duty_type": "cctv_surveillance",  "start_hour": 22.0, "end_hour": 2.0}
+        ],
+        "sleep_blocks": [
+            {"start_hour": 2.5, "end_hour": 6.0}
+        ],
+        "consecutive_duty_days": 1,
+        "actual_fatigue": 9.0,
+        "actual_can_study": "거의 불가능"
+    }
+]

@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CourseCategory, GoalType } from '@prisma/client';
 
 /**
  * 공공데이터포털 K-MOOC 강좌정보 API 응답 타입
@@ -123,10 +122,10 @@ export class KmoocSyncService {
         description,
         durationMinutes,
         url,
-        tags,
+        tags: JSON.stringify(tags),
         isActive: true,
       },
-      update: { title, description, durationMinutes, url, tags, isActive: true },
+      update: { title, description, durationMinutes, url, tags: JSON.stringify(tags), isActive: true },
     });
   }
 
@@ -149,23 +148,23 @@ export class KmoocSyncService {
     return num <= 20 ? Math.round(num * 60) : Math.round(num);
   }
 
-  private inferCategory(large: string, middle: string, tags: string[]): CourseCategory {
+  private inferCategory(large: string, middle: string, tags: string[]): string {
     const text = `${large} ${middle} ${tags.join(' ')}`.toLowerCase();
-    if (/영어|토익|토플|어학|언어/.test(text)) return CourseCategory.LANGUAGE;
-    if (/it|프로그래밍|코딩|소프트웨어|컴퓨터|파이썬|자바|데이터/.test(text)) return CourseCategory.IT;
-    if (/자격증|certificate/.test(text)) return CourseCategory.CERTIFICATE;
-    if (/리더십|leadership|커뮤니케이션|소통/.test(text)) return CourseCategory.LEADERSHIP;
-    if (/운동|체력|헬스|exercise/.test(text)) return CourseCategory.EXERCISE;
-    return CourseCategory.OTHER;
+    if (/영어|토익|토플|어학|언어/.test(text)) return 'LANGUAGE';
+    if (/it|프로그래밍|코딩|소프트웨어|컴퓨터|파이썬|자바|데이터/.test(text)) return 'IT';
+    if (/자격증|certificate/.test(text)) return 'CERTIFICATE';
+    if (/리더십|leadership|커뮤니케이션|소통/.test(text)) return 'LEADERSHIP';
+    if (/운동|체력|헬스|exercise/.test(text)) return 'EXERCISE';
+    return 'OTHER';
   }
 
-  private inferGoalType(category: CourseCategory, tags: string[]): GoalType {
+  private inferGoalType(category: string, tags: string[]): string {
     const text = `${category} ${tags.join(' ')}`.toLowerCase();
-    if (/certificate/.test(text)) return GoalType.CERTIFICATE;
-    if (/it/.test(text)) return GoalType.CODING;
-    if (/language/.test(text)) return GoalType.STUDY;
-    if (/exercise/.test(text)) return GoalType.EXERCISE;
-    if (/reading|독서|인문|문학/.test(text)) return GoalType.READING;
-    return GoalType.STUDY;
+    if (/certificate/.test(text)) return 'CERTIFICATE';
+    if (/it/.test(text)) return 'CODING';
+    if (/language/.test(text)) return 'STUDY';
+    if (/exercise/.test(text)) return 'EXERCISE';
+    if (/reading|독서|인문|문학/.test(text)) return 'READING';
+    return 'STUDY';
   }
 }

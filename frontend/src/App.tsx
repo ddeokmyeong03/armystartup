@@ -9,6 +9,7 @@ import TodayPage from './pages/today/TodayPage';
 import GoalsPage from './pages/goals/GoalsPage';
 import GoalCreatePage from './pages/goals/GoalCreatePage';
 import AiPage from './pages/ai/AiPage';
+import RoadmapPage from './pages/roadmap/RoadmapPage';
 import ScheduleCreatePage from './pages/schedules/ScheduleCreatePage';
 import ScheduleDetailPage from './pages/schedules/ScheduleDetailPage';
 import ScheduleEditPage from './pages/schedules/ScheduleEditPage';
@@ -67,12 +68,13 @@ export default function App() {
 
         {/* 탭 메인 화면 (하단 내비게이션 포함) */}
         <Route path="/" element={<ProtectedRoute><MainPage /></ProtectedRoute>} />
-        <Route path="/today" element={<ProtectedRoute><TodayPage /></ProtectedRoute>} />
-        <Route path="/goals" element={<ProtectedRoute><GoalsPage /></ProtectedRoute>} />
-        <Route path="/ai" element={<ProtectedRoute><AiPage /></ProtectedRoute>} />
+        <Route path="/roadmap" element={<ProtectedRoute><RoadmapPage /></ProtectedRoute>} />
+        <Route path="/recommend" element={<ProtectedRoute><AiPage /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
 
         {/* 서브 페이지 */}
+        <Route path="/today" element={<ProtectedRoute><TodayPage /></ProtectedRoute>} />
+        <Route path="/goals" element={<ProtectedRoute><GoalsPage /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
         <Route path="/schedules/new" element={<ProtectedRoute><ScheduleCreatePage /></ProtectedRoute>} />

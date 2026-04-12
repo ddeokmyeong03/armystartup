@@ -1,36 +1,3 @@
--- CreateEnum
-CREATE TYPE "AuthProvider" AS ENUM ('LOCAL', 'KAKAO', 'APPLE');
-
--- CreateEnum
-CREATE TYPE "UserRole" AS ENUM ('USER', 'ADMIN');
-
--- CreateEnum
-CREATE TYPE "RepeatType" AS ENUM ('NONE', 'DAILY', 'WEEKLY', 'MONTHLY');
-
--- CreateEnum
-CREATE TYPE "ScheduleCategory" AS ENUM ('MILITARY', 'SELF_DEV', 'PERSONAL', 'REST', 'OTHER');
-
--- CreateEnum
-CREATE TYPE "GoalType" AS ENUM ('STUDY', 'CERTIFICATE', 'EXERCISE', 'READING', 'CODING', 'OTHER');
-
--- CreateEnum
-CREATE TYPE "AiPlanStatus" AS ENUM ('RECOMMENDED', 'APPLIED', 'COMPLETED', 'MISSED', 'CANCELED');
-
--- CreateEnum
-CREATE TYPE "PlanSourceType" AS ENUM ('AI_GENERATED', 'MANUAL_ADJUSTED');
-
--- CreateEnum
-CREATE TYPE "PlanIntensity" AS ENUM ('LOW', 'MEDIUM', 'HIGH');
-
--- CreateEnum
-CREATE TYPE "CourseSource" AS ENUM ('JANGBYEONGEEUM', 'DEFENSE_TRANSITION', 'K_MOOC', 'CERTIFICATE', 'OTHER');
-
--- CreateEnum
-CREATE TYPE "CourseCategory" AS ENUM ('LANGUAGE', 'IT', 'LEADERSHIP', 'EXERCISE', 'CERTIFICATE', 'OTHER');
-
--- CreateEnum
-CREATE TYPE "RecommendationStatus" AS ENUM ('RECOMMENDED', 'SAVED', 'DISMISSED');
-
 -- CreateTable
 CREATE TABLE "users" (
     "id" SERIAL NOT NULL,
@@ -38,8 +5,8 @@ CREATE TABLE "users" (
     "password" TEXT NOT NULL,
     "nickname" TEXT NOT NULL,
     "phoneNumber" TEXT,
-    "provider" "AuthProvider" NOT NULL DEFAULT 'LOCAL',
-    "role" "UserRole" NOT NULL DEFAULT 'USER',
+    "provider" TEXT NOT NULL DEFAULT 'LOCAL',
+    "role" TEXT NOT NULL DEFAULT 'USER',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -53,8 +20,11 @@ CREATE TABLE "user_profiles" (
     "wakeUpTime" TEXT NOT NULL,
     "sleepTime" TEXT NOT NULL,
     "availableStudyMinutes" INTEGER NOT NULL DEFAULT 60,
-    "preferredPlanIntensity" "PlanIntensity" NOT NULL DEFAULT 'MEDIUM',
+    "preferredPlanIntensity" TEXT NOT NULL DEFAULT 'MEDIUM',
     "memo" TEXT,
+    "dischargeDate" TEXT,
+    "unitName" TEXT,
+    "rankName" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -69,8 +39,8 @@ CREATE TABLE "schedules" (
     "scheduleDate" TEXT NOT NULL,
     "startTime" TEXT NOT NULL,
     "endTime" TEXT NOT NULL,
-    "repeatType" "RepeatType" NOT NULL DEFAULT 'NONE',
-    "category" "ScheduleCategory" NOT NULL DEFAULT 'PERSONAL',
+    "repeatType" TEXT NOT NULL DEFAULT 'NONE',
+    "category" TEXT NOT NULL DEFAULT 'PERSONAL',
     "memo" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -83,11 +53,12 @@ CREATE TABLE "goals" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
     "title" TEXT NOT NULL,
-    "type" "GoalType" NOT NULL DEFAULT 'STUDY',
+    "type" TEXT NOT NULL DEFAULT 'STUDY',
     "targetDescription" TEXT,
     "preferredMinutesPerSession" INTEGER NOT NULL DEFAULT 60,
     "preferredSessionsPerWeek" INTEGER NOT NULL DEFAULT 3,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "progressPercent" INTEGER NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -103,8 +74,8 @@ CREATE TABLE "ai_plans" (
     "recommendedDate" TEXT NOT NULL,
     "startTime" TEXT NOT NULL,
     "endTime" TEXT NOT NULL,
-    "status" "AiPlanStatus" NOT NULL DEFAULT 'RECOMMENDED',
-    "sourceType" "PlanSourceType" NOT NULL DEFAULT 'AI_GENERATED',
+    "status" TEXT NOT NULL DEFAULT 'RECOMMENDED',
+    "sourceType" TEXT NOT NULL DEFAULT 'AI_GENERATED',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -114,14 +85,15 @@ CREATE TABLE "ai_plans" (
 -- CreateTable
 CREATE TABLE "courses" (
     "id" SERIAL NOT NULL,
+    "externalId" TEXT,
     "title" TEXT NOT NULL,
-    "source" "CourseSource" NOT NULL,
-    "category" "CourseCategory" NOT NULL,
-    "targetGoalType" "GoalType",
+    "source" TEXT NOT NULL,
+    "category" TEXT NOT NULL,
+    "targetGoalType" TEXT,
     "description" TEXT,
     "durationMinutes" INTEGER NOT NULL DEFAULT 60,
     "url" TEXT,
-    "tags" TEXT[],
+    "tags" TEXT NOT NULL DEFAULT '[]',
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -137,10 +109,27 @@ CREATE TABLE "course_recommendations" (
     "goalId" INTEGER,
     "reason" TEXT NOT NULL,
     "priority" INTEGER NOT NULL DEFAULT 1,
-    "status" "RecommendationStatus" NOT NULL DEFAULT 'RECOMMENDED',
+    "status" TEXT NOT NULL DEFAULT 'RECOMMENDED',
     "recommendedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "course_recommendations_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "roadmaps" (
+    "id" SERIAL NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "goalId" INTEGER NOT NULL,
+    "title" TEXT NOT NULL,
+    "totalWeeks" INTEGER NOT NULL DEFAULT 12,
+    "stages" TEXT NOT NULL DEFAULT '[]',
+    "progressPercent" DOUBLE PRECISION NOT NULL DEFAULT 0,
+    "updateCount" INTEGER NOT NULL DEFAULT 1,
+    "nextUpdateDate" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "roadmaps_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -159,10 +148,16 @@ CREATE INDEX "goals_userId_idx" ON "goals"("userId");
 CREATE INDEX "ai_plans_userId_recommendedDate_idx" ON "ai_plans"("userId", "recommendedDate");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "courses_externalId_key" ON "courses"("externalId");
+
+-- CreateIndex
 CREATE INDEX "courses_source_category_idx" ON "courses"("source", "category");
 
 -- CreateIndex
 CREATE INDEX "course_recommendations_userId_status_idx" ON "course_recommendations"("userId", "status");
+
+-- CreateIndex
+CREATE INDEX "roadmaps_userId_idx" ON "roadmaps"("userId");
 
 -- AddForeignKey
 ALTER TABLE "user_profiles" ADD CONSTRAINT "user_profiles_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -187,3 +182,9 @@ ALTER TABLE "course_recommendations" ADD CONSTRAINT "course_recommendations_cour
 
 -- AddForeignKey
 ALTER TABLE "course_recommendations" ADD CONSTRAINT "course_recommendations_goalId_fkey" FOREIGN KEY ("goalId") REFERENCES "goals"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "roadmaps" ADD CONSTRAINT "roadmaps_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "roadmaps" ADD CONSTRAINT "roadmaps_goalId_fkey" FOREIGN KEY ("goalId") REFERENCES "goals"("id") ON DELETE CASCADE ON UPDATE CASCADE;

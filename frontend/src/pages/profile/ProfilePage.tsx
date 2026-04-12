@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import dayjs from 'dayjs';
 import { logout, getNickname } from '../../shared/lib/auth';
 import Avatar from '../../shared/ui/Avatar';
 import BottomNavBar from '../../shared/ui/BottomNavBar';
 import apiClient from '../../shared/lib/apiClient';
+
+// ─── 타입 ─────────────────────────────────────────────────────────────────────
 
 type UserProfile = {
   wakeUpTime: string;
@@ -11,7 +14,18 @@ type UserProfile = {
   availableStudyMinutes: number;
   preferredPlanIntensity: 'LOW' | 'MEDIUM' | 'HIGH';
   memo: string | null;
+  dischargeDate: string | null;
+  unitName: string | null;
+  rankName: string | null;
 };
+
+type ActivitySummary = {
+  completedCourses: number;
+  studyDays: number;
+  goalAchieveRate: number;
+};
+
+// ─── 상수 ─────────────────────────────────────────────────────────────────────
 
 const INTENSITY_LABEL: Record<string, string> = {
   LOW: '여유롭게',
@@ -25,16 +39,93 @@ const INTENSITY_OPTIONS = [
   { value: 'HIGH', label: '집중적으로' },
 ];
 
-type MenuItem = {
-  label: string;
-  icon: React.ReactNode;
-  onClick: () => void;
-};
+// ─── 서브컴포넌트 ──────────────────────────────────────────────────────────────
+
+function ProfileRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-[13px] text-[#8E8E93]">{label}</span>
+      <span className="text-[13px] font-medium text-[#111111]">{value}</span>
+    </div>
+  );
+}
+
+function DdayBadge({ dischargeDate }: { dischargeDate: string }) {
+  const daysLeft = dayjs(dischargeDate).diff(dayjs(), 'day');
+  const isNear = daysLeft <= 90;
+  const isPast = daysLeft < 0;
+
+  return (
+    <div
+      className={`flex items-center gap-2 rounded-[14px] px-4 py-3 ${
+        isPast ? 'bg-[#E8F4E8]' : isNear ? 'bg-[#FFF3DC]' : 'bg-[#DCE8F8]'
+      }`}
+    >
+      <div
+        className={`w-8 h-8 rounded-full flex items-center justify-center ${
+          isPast ? 'bg-[#3A7D44]' : isNear ? 'bg-[#B07830]' : 'bg-[#4A7BAF]'
+        }`}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <line x1="16" y1="2" x2="16" y2="6" />
+          <line x1="8" y1="2" x2="8" y2="6" />
+          <line x1="3" y1="10" x2="21" y2="10" />
+        </svg>
+      </div>
+      <div>
+        <p
+          className={`text-[11px] font-medium ${
+            isPast ? 'text-[#3A7D44]' : isNear ? 'text-[#B07830]' : 'text-[#4A7BAF]'
+          }`}
+        >
+          {isPast ? '전역 완료' : '전역까지'}
+        </p>
+        <p
+          className={`text-[17px] font-bold leading-none ${
+            isPast ? 'text-[#3A7D44]' : isNear ? 'text-[#B07830]' : 'text-[#4A7BAF]'
+          }`}
+        >
+          {isPast ? '전역했습니다!' : `D-${daysLeft}`}
+        </p>
+      </div>
+      <div className="ml-auto text-right">
+        <p className="text-[11px] text-[#8E8E93]">전역 예정일</p>
+        <p className="text-[12px] font-semibold text-[#111111]">{dischargeDate}</p>
+      </div>
+    </div>
+  );
+}
+
+function ActivityCard({ summary }: { summary: ActivitySummary }) {
+  return (
+    <div className="bg-white rounded-[20px] px-5 py-5">
+      <p className="text-[13px] font-semibold text-[#111111] mb-3">활동 요약</p>
+      <div className="grid grid-cols-3 gap-3">
+        <div className="flex flex-col items-center gap-1 bg-[#F8F8F6] rounded-[14px] py-3">
+          <span className="text-[22px] font-bold text-[#4A7BAF]">{summary.studyDays}</span>
+          <span className="text-[11px] text-[#8E8E93]">학습 일수</span>
+        </div>
+        <div className="flex flex-col items-center gap-1 bg-[#F8F8F6] rounded-[14px] py-3">
+          <span className="text-[22px] font-bold text-[#3A7D44]">{summary.completedCourses}</span>
+          <span className="text-[11px] text-[#8E8E93]">완료 강의</span>
+        </div>
+        <div className="flex flex-col items-center gap-1 bg-[#F8F8F6] rounded-[14px] py-3">
+          <span className="text-[22px] font-bold text-[#B07830]">{summary.goalAchieveRate}%</span>
+          <span className="text-[11px] text-[#8E8E93]">목표 달성</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── 메인 ─────────────────────────────────────────────────────────────────────
 
 export default function ProfilePage() {
   const navigate = useNavigate();
   const nickname = getNickname();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [activity, setActivity] = useState<ActivitySummary>({ completedCourses: 0, studyDays: 0, goalAchieveRate: 0 });
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
     wakeUpTime: '06:30',
@@ -42,6 +133,9 @@ export default function ProfilePage() {
     availableStudyMinutes: 60,
     preferredPlanIntensity: 'MEDIUM',
     memo: '',
+    dischargeDate: '',
+    unitName: '',
+    rankName: '',
   });
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
@@ -51,6 +145,7 @@ export default function ProfilePage() {
       .get<{ data: UserProfile }>('/api/profiles/me')
       .then((res) => {
         const p = res.data.data;
+        if (!p) return;
         setProfile(p);
         setForm({
           wakeUpTime: p.wakeUpTime,
@@ -58,11 +153,36 @@ export default function ProfilePage() {
           availableStudyMinutes: p.availableStudyMinutes,
           preferredPlanIntensity: p.preferredPlanIntensity,
           memo: p.memo ?? '',
+          dischargeDate: p.dischargeDate ?? '',
+          unitName: p.unitName ?? '',
+          rankName: p.rankName ?? '',
         });
       })
-      .catch(() => {
-        // 프로필 미설정 상태
-      });
+      .catch(() => {});
+
+    // 활동 요약: 완료 강의 수
+    apiClient
+      .get<{ data: Array<{ status: string }> }>('/api/courses/saved')
+      .then((res) => {
+        const saved = res.data.data ?? [];
+        const completed = saved.filter((c) => c.status === 'SAVED').length;
+        setActivity((prev) => ({ ...prev, completedCourses: completed }));
+      })
+      .catch(() => {});
+
+    // 활동 요약: 목표 달성률
+    apiClient
+      .get<{ data: Array<{ progressPercent: number }> }>('/api/goals')
+      .then((res) => {
+        const goals = res.data.data ?? [];
+        if (goals.length > 0) {
+          const avg = Math.round(
+            goals.reduce((sum, g) => sum + (g.progressPercent ?? 0), 0) / goals.length,
+          );
+          setActivity((prev) => ({ ...prev, goalAchieveRate: avg }));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   function handleLogout() {
@@ -82,6 +202,9 @@ export default function ProfilePage() {
         availableStudyMinutes: form.availableStudyMinutes,
         preferredPlanIntensity: form.preferredPlanIntensity,
         memo: form.memo || undefined,
+        dischargeDate: form.dischargeDate || undefined,
+        unitName: form.unitName || undefined,
+        rankName: form.rankName || undefined,
       });
       setProfile({
         wakeUpTime: form.wakeUpTime,
@@ -89,6 +212,9 @@ export default function ProfilePage() {
         availableStudyMinutes: form.availableStudyMinutes,
         preferredPlanIntensity: form.preferredPlanIntensity as 'LOW' | 'MEDIUM' | 'HIGH',
         memo: form.memo || null,
+        dischargeDate: form.dischargeDate || null,
+        unitName: form.unitName || null,
+        rankName: form.rankName || null,
       });
       setEditing(false);
     } catch {
@@ -98,7 +224,7 @@ export default function ProfilePage() {
     }
   }
 
-  const menuItems: MenuItem[] = [
+  const menuItems = [
     {
       label: '알림 설정',
       icon: (
@@ -153,14 +279,68 @@ export default function ProfilePage() {
           <Avatar size={56} alt={nickname} />
           <div className="flex-1 min-w-0">
             <p className="text-[17px] font-bold text-[#111111] truncate">{nickname}</p>
-            <p className="text-[13px] text-[#8E8E93] mt-0.5">Millog 사용자</p>
+            <div className="flex items-center gap-2 mt-0.5">
+              {profile?.rankName && (
+                <span className="text-[12px] text-[#4A7BAF] font-medium">{profile.rankName}</span>
+              )}
+              {profile?.unitName && (
+                <span className="text-[12px] text-[#8E8E93]">{profile.unitName}</span>
+              )}
+              {!profile?.rankName && !profile?.unitName && (
+                <span className="text-[12px] text-[#8E8E93]">Millog 사용자</span>
+              )}
+            </div>
           </div>
         </div>
+
+        {/* 전역 D-day 배지 */}
+        {profile?.dischargeDate && (
+          <DdayBadge dischargeDate={profile.dischargeDate} />
+        )}
+
+        {/* 활동 요약 */}
+        <ActivityCard summary={activity} />
 
         {/* 자기개발 설정 카드 */}
         {editing ? (
           <div className="bg-white rounded-[20px] px-5 py-5 flex flex-col gap-4">
             <p className="text-[13px] font-semibold text-[#111111]">자기개발 설정</p>
+
+            {/* 군 정보 */}
+            <div className="flex gap-3">
+              <div className="flex flex-col gap-1 flex-1">
+                <label className="text-[11px] font-semibold text-[#8E8E93]">계급</label>
+                <input
+                  type="text"
+                  value={form.rankName}
+                  onChange={(e) => setForm((p) => ({ ...p, rankName: e.target.value }))}
+                  placeholder="예: 일병"
+                  className="h-[44px] bg-[#F8F8F6] rounded-[12px] px-3 text-[14px] text-[#111111] placeholder:text-[#C7C7CC] outline-none"
+                />
+              </div>
+              <div className="flex flex-col gap-1 flex-1">
+                <label className="text-[11px] font-semibold text-[#8E8E93]">부대</label>
+                <input
+                  type="text"
+                  value={form.unitName}
+                  onChange={(e) => setForm((p) => ({ ...p, unitName: e.target.value }))}
+                  placeholder="예: 00사단"
+                  className="h-[44px] bg-[#F8F8F6] rounded-[12px] px-3 text-[14px] text-[#111111] placeholder:text-[#C7C7CC] outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label className="text-[11px] font-semibold text-[#8E8E93]">전역 예정일</label>
+              <input
+                type="date"
+                value={form.dischargeDate}
+                onChange={(e) => setForm((p) => ({ ...p, dischargeDate: e.target.value }))}
+                className="h-[44px] bg-[#F8F8F6] rounded-[12px] px-3 text-[14px] text-[#111111] outline-none"
+              />
+            </div>
+
+            <div className="h-px bg-[#F0F0F0]" />
 
             <div className="flex gap-3">
               <div className="flex flex-col gap-1 flex-1">
@@ -295,6 +475,22 @@ export default function ProfilePage() {
           ))}
         </div>
 
+        {/* 보안 정책 */}
+        <div className="bg-white rounded-[20px] px-5 py-4 flex flex-col gap-2">
+          <div className="flex items-center gap-2 mb-1">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            <p className="text-[12px] font-semibold text-[#8E8E93]">보안 정책</p>
+          </div>
+          <p className="text-[12px] text-[#8E8E93] leading-relaxed">
+            • 모든 데이터는 암호화되어 저장됩니다<br />
+            • 개인 정보는 군 보안 규정에 따라 보호됩니다<br />
+            • 활동 이력은 30일 후 자동으로 삭제됩니다<br />
+            • 비밀 이상의 군사 정보는 절대 입력하지 마세요
+          </p>
+        </div>
+
         {/* 로그아웃 */}
         <button
           onClick={handleLogout}
@@ -312,15 +508,6 @@ export default function ProfilePage() {
       </div>
 
       <BottomNavBar />
-    </div>
-  );
-}
-
-function ProfileRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-[13px] text-[#8E8E93]">{label}</span>
-      <span className="text-[13px] font-medium text-[#111111]">{value}</span>
     </div>
   );
 }

@@ -7,115 +7,40 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum AuthProvider {
-  LOCAL
-  KAKAO
-  APPLE
-}
-
-enum UserRole {
-  USER
-  ADMIN
-}
-
-enum RepeatType {
-  NONE
-  DAILY
-  WEEKLY
-  MONTHLY
-}
-
-enum ScheduleCategory {
-  DUTY
-  TRAINING
-  ROLLCALL
-  PERSONAL
-  STUDY
-  REST
-  OTHER
-}
-
-enum GoalType {
-  STUDY
-  CERTIFICATE
-  EXERCISE
-  READING
-  CODING
-  OTHER
-}
-
-enum AiPlanStatus {
-  RECOMMENDED
-  APPLIED
-  COMPLETED
-  MISSED
-  CANCELED
-}
-
-enum PlanSourceType {
-  AI_GENERATED
-  MANUAL_ADJUSTED
-}
-
-enum PlanIntensity {
-  LOW
-  MEDIUM
-  HIGH
-}
-
-enum CourseSource {
-  JANGBYEONGEEUM
-  DEFENSE_TRANSITION
-  K_MOOC
-  CERTIFICATE
-  OTHER
-}
-
-enum CourseCategory {
-  LANGUAGE
-  IT
-  LEADERSHIP
-  EXERCISE
-  CERTIFICATE
-  OTHER
-}
-
-enum RecommendationStatus {
-  RECOMMENDED
-  SAVED
-  DISMISSED
-}
-
 model User {
-  id          Int          @id @default(autoincrement())
-  email       String       @unique
+  id          Int      @id @default(autoincrement())
+  email       String   @unique
   password    String
   nickname    String
   phoneNumber String?
-  provider    AuthProvider @default(LOCAL)
-  role        UserRole     @default(USER)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  provider    String   @default("LOCAL")
+  role        String   @default("USER")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   profile               UserProfile?
   schedules             Schedule[]
   goals                 Goal[]
   aiPlans               AiPlan[]
   courseRecommendations CourseRecommendation[]
+  roadmaps              Roadmap[]
 
   @@map("users")
 }
 
 model UserProfile {
-  id                     Int           @id @default(autoincrement())
-  userId                 Int           @unique
+  id                     Int      @id @default(autoincrement())
+  userId                 Int      @unique
   wakeUpTime             String
   sleepTime              String
-  availableStudyMinutes  Int           @default(60)
-  preferredPlanIntensity PlanIntensity @default(MEDIUM)
+  availableStudyMinutes  Int      @default(60)
+  preferredPlanIntensity String   @default("MEDIUM")
   memo                   String?
-  createdAt              DateTime      @default(now())
-  updatedAt              DateTime      @updatedAt
+  dischargeDate          String?  // 전역 예정일 "YYYY-MM-DD"
+  unitName               String?  // 소속 부대명
+  rankName               String?  // 계급
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -123,17 +48,17 @@ model UserProfile {
 }
 
 model Schedule {
-  id           Int              @id @default(autoincrement())
+  id           Int      @id @default(autoincrement())
   userId       Int
   title        String
   scheduleDate String
   startTime    String
   endTime      String
-  repeatType   RepeatType       @default(NONE)
-  category     ScheduleCategory @default(PERSONAL)
+  repeatType   String   @default("NONE")
+  category     String   @default("PERSONAL")
   memo         String?
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -145,34 +70,36 @@ model Goal {
   id                         Int      @id @default(autoincrement())
   userId                     Int
   title                      String
-  type                       GoalType @default(STUDY)
+  type                       String   @default("STUDY")
   targetDescription          String?
   preferredMinutesPerSession Int      @default(60)
   preferredSessionsPerWeek   Int      @default(3)
   isActive                   Boolean  @default(true)
+  progressPercent            Int      @default(0)  // 진행률 0~100
   createdAt                  DateTime @default(now())
   updatedAt                  DateTime @updatedAt
 
   user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   aiPlans               AiPlan[]
   courseRecommendations CourseRecommendation[]
+  roadmaps              Roadmap[]
 
   @@index([userId])
   @@map("goals")
 }
 
 model AiPlan {
-  id              Int            @id @default(autoincrement())
+  id              Int      @id @default(autoincrement())
   userId          Int
   goalId          Int
   activityTitle   String
   recommendedDate String
   startTime       String
   endTime         String
-  status          AiPlanStatus   @default(RECOMMENDED)
-  sourceType      PlanSourceType @default(AI_GENERATED)
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  status          String   @default("RECOMMENDED")
+  sourceType      String   @default("AI_GENERATED")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   goal Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
@@ -182,19 +109,19 @@ model AiPlan {
 }
 
 model Course {
-  id              Int            @id @default(autoincrement())
-  externalId      String?        @unique  // K-MOOC 등 외부 API의 강좌 ID (upsert용)
+  id              Int      @id @default(autoincrement())
+  externalId      String?  @unique
   title           String
-  source          CourseSource
-  category        CourseCategory
-  targetGoalType  GoalType?
+  source          String
+  category        String
+  targetGoalType  String?
   description     String?
-  durationMinutes Int            @default(60)
+  durationMinutes Int      @default(60)
   url             String?
-  tags            String[]
-  isActive        Boolean        @default(true)
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  tags            String   @default("[]")
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   recommendations CourseRecommendation[]
 
@@ -203,20 +130,40 @@ model Course {
 }
 
 model CourseRecommendation {
-  id            Int                  @id @default(autoincrement())
+  id            Int      @id @default(autoincrement())
   userId        Int
   courseId      Int
   goalId        Int?
   reason        String
-  priority      Int                  @default(1)
-  status        RecommendationStatus @default(RECOMMENDED)
-  recommendedAt DateTime             @default(now())
+  priority      Int      @default(1)
+  status        String   @default("RECOMMENDED")
+  recommendedAt DateTime @default(now())
 
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  goal   Goal?   @relation(fields: [goalId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  goal   Goal?  @relation(fields: [goalId], references: [id])
 
   @@index([userId, status])
   @@map("course_recommendations")
 }
 
+// AI 자기개발 로드맵 — Claude API로 생성, 주 1회 자동 업데이트
+model Roadmap {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  goalId         Int
+  title          String   // 예: "정보처리기사 취득 플랜"
+  totalWeeks     Int      @default(12)
+  stages         String   @default("[]") // JSON: [{week, title, status, items[]}]
+  progressPercent Float   @default(0)
+  updateCount    Int      @default(1)
+  nextUpdateDate String?  // "YYYY-MM-DD"
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goal Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("roadmaps")
+}

@@ -19,34 +19,21 @@ const navItems: NavItem[] = [
     ),
   },
   {
-    path: '/today',
-    label: '오늘',
+    path: '/roadmap',
+    label: '로드맵',
     icon: (active) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
         stroke={active ? '#111111' : '#8E8E93'} strokeWidth={active ? 2.2 : 1.8}>
-        <rect x="3" y="4" width="18" height="18" rx="2" />
-        <line x1="16" y1="2" x2="16" y2="6" />
-        <line x1="8" y1="2" x2="8" y2="6" />
-        <line x1="3" y1="10" x2="21" y2="10" />
-        <circle cx="12" cy="16" r="1.5" fill={active ? '#111111' : '#8E8E93'} stroke="none" />
+        <path d="M3 3h7v7H3z" />
+        <path d="M14 3h7v7h-7z" />
+        <path d="M3 14h7v7H3z" />
+        <circle cx="17.5" cy="17.5" r="3.5" />
       </svg>
     ),
   },
   {
-    path: '/goals',
-    label: '목표',
-    icon: (active) => (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-        stroke={active ? '#111111' : '#8E8E93'} strokeWidth={active ? 2.2 : 1.8}>
-        <circle cx="12" cy="12" r="10" />
-        <circle cx="12" cy="12" r="6" />
-        <circle cx="12" cy="12" r="2" fill={active ? '#111111' : '#8E8E93'} stroke="none" />
-      </svg>
-    ),
-  },
-  {
-    path: '/ai',
-    label: 'AI',
+    path: '/recommend',
+    label: '추천',
     icon: (active) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
         stroke={active ? '#111111' : '#8E8E93'} strokeWidth={active ? 2.2 : 1.8}>
