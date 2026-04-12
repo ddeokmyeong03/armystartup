@@ -12,6 +12,7 @@ type AvailableTime = {
   baseAvailableH: number;
   fatigueReductionH: number;
   finalAvailableH: number;
+  fatigueScore: number;
 };
 
 type ScheduleItem = {
@@ -50,19 +51,23 @@ type DashboardData = {
 // ─── 상수 ─────────────────────────────────────────────────────────────────────
 
 const CATEGORY_LABEL: Record<string, string> = {
-  MILITARY: '근무',
-  SELF_DEV: '자기개발',
+  DUTY:     '근무',
+  TRAINING: '훈련',
+  ROLLCALL: '점호',
+  STUDY:    '자기개발',
   PERSONAL: '개인',
-  REST: '휴식',
-  OTHER: '기타',
+  REST:     '휴식',
+  OTHER:    '기타',
 };
 
 const CATEGORY_COLOR: Record<string, string> = {
-  MILITARY: 'bg-[#DCE8F8] text-[#4A7BAF]',
-  SELF_DEV: 'bg-[#E8F4E8] text-[#3A7D44]',
-  PERSONAL: 'bg-[#EDE8F8] text-[#6040A0]',
-  REST: 'bg-[#F8F8F6] text-[#8E8E93]',
-  OTHER: 'bg-[#FFF3DC] text-[#B07830]',
+  DUTY:     'bg-[#DCE8F8] text-[#4A7BAF]',
+  TRAINING: 'bg-[#FFF3DC] text-[#B07830]',
+  ROLLCALL: 'bg-[#EDE8F8] text-[#6040A0]',
+  STUDY:    'bg-[#E8F4E8] text-[#3A7D44]',
+  PERSONAL: 'bg-[#F8F8F6] text-[#8E8E93]',
+  REST:     'bg-[#F8F8F6] text-[#8E8E93]',
+  OTHER:    'bg-[#FFF3DC] text-[#B07830]',
 };
 
 const GOAL_TYPE_LABEL: Record<string, string> = {
@@ -82,10 +87,13 @@ function AvailableTimeGauge({ available }: { available: AvailableTime }) {
   const circumference = 2 * Math.PI * 38;
   const strokeDash = (pct / 100) * circumference;
 
+  const score = available.fatigueScore ?? 0;
   const fatigueLevel =
-    available.fatigueReductionH >= 1.5
+    score >= 8
+      ? { label: '매우 높음', color: 'text-[#E05C5C]' }
+      : score >= 6
       ? { label: '높음', color: 'text-[#E05C5C]' }
-      : available.fatigueReductionH >= 0.5
+      : score >= 3
       ? { label: '보통', color: 'text-[#B07830]' }
       : { label: '낮음', color: 'text-[#3A7D44]' };
 
@@ -138,14 +146,14 @@ function AvailableTimeGauge({ available }: { available: AvailableTime }) {
               <div className="w-16 h-1.5 bg-[#F0F0F0] rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full ${
-                    available.fatigueReductionH >= 1.5 ? 'bg-[#E05C5C]' :
-                    available.fatigueReductionH >= 0.5 ? 'bg-[#B07830]' : 'bg-[#3A7D44]'
+                    score >= 8 ? 'bg-[#E05C5C]' :
+                    score >= 3 ? 'bg-[#B07830]' : 'bg-[#3A7D44]'
                   }`}
-                  style={{ width: `${Math.min(100, (available.fatigueReductionH / 2) * 100)}%` }}
+                  style={{ width: `${(score / 10) * 100}%` }}
                 />
               </div>
               <span className={`text-[13px] font-semibold ${fatigueLevel.color}`}>
-                {fatigueLevel.label}
+                {score.toFixed(1)} / 10
               </span>
             </div>
           </div>
@@ -369,6 +377,7 @@ export default function MainPage() {
                   baseAvailableH: 0,
                   fatigueReductionH: 0,
                   finalAvailableH: 0,
+                  fatigueScore: 0,
                 }
               }
             />

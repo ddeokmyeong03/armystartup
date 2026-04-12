@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Millog",
+    "slug": "millog",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "scheme": "millog",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F8F8F6"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.millog.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F8F8F6"
+      },
+      "package": "com.millog.app",
+      "edgeToEdgeEnabled": true
+    },
+    "plugins": [
+      "expo-router"
+    ]
+  }
+}

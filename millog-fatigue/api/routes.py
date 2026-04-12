@@ -6,6 +6,7 @@ from fastapi import APIRouter
 from fatigue.models import DailySchedule, FatigueResult, StudyRecommendation
 from fatigue.calculator import calculate_fatigue
 from fatigue.recommender import build_study_recommendation
+from fatigue.predictor import predict_weekly_fatigue
 from fatigue.constants import DUTY_FATIGUE_INDEX
 
 router = APIRouter(prefix="/api/fatigue", tags=["fatigue"])
@@ -36,20 +37,11 @@ async def recommend(schedule: DailySchedule) -> StudyRecommendation:
 @router.post("/weekly-predict")
 async def weekly_predict(weekly_duties: list[DailySchedule]) -> list[dict]:
     """
-    주간 피로도를 예측합니다 (향후 확장 기능).
+    주간 피로도를 예측합니다.
 
-    일별 스케줄 목록을 입력받아 각 날의 예상 피로도를 반환합니다.
+    일별 스케줄 목록을 입력받아 각 날의 예상 피로도와 자기개발 추천을 반환합니다.
     """
-    results = []
-    for i, daily_schedule in enumerate(weekly_duties):
-        result = calculate_fatigue(daily_schedule)
-        results.append({
-            "day": i + 1,
-            "fatigue_score": result.fatigue_score,
-            "fatigue_level": result.fatigue_level,
-            "max_study_minutes": result.max_study_minutes,
-        })
-    return results
+    return predict_weekly_fatigue(weekly_duties)
 
 
 @router.get("/duty-types")

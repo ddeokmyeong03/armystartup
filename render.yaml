@@ -30,6 +30,16 @@ services:
         source: /*
         destination: /index.html
 
+  - type: web
+    name: millog-fatigue
+    runtime: python
+    rootDir: millog-fatigue
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PORT
+        value: "10000"
+
 databases:
   - name: millog-db
     databaseName: millog

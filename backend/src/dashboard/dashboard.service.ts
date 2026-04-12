@@ -10,11 +10,13 @@ function toMinutes(time: string): number {
 
 /** 근무 카테고리 → 피로도 계수 (시간당) */
 const CATEGORY_FATIGUE: Record<string, number> = {
-  MILITARY: 1.2,   // 근무/훈련
-  SELF_DEV: 0.3,   // 자기개발 시간
+  DUTY:     1.5,   // 당직/경계근무
+  TRAINING: 1.2,   // 훈련
+  ROLLCALL: 0.6,   // 점호
+  STUDY:    0.3,   // 자기개발
   PERSONAL: 0.2,   // 개인 시간
-  REST: 0.0,       // 휴식
-  OTHER: 0.5,
+  REST:     0.0,   // 휴식
+  OTHER:    0.5,
 };
 
 @Injectable()
@@ -59,6 +61,8 @@ export class DashboardService {
 
     // 기본 가용시간 (시간 단위)
     const baseAvailableH = Math.max(0, (totalAwakeMinutes - scheduledMinutes) / 60);
+    // 피로도 0~10 정규화 (최대 기준: 10시간 근무 × 계수 1.5 = 15)
+    const fatigueScore10 = Math.min(10, Math.round((fatigueScore / 15) * 100) / 10);
     // 피로도 감소: 피로 점수 기반 (최대 2시간 감소)
     const fatigueReductionH = Math.min(2.0, fatigueScore * 0.3);
     const finalAvailableH = Math.max(0, baseAvailableH - fatigueReductionH);
@@ -83,6 +87,7 @@ export class DashboardService {
           baseAvailableH: Math.round(baseAvailableH * 10) / 10,
           fatigueReductionH: Math.round(fatigueReductionH * 10) / 10,
           finalAvailableH: Math.round(finalAvailableH * 10) / 10,
+          fatigueScore: fatigueScore10,
         },
         // 오늘 일과 시간표
         scheduleTimeline,
