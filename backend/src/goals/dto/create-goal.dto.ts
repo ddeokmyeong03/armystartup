@@ -11,9 +11,9 @@ export class CreateGoalDto {
   @IsString()
   category?: string;
 
-  @ApiPropertyOptional({ enum: ['STUDY','CERTIFICATE','EXERCISE','READING','CODING','OTHER'], default: 'STUDY' })
+  @ApiPropertyOptional({ example: 'STUDY' })
   @IsOptional()
-  @IsEnum(['STUDY','CERTIFICATE','EXERCISE','READING','CODING','OTHER'])
+  @IsString()
   type?: string;
 
   @ApiPropertyOptional({ example: '2026-05-15' })

@@ -18,9 +18,9 @@ export class CreateScheduleDto {
   @IsString()
   endTime: string;
 
-  @ApiPropertyOptional({ enum: ['NONE', 'DAILY', 'WEEKLY', 'MONTHLY'], default: 'NONE' })
+  @ApiPropertyOptional({ example: 'NONE' })
   @IsOptional()
-  @IsEnum(['NONE', 'DAILY', 'WEEKLY', 'MONTHLY'])
+  @IsString()
   repeatType?: string;
 
   @ApiPropertyOptional({ example: 'PERSONAL', description: 'DUTY/TRAINING/ROLLCALL/PERSONAL/STUDY/REST/OTHER 또는 guard-night 등 프론트엔드 타입' })

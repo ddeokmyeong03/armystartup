@@ -17,9 +17,9 @@ export class UpsertProfileDto {
   @Max(480)
   availableStudyMinutes?: number;
 
-  @ApiPropertyOptional({ enum: ['LOW', 'MEDIUM', 'HIGH'], example: 'MEDIUM' })
+  @ApiPropertyOptional({ example: 'MEDIUM' })
   @IsOptional()
-  @IsEnum(['LOW', 'MEDIUM', 'HIGH'])
+  @IsString()
   preferredPlanIntensity?: string;
 
   @ApiPropertyOptional({ example: '주중엔 저녁 훈련이 많아요' })

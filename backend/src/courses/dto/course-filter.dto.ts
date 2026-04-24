@@ -1,18 +1,18 @@
-import { IsOptional, IsEnum, IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CourseFilterDto {
-  @ApiPropertyOptional({ enum: ['JANGBYEONGEEUM', 'DEFENSE_TRANSITION', 'K_MOOC', 'CERTIFICATE', 'OTHER'] })
+  @ApiPropertyOptional({ example: 'K_MOOC' })
   @IsOptional()
-  @IsEnum(['JANGBYEONGEEUM', 'DEFENSE_TRANSITION', 'K_MOOC', 'CERTIFICATE', 'OTHER'])
+  @IsString()
   source?: string;
 
-  @ApiPropertyOptional({ enum: ['LANGUAGE', 'IT', 'LEADERSHIP', 'EXERCISE', 'CERTIFICATE', 'OTHER'] })
+  @ApiPropertyOptional({ example: 'IT' })
   @IsOptional()
-  @IsEnum(['LANGUAGE', 'IT', 'LEADERSHIP', 'EXERCISE', 'CERTIFICATE', 'OTHER'])
+  @IsString()
   category?: string;
 
-  @ApiPropertyOptional({ enum: ['STUDY', 'CERTIFICATE', 'EXERCISE', 'READING', 'CODING', 'OTHER'] })
+  @ApiPropertyOptional({ example: 'STUDY' })
   @IsOptional()
   @IsString()
   goalType?: string;
