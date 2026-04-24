@@ -1,141 +1,75 @@
-Running 'gradlew :app:bundleRelease' in /home/expo/workingdir/build/mobile/android
-Downloading https://services.gradle.org/distributions/gradle-8.14.3-bin.zip
-10%.
-20%.
-30%.
-40%.
-50%.
-60%.
-70%.
-80%.
-90%.
-100%
-Welcome to Gradle 8.14.3!
-Here are the highlights of this release:
- - Java 24 support
-- GraalVM Native Image toolchain selection
-- Enhancements to test reporting
-- Build Authoring improvements
-For more details see https://docs.gradle.org/8.14.3/release-notes.html
-To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/8.14.3/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
-Daemon will be stopped at the end of the build
-> Configure project :expo-gradle-plugin:expo-autolinking-plugin
-w: file:///home/expo/workingdir/build/mobile/node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-plugin/build.gradle.kts:25:3: 'kotlinOptions(KotlinJvmOptionsDeprecated /* = KotlinJvmOptions */.() -> Unit): Unit' is deprecated. Please migrate to the compilerOptions DSL. More details are here: https://kotl.in/u1r8ln
-> Configure project :expo-gradle-plugin:expo-autolinking-settings-plugin
-w: file:///home/expo/workingdir/build/mobile/node_modules/expo-modules-autolinking/android/expo-gradle-plugin/expo-autolinking-settings-plugin/build.gradle.kts:30:3: 'kotlinOptions(KotlinJvmOptionsDeprecated /* = KotlinJvmOptions */.() -> Unit): Unit' is deprecated. Please migrate to the compilerOptions DSL. More details are here: https://kotl.in/u1r8ln
-> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
-> Task :gradle-plugin:shared:checkKotlinGradlePluginConfigurationErrors SKIPPED
-> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
-> Task :gradle-plugin:settings-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
-> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:pluginDescriptors
-> Task :gradle-plugin:settings-plugin:pluginDescriptors
-> Task :gradle-plugin:settings-plugin:processResources
-> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:processResources
-> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:processResources NO-SOURCE
-> Task :gradle-plugin:shared:processResources NO-SOURCE
-> Task :gradle-plugin:shared:compileKotlin
-> Task :gradle-plugin:shared:compileJava NO-SOURCE
-> Task :gradle-plugin:shared:classes UP-TO-DATE
-> Task :gradle-plugin:shared:jar
-> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:compileKotlin
-> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:compileJava NO-SOURCE
-> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:classes UP-TO-DATE
-> Task :expo-gradle-plugin:expo-autolinking-plugin-shared:jar
-> Task :gradle-plugin:settings-plugin:compileKotlin
-> Task :gradle-plugin:settings-plugin:compileJava NO-SOURCE
-> Task :gradle-plugin:settings-plugin:classes
-> Task :gradle-plugin:settings-plugin:jar
-> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:compileKotlin
-> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:compileJava NO-SOURCE
-> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:classes
-> Task :expo-gradle-plugin:expo-autolinking-settings-plugin:jar
-> Configure project :expo-module-gradle-plugin
-w: file:///home/expo/workingdir/build/mobile/node_modules/expo-modules-core/expo-module-gradle-plugin/build.gradle.kts:58:3: 'kotlinOptions(KotlinJvmOptionsDeprecated /* = KotlinJvmOptions */.() -> Unit): Unit' is deprecated. Please migrate to the compilerOptions DSL. More details are here: https://kotl.in/u1r8ln
-> Task :gradle-plugin:react-native-gradle-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
-> Task :expo-gradle-plugin:expo-autolinking-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
-> Task :expo-module-gradle-plugin:checkKotlinGradlePluginConfigurationErrors SKIPPED
-> Task :expo-module-gradle-plugin:pluginDescriptors
-> Task :expo-module-gradle-plugin:processResources
-> Task :expo-gradle-plugin:expo-autolinking-plugin:pluginDescriptors
-> Task :expo-gradle-plugin:expo-autolinking-plugin:processResources
-> Task :gradle-plugin:react-native-gradle-plugin:pluginDescriptors
-> Task :gradle-plugin:react-native-gradle-plugin:processResources
-> Task :expo-gradle-plugin:expo-autolinking-plugin:compileKotlin
-> Task :expo-gradle-plugin:expo-autolinking-plugin:compileJava NO-SOURCE
-> Task :expo-gradle-plugin:expo-autolinking-plugin:classes
-> Task :expo-gradle-plugin:expo-autolinking-plugin:jar
-> Task :gradle-plugin:react-native-gradle-plugin:compileKotlin
-> Task :gradle-plugin:react-native-gradle-plugin:compileJava NO-SOURCE
-> Task :gradle-plugin:react-native-gradle-plugin:classes
-> Task :gradle-plugin:react-native-gradle-plugin:jar
-> Task :expo-module-gradle-plugin:compileKotlin
-w: file:///home/expo/workingdir/build/mobile/node_modules/expo-modules-core/expo-module-gradle-plugin/src/main/kotlin/expo/modules/plugin/android/AndroidLibraryExtension.kt:9:24 'var targetSdk: Int?' is deprecated. Will be removed from library DSL in v9.0. Use testOptions.targetSdk or/and lint.targetSdk instead.
-> Task :expo-module-gradle-plugin:compileJava NO-SOURCE
-> Task :expo-module-gradle-plugin:classes
-> Task :expo-module-gradle-plugin:jar
-> Configure project :
-[ExpoRootProject] Using the following versions:
-  - buildTools:  36.0.0
-  - minSdk:      24
-  - compileSdk:  36
-  - targetSdk:   36
-  - ndk:         27.1.12297006
-  - kotlin:      2.1.20
-  - ksp:         2.1.20-2.0.1
-> Configure project :expo
-Using expo modules
-  - expo-constants (18.0.13)
-- expo-modules-core (3.0.29)
-- [📦] expo-asset (12.0.12)
-  - [📦] expo-file-system (19.0.21)
-  - [📦] expo-font (14.0.11)
-  - [📦] expo-keep-awake (15.0.8)
-  - [📦] expo-linking (8.0.11)
-Checking the license for package Android SDK Build-Tools 36 in /home/expo/Android/Sdk/licenses
-License for package Android SDK Build-Tools 36 accepted.
-Preparing "Install Android SDK Build-Tools 36 v.36.0.0".
-"Install Android SDK Build-Tools 36 v.36.0.0" ready.
-Installing Android SDK Build-Tools 36 in /home/expo/Android/Sdk/build-tools/36.0.0
-"Install Android SDK Build-Tools 36 v.36.0.0" complete.
-"Install Android SDK Build-Tools 36 v.36.0.0" finished.
-[=========                              ] 25%
-[=======================================] 100% Fetch remote repository...       
-> Task :expo-modules-core:preBuild
-UP-TO-DATE
-> Task :react-native-async-storage_async-storage:preBuild
-UP-TO-DATE
-> Task :react-native-reanimated:assertMinimalReactNativeVersionTask
-> Task :react-native-reanimated:assertNewArchitectureEnabledTask FAILED
-> Task :expo-constants:createExpoConfig
-The NODE_ENV environment variable is required but was not specified. Ensure the project is bundled with Expo CLI or NODE_ENV is set. Using only .env.local and .env
-> Task :expo:generatePackagesList
-> Task :app:createBundleReleaseJsAndAssets
-Starting Metro Bundler
-Android Bundled 2093ms node_modules/expo-router/entry.js (1451 modules)
-Writing bundle output to: /home/expo/workingdir/build/mobile/android/app/build/generated/assets/createBundleReleaseJsAndAssets/index.android.bundle
-Writing sourcemap output to: /home/expo/workingdir/build/mobile/android/app/build/intermediates/sourcemaps/react/release/index.android.bundle.packager.map
-Copying 45 asset files
-Done writing bundle output
-Done writing sourcemap output
-[Incubating] Problems report is available at: file:///home/expo/workingdir/build/mobile/android/build/reports/problems/problems-report.html
-FAILURE:
-Build failed with an exception.
-* Where:
-Build file '/home/expo/workingdir/build/mobile/node_modules/react-native-reanimated/android/build.gradle' line: 261
-* What went wrong:
-Execution failed for task ':react-native-reanimated:assertNewArchitectureEnabledTask'.
-> [Reanimated] Reanimated requires new architecture to be enabled. Please enable it by setting `newArchEnabled` to `true` in `gradle.properties`.
-* Try:
-> Run with --stacktrace option to get the stack trace.
-> Run with --info or --debug option to get more log output.
-> Run with --scan to get full insights.
-> Get more help at https://help.gradle.org.
-BUILD FAILED
-Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
-You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
-For more on this, please refer to https://docs.gradle.org/8.14.3/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
-29 actionable tasks: 29 executed
-in 2m 14s
-Error: Gradle build failed with unknown error. See logs for the "Run gradlew" phase for more information.
 
-Build failed: Gradle build failed with unknown error. See logs for the "Run gradlew" phase for more information.
+15 vulnerabilities (7 moderate, 7 high, 1 critical)
+To address all issues, run:
+  npm audit fix
+Run `npm audit` for details.
+> backend@0.0.1 build
+> nest build
+src/admin/analytics/analytics.service.ts:31:7 - error TS2322: Type '"category"[]' is not assignable to type 'GoalScalarFieldEnum | GoalScalarFieldEnum[]'.
+  Type '"category"[]' is not assignable to type 'GoalScalarFieldEnum[]'.
+    Type '"category"' is not assignable to type 'GoalScalarFieldEnum'.
+31       by: ['category'],
+         ~~
+  node_modules/.prisma/client/index.d.ts:5047:5
+    5047     by: GoalScalarFieldEnum[] | GoalScalarFieldEnum
+             ~~
+    The expected type comes from property 'by' which is declared here on type '{ where?: GoalWhereInput | undefined; orderBy?: GoalOrderByWithAggregationInput | GoalOrderByWithAggregationInput[] | undefined; ... 8 more ...; _max?: GoalMaxAggregateInputType | undefined; } & { ...; }'
+src/admin/analytics/analytics.service.ts:52:66 - error TS2339: Property 'category' does not exist on type 'PickEnumerable<GoalGroupByOutputType, GoalScalarFieldEnum | GoalScalarFieldEnum[]> & { ...; }'.
+52         goalsByCategory: goalsByCategory.map(g => ({ category: g.category, count: g._count.id })),
+                                                                    ~~~~~~~~
+src/admin/analytics/analytics.service.ts:52:83 - error TS18048: 'g._count' is possibly 'undefined'.
+52         goalsByCategory: goalsByCategory.map(g => ({ category: g.category, count: g._count.id })),
+                                                                                     ~~~~~~~~
+src/admin/analytics/analytics.service.ts:52:92 - error TS2339: Property 'id' does not exist on type 'true | { id?: number | undefined; userId?: number | undefined; title?: number | undefined; type?: number | undefined; targetDescription?: number | undefined; preferredMinutesPerSession?: number | undefined; ... 5 more ...; _all?: number | undefined; }'.
+  Property 'id' does not exist on type 'true'.
+52         goalsByCategory: goalsByCategory.map(g => ({ category: g.category, count: g._count.id })),
+                                                                                              ~~
+src/admin/analytics/analytics.service.ts:59:7 - error TS2322: Type '"category"[]' is not assignable to type 'GoalScalarFieldEnum | GoalScalarFieldEnum[]'.
+  Type '"category"[]' is not assignable to type 'GoalScalarFieldEnum[]'.
+    Type '"category"' is not assignable to type 'GoalScalarFieldEnum'.
+59       by: ['category'],
+         ~~
+  node_modules/.prisma/client/index.d.ts:5047:5
+    5047     by: GoalScalarFieldEnum[] | GoalScalarFieldEnum
+             ~~
+    The expected type comes from property 'by' which is declared here on type '{ where?: GoalWhereInput | undefined; orderBy?: GoalOrderByWithAggregationInput | GoalOrderByWithAggregationInput[] | undefined; ... 8 more ...; _max?: GoalMaxAggregateInputType | undefined; } & { ...; }'
+src/admin/analytics/analytics.service.ts:73:40 - error TS2353: Object literal may only specify known properties, and 'category' does not exist in type 'GoalSelect<DefaultArgs>'.
+73       select: { id: true, title: true, category: true, progressPercent: true, isActive: true, createdAt: true },
+                                          ~~~~~~~~
+src/admin/analytics/analytics.service.ts:80:23 - error TS2339: Property 'category' does not exist on type 'PickEnumerable<GoalGroupByOutputType, GoalScalarFieldEnum | GoalScalarFieldEnum[]> & { ...; }'.
+80           category: g.category,
+                         ~~~~~~~~
+src/admin/analytics/analytics.service.ts:81:18 - error TS18048: 'g._count' is possibly 'undefined'.
+81           count: g._count.id,
+                    ~~~~~~~~
+Found 17 error(s).
+src/admin/analytics/analytics.service.ts:81:27 - error TS2339: Property 'id' does not exist on type 'true | { id?: number | undefined; userId?: number | undefined; title?: number | undefined; type?: number | undefined; targetDescription?: number | undefined; preferredMinutesPerSession?: number | undefined; ... 5 more ...; _all?: number | undefined; }'.
+  Property 'id' does not exist on type 'true'.
+81           count: g._count.id,
+                             ~~
+src/admin/analytics/analytics.service.ts:82:35 - error TS18048: 'g._avg' is possibly 'undefined'.
+82           avgProgress: Math.round(g._avg.progressPercent ?? 0),
+                                     ~~~~~~
+src/admin/analytics/analytics.service.ts:136:33 - error TS2353: Object literal may only specify known properties, and 'fatigueType' does not exist in type 'ScheduleSelect<DefaultArgs>'.
+136       select: { category: true, fatigueType: true, scheduleDate: true },
+                                    ~~~~~~~~~~~
+src/admin/analytics/analytics.service.ts:140:22 - error TS2339: Property 'fatigueType' does not exist on type '{ title: string; id: number; createdAt: Date; updatedAt: Date; memo: string | null; userId: number; scheduleDate: string; startTime: string; endTime: string; repeatType: string; category: string; }'.
+140       .filter(s => s.fatigueType !== null)
+                         ~~~~~~~~~~~
+src/admin/analytics/analytics.service.ts:142:34 - error TS2339: Property 'fatigueType' does not exist on type '{ title: string; id: number; createdAt: Date; updatedAt: Date; memo: string | null; userId: number; scheduleDate: string; startTime: string; endTime: string; repeatType: string; category: string; }'.
+142         const level = parseInt(s.fatigueType ?? '0');
+                                     ~~~~~~~~~~~
+src/notifications/notifications.service.ts:10:37 - error TS2339: Property 'notification' does not exist on type 'PrismaService'.
+10     const items = await this.prisma.notification.findMany({
+                                       ~~~~~~~~~~~~
+src/notifications/notifications.service.ts:22:23 - error TS2339: Property 'notification' does not exist on type 'PrismaService'.
+22     await this.prisma.notification.updateMany({
+                         ~~~~~~~~~~~~
+src/notifications/notifications.service.ts:30:23 - error TS2339: Property 'notification' does not exist on type 'PrismaService'.
+30     await this.prisma.notification.updateMany({
+                         ~~~~~~~~~~~~
+src/notifications/notifications.service.ts:38:33 - error TS2339: Property 'notification' does not exist on type 'PrismaService'.
+38     const n = await this.prisma.notification.create({
+                                   ~~~~~~~~~~~~
+==> Build failed 😞
+==> Common ways to troubleshoot your deploy: https://render.com/docs/troubleshooting-deploys

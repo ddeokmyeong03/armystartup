@@ -1,14 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateGoalDto } from './dto/create-goal.dto';
 import { UpdateGoalDto } from './dto/update-goal.dto';
 
 @Injectable()
 export class GoalsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   async create(userId: number, dto: CreateGoalDto) {
     const goal = await this.prisma.goal.create({ data: { userId, isActive: true, ...dto } as any });
+    await this.notifications.autoCreate(userId, 'GOAL', `새 목표 '${goal.title}'이 생성되었습니다.`);
     return { message: '목표가 생성되었습니다.', data: goal };
   }
 
@@ -24,9 +29,12 @@ export class GoalsService {
   }
 
   async update(userId: number, id: number, dto: UpdateGoalDto) {
-    await this.findOne(userId, id);
+    const existing = await this.findOne(userId, id);
     const cleanDto = Object.fromEntries(Object.entries(dto).filter(([, v]) => v !== undefined));
     const goal = await this.prisma.goal.update({ where: { id }, data: cleanDto as any });
+    if ((dto.progressPercent === 100) && (existing.data as any).progressPercent !== 100) {
+      await this.notifications.autoCreate(userId, 'GOAL', `목표 '${goal.title}'를 달성했습니다!`);
+    }
     return { message: '목표가 수정되었습니다.', data: goal };
   }
 

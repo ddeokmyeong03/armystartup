@@ -1,14 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
 import { UpdateScheduleDto } from './dto/update-schedule.dto';
 
 @Injectable()
 export class SchedulesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationsService,
+  ) {}
 
   async create(userId: number, dto: CreateScheduleDto) {
     const schedule = await this.prisma.schedule.create({ data: { userId, ...dto } as any });
+    await this.notifications.autoCreate(userId, 'SCHEDULE', `'${schedule.title}' 일정이 추가되었습니다.`);
     return { message: '일정이 생성되었습니다.', data: schedule };
   }
 

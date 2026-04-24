@@ -73,20 +73,22 @@ export class RoadmapService {
 완료한 학습 세션 수: ${completedPlans}개
 현재 진행률: ${goal.progressPercent}%
 
-위 정보를 바탕으로 4단계 학습 로드맵을 JSON으로 생성해주세요.
-각 단계는 2-4주 분량이며, 총 12주 내외로 구성해주세요.
-완료된 세션 수를 고려하여 진행 상태(completed/in_progress/pending)를 적절히 설정하세요.
+위 정보를 바탕으로 6단계 학습 로드맵을 JSON으로 생성해주세요.
+각 단계는 2주 분량이며, 총 12주로 구성해주세요.
+각 단계에는 구체적인 학습 항목 3-4개를 포함하고, 참고할 수 있는 무료 리소스(책명, 유튜브, 앱, 사이트 등)를 1개 포함하세요.
+완료된 세션 수(${completedPlans}개)와 현재 진행률(${goal.progressPercent}%)을 고려하여 진행 상태(completed/in_progress/pending)를 적절히 설정하세요.
+주당 ${goal.preferredSessionsPerWeek}회, 1회 ${goal.preferredMinutesPerSession}분 학습 일정에 맞게 현실적으로 구성하세요.
 
-응답 형식 (JSON만 출력):
+응답 형식 (JSON만 출력, 다른 텍스트 없이):
 {
   "title": "로드맵 제목",
   "totalWeeks": 12,
   "stages": [
     {
-      "week": "1-3주차",
+      "week": "1-2주차",
       "title": "단계 제목",
       "status": "completed",
-      "items": ["세부 학습 항목 1", "세부 학습 항목 2", "세부 학습 항목 3"]
+      "items": ["세부 학습 항목 1", "세부 학습 항목 2", "세부 학습 항목 3", "📚 참고: 리소스명"]
     }
   ]
 }`;
@@ -187,22 +189,36 @@ export class RoadmapService {
   private getFallbackStages(goalType: string): RoadmapStage[] {
     const templates: Record<string, RoadmapStage[]> = {
       CERTIFICATE: [
-        { week: '1-2주차', title: '기초 이론', status: 'pending', items: ['개념 정리', '핵심 이론 학습', '기출 분석'] },
-        { week: '3-5주차', title: '심화 학습', status: 'pending', items: ['심화 이론', '문제 유형 분석', '오답 노트'] },
-        { week: '6-9주차', title: '문제 풀이', status: 'pending', items: ['기출문제 풀이', '모의고사', '취약점 보완'] },
-        { week: '10-12주차', title: '최종 마무리', status: 'pending', items: ['최종 정리', '실전 모의고사', '시험 준비'] },
+        { week: '1-2주차', title: '시험 파악 및 계획', status: 'pending', items: ['시험 구조 분석', '출제 범위 정리', '학습 일정표 작성', '📚 참고: 해커스/에듀윌 무료 강의'] },
+        { week: '3-4주차', title: '기초 이론 학습', status: 'pending', items: ['핵심 이론 1회독', '개념 정리 노트', '용어 암기', '📚 참고: 공식 교재'] },
+        { week: '5-6주차', title: '심화 이론 학습', status: 'pending', items: ['심화 내용 학습', '이론 2회독', '오답 원인 분석', '📚 참고: 기출문제집'] },
+        { week: '7-8주차', title: '기출문제 풀이', status: 'pending', items: ['최근 5개년 기출', '유형별 풀이 전략', '취약 파트 집중', '📚 참고: 국가자격시험 포털'] },
+        { week: '9-10주차', title: '모의고사 훈련', status: 'pending', items: ['실전 모의고사 3회', '시간 배분 연습', '오답 총정리', '📚 참고: 스터디 앱'] },
+        { week: '11-12주차', title: '최종 마무리', status: 'pending', items: ['핵심 요약본 정리', '약점 최종 보완', '컨디션 관리', '📚 참고: 암기 카드'] },
       ],
       STUDY: [
-        { week: '1-2주차', title: '기초 다지기', status: 'pending', items: ['개념 학습', '기본기 확인', '학습 계획 수립'] },
-        { week: '3-5주차', title: '핵심 내용', status: 'pending', items: ['주요 개념 학습', '예제 풀이', '정리 노트'] },
-        { week: '6-9주차', title: '응용 연습', status: 'pending', items: ['응용 문제', '프로젝트 실습', '복습'] },
-        { week: '10-12주차', title: '마무리', status: 'pending', items: ['전체 복습', '부족한 부분 보완', '목표 달성 확인'] },
+        { week: '1-2주차', title: '학습 설계', status: 'pending', items: ['목표 세분화', '교재/강의 선택', '학습 루틴 설계', '📚 참고: 유튜브 입문 강의'] },
+        { week: '3-4주차', title: '기초 개념 학습', status: 'pending', items: ['기본 개념 1회독', '핵심 요약 노트', '예제 문제 풀기', '📚 참고: 칸아카데미'] },
+        { week: '5-6주차', title: '심화 내용 학습', status: 'pending', items: ['심화 이론 학습', '응용 문제 도전', '이해 안 된 부분 재학습', '📚 참고: 교육부 e학습터'] },
+        { week: '7-8주차', title: '반복 학습', status: 'pending', items: ['전체 내용 2회독', '플래시카드 제작', '취약 파트 집중 복습', '📚 참고: Anki 암기 앱'] },
+        { week: '9-10주차', title: '응용 및 실습', status: 'pending', items: ['응용 문제 풀이', '실전 적용 연습', '자기 점검', '📚 참고: 관련 유튜브 채널'] },
+        { week: '11-12주차', title: '마무리 및 점검', status: 'pending', items: ['전체 복습', '최종 자기평가', '다음 목표 설정', '📚 참고: 학습 일지 정리'] },
       ],
       CODING: [
-        { week: '1-2주차', title: '언어 기초', status: 'pending', items: ['문법 학습', '기본 자료구조', '입출력 연습'] },
-        { week: '3-5주차', title: '알고리즘', status: 'pending', items: ['정렬/탐색', '재귀', '동적 프로그래밍'] },
-        { week: '6-9주차', title: '프로젝트', status: 'pending', items: ['미니 프로젝트', 'API 활용', '코드 리뷰'] },
-        { week: '10-12주차', title: '실전 대비', status: 'pending', items: ['코딩 테스트', '포트폴리오 정리', '취업 준비'] },
+        { week: '1-2주차', title: '언어 기초 문법', status: 'pending', items: ['변수·자료형·조건문', '반복문·함수', '입출력 연습', '📚 참고: 프로그래머스 입문 문제'] },
+        { week: '3-4주차', title: '자료구조 기초', status: 'pending', items: ['배열·문자열', '스택·큐', '기본 정렬', '📚 참고: 백준 브론즈 문제'] },
+        { week: '5-6주차', title: '알고리즘 기초', status: 'pending', items: ['이분탐색·DFS/BFS', '재귀', '그리디 기초', '📚 참고: 이것이 코딩테스트다(유튜브)'] },
+        { week: '7-8주차', title: '알고리즘 심화', status: 'pending', items: ['동적 프로그래밍', '그래프 탐색', '실버 문제 풀이', '📚 참고: 백준 실버 문제'] },
+        { week: '9-10주차', title: '프로젝트 실습', status: 'pending', items: ['미니 프로젝트 설계', 'API 연동 실습', 'GitHub 커밋', '📚 참고: GitHub 무료 교육'] },
+        { week: '11-12주차', title: '코딩테스트 대비', status: 'pending', items: ['프로그래머스 레벨1-2', '모의 코딩테스트', '포트폴리오 정리', '📚 참고: LeetCode Easy'] },
+      ],
+      LANGUAGE: [
+        { week: '1-2주차', title: '기초 실력 점검', status: 'pending', items: ['현재 실력 진단', '어휘 암기 시작', '발음 교정', '📚 참고: Duolingo 무료앱'] },
+        { week: '3-4주차', title: '문법 기초', status: 'pending', items: ['핵심 문법 학습', '패턴 문장 암기', '듣기 연습', '📚 참고: EBS 무료 강의'] },
+        { week: '5-6주차', title: '어휘 확장', status: 'pending', items: ['주제별 어휘 500개', '단어장 제작', '독해 연습', '📚 참고: Quizlet 앱'] },
+        { week: '7-8주차', title: '말하기·쓰기', status: 'pending', items: ['기본 회화 패턴', '작문 연습', '말하기 녹음 연습', '📚 참고: 스피킹 유튜브'] },
+        { week: '9-10주차', title: '실전 모의 훈련', status: 'pending', items: ['모의시험 응시', '오답 분석', '취약 영역 집중', '📚 참고: 토익/토스 무료 기출'] },
+        { week: '11-12주차', title: '최종 마무리', status: 'pending', items: ['전 범위 복습', '실전 감각 유지', '시험 준비 완료', '📚 참고: 암기 플래시카드'] },
       ],
     };
     return templates[goalType] ?? templates.STUDY;

@@ -26,17 +26,17 @@ export class AnalyticsService {
       where: { createdAt: { gte: oneDayAgo } },
     });
 
-    // 목표 카테고리 분포
-    const goalsByCategory = await this.prisma.goal.groupBy({
-      by: ['category'],
-      _count: { id: true },
-      orderBy: { _count: { id: 'desc' } },
-    });
-
-    // 완료된 목표 수
     const completedGoals = await this.prisma.goal.count({
       where: { progressPercent: { gte: 100 } },
     });
+
+    // 목표 카테고리 분포 (raw SQL — Goal.category 타입 우회)
+    const goalsByCategory = await this.prisma.$queryRaw<{ category: string; count: bigint }[]>`
+      SELECT category, COUNT(*)::bigint AS count
+      FROM goals
+      GROUP BY category
+      ORDER BY count DESC
+    `;
 
     return {
       message: '대시보드 개요를 조회했습니다.',
@@ -49,47 +49,54 @@ export class AnalyticsService {
         goalCompletionRate: totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0,
         totalSchedules,
         totalCourseViews,
-        goalsByCategory: goalsByCategory.map(g => ({ category: g.category, count: g._count.id })),
+        goalsByCategory: goalsByCategory.map(g => ({ category: g.category, count: Number(g.count) })),
       },
     };
   }
 
-  async getGoalsAnalytics(branch?: string) {
-    const goalsByCategory = await this.prisma.goal.groupBy({
-      by: ['category'],
-      _count: { id: true },
-      _avg: { progressPercent: true },
-      orderBy: { _count: { id: 'desc' } },
-    });
+  async getGoalsAnalytics(_branch?: string) {
+    // 카테고리별 목표 분포 + 평균 진행률 (raw SQL)
+    const goalsByCategory = await this.prisma.$queryRaw<
+      { category: string; count: bigint; avg_progress: number | null }[]
+    >`
+      SELECT category, COUNT(*)::bigint AS count, AVG("progressPercent") AS avg_progress
+      FROM goals
+      GROUP BY category
+      ORDER BY count DESC
+    `;
 
-    const activeVsInactive = await this.prisma.goal.groupBy({
-      by: ['isActive'],
-      _count: { id: true },
-    });
+    const [activeCount, inactiveCount] = await Promise.all([
+      this.prisma.goal.count({ where: { isActive: true } }),
+      this.prisma.goal.count({ where: { isActive: false } }),
+    ]);
 
-    const recentGoals = await this.prisma.goal.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 10,
-      select: { id: true, title: true, category: true, progressPercent: true, isActive: true, createdAt: true },
-    });
+    // 최근 목표 목록 (raw SQL — category 필드 포함)
+    const recentGoals = await this.prisma.$queryRaw<
+      { id: number; title: string; category: string; progressPercent: number; isActive: boolean; createdAt: Date }[]
+    >`
+      SELECT id, title, category, "progressPercent", "isActive", "createdAt"
+      FROM goals
+      ORDER BY "createdAt" DESC
+      LIMIT 10
+    `;
 
     return {
       message: '목표 분석 데이터를 조회했습니다.',
       data: {
         byCategory: goalsByCategory.map(g => ({
           category: g.category,
-          count: g._count.id,
-          avgProgress: Math.round(g._avg.progressPercent ?? 0),
+          count: Number(g.count),
+          avgProgress: Math.round(g.avg_progress ?? 0),
         })),
-        activeCount: activeVsInactive.find(g => g.isActive)?._count.id ?? 0,
-        inactiveCount: activeVsInactive.find(g => !g.isActive)?._count.id ?? 0,
+        activeCount,
+        inactiveCount,
         recentGoals,
       },
     };
   }
 
   async getCoursesAnalytics() {
-    const bySource = await this.prisma.courseRecommendation.groupBy({
+    const byStatus = await this.prisma.courseRecommendation.groupBy({
       by: ['status'],
       _count: { id: true },
     });
@@ -104,7 +111,13 @@ export class AnalyticsService {
     const topCoursesWithDetails = await Promise.all(
       topCourses.map(async tc => {
         const course = await this.prisma.course.findUnique({ where: { id: tc.courseId } });
-        return { courseId: tc.courseId, title: course?.title ?? '', source: course?.source ?? '', category: course?.category ?? '', count: tc._count.id };
+        return {
+          courseId: tc.courseId,
+          title: course?.title ?? '',
+          source: course?.source ?? '',
+          category: course?.category ?? '',
+          count: tc._count.id,
+        };
       }),
     );
 
@@ -116,7 +129,7 @@ export class AnalyticsService {
     return {
       message: '강의 분석 데이터를 조회했습니다.',
       data: {
-        recommendationStatus: bySource.map(s => ({ status: s.status, count: s._count.id })),
+        recommendationStatus: byStatus.map(s => ({ status: s.status, count: s._count.id })),
         topCourses: topCoursesWithDetails,
         coursesByCategory: coursesByCategory.map(c => ({ category: c.category, count: c._count.id })),
       },
@@ -124,32 +137,20 @@ export class AnalyticsService {
   }
 
   async getFatigueAnalytics() {
+    // 일정 카테고리별 분포 (근무 유형 파악)
     const schedulesByCategory = await this.prisma.schedule.groupBy({
       by: ['category'],
       _count: { id: true },
       orderBy: { _count: { id: 'desc' } },
     });
 
-    const recentSchedules = await this.prisma.schedule.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 20,
-      select: { category: true, fatigueType: true, scheduleDate: true },
-    });
-
-    const fatigueDistribution = recentSchedules
-      .filter(s => s.fatigueType !== null)
-      .reduce<Record<string, number>>((acc, s) => {
-        const level = parseInt(s.fatigueType ?? '0');
-        const bucket = level >= 80 ? '고피로(80+)' : level >= 50 ? '중피로(50-79)' : '저피로(~49)';
-        acc[bucket] = (acc[bucket] ?? 0) + 1;
-        return acc;
-      }, {});
-
     return {
       message: '피로도 분석 데이터를 조회했습니다.',
       data: {
-        schedulesByCategory: schedulesByCategory.map(s => ({ category: s.category ?? '기타', count: s._count.id })),
-        fatigueDistribution: Object.entries(fatigueDistribution).map(([bucket, count]) => ({ bucket, count })),
+        schedulesByCategory: schedulesByCategory.map(s => ({
+          category: s.category ?? '기타',
+          count: s._count.id,
+        })),
       },
     };
   }

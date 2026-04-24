@@ -164,7 +164,7 @@ export default function HomePage() {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {todaySchedules.map((s: any) => (
-                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div key={s.id} onClick={() => navigate('/schedule/new', { state: { editItem: s } })} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
                       <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', flexShrink: 0 }}/>
                       <div style={{ flex: 1, fontSize: 13 }}>{s.title}</div>
                       <div className="t-caption"><IconClock size={10}/> {s.startTime} – {s.endTime}</div>
