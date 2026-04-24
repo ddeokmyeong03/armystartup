@@ -89,12 +89,14 @@ function RoadmapView({ navigate }: { navigate: ReturnType<typeof useNavigate> })
   }
 
   const rm = roadmaps[0];
+  if (!rm) return null;
+
   return (
     <div className="scroll-area" style={{ padding: '4px 0 24px', position: 'relative', zIndex: 1 }}>
       <div style={{ padding: '0 20px 16px' }}>
         <div className="hero-gradient">
           <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', opacity: 0.7 }}>PRIMARY GOAL</div>
-          <div style={{ fontSize: 20, fontWeight: 800, marginTop: 6, lineHeight: 1.25 }}>{rm.goal.title}</div>
+          <div style={{ fontSize: 20, fontWeight: 800, marginTop: 6, lineHeight: 1.25 }}>{rm.goal?.title ?? rm.title}</div>
           <div style={{ display: 'flex', gap: 10, marginTop: 14, fontSize: 12 }}>
             <span style={{ background: 'rgba(0,0,0,0.2)', padding: '4px 10px', borderRadius: 999, fontWeight: 700 }}>{rm.totalWeeks}주 플랜</span>
             <span style={{ background: 'rgba(0,0,0,0.2)', padding: '4px 10px', borderRadius: 999, fontWeight: 700 }}>진행률 {rm.progressPercent}%</span>
@@ -135,16 +137,23 @@ function RoadmapView({ navigate }: { navigate: ReturnType<typeof useNavigate> })
                   {stage.items.map((item, j) => {
                     const key = `${rm.id}-${stage.week}-${j}`;
                     const isDone = checked.has(key) || (stage.checkedItems ?? []).includes(j);
-                    const canToggle = stage.status !== 'pending';
                     return (
-                      <div key={j} onClick={() => canToggle && toggleCheck(rm.id, stage.week, j)}
-                        style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: canToggle ? 'pointer' : 'default', padding: '2px 0' }}>
-                        {isDone ? (
-                          <span style={{ color: 'var(--accent)', flexShrink: 0 }}><Icon name="check-filled" size={16}/></span>
-                        ) : (
-                          <span style={{ width: 16, height: 16, borderRadius: '50%', flexShrink: 0, border: `1.5px solid ${canToggle ? 'var(--accent)' : 'var(--border-default)'}`, display: 'inline-block' }}/>
-                        )}
-                        <span style={{ flex: 1, color: isDone ? 'var(--text-subdued)' : 'var(--text-base)', textDecoration: isDone ? 'line-through' : 'none' }}>{item}</span>
+                      <div key={j} onClick={() => toggleCheck(rm.id, stage.week, j)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: 'pointer', padding: '4px 0', borderRadius: 6, transition: 'background 150ms' }}
+                        onMouseDown={e => (e.currentTarget.style.background = 'rgba(34,255,178,0.06)')}
+                        onMouseUp={e => (e.currentTarget.style.background = 'transparent')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                        <span style={{
+                          width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
+                          border: `2px solid ${isDone ? 'var(--accent)' : 'var(--border-default)'}`,
+                          background: isDone ? 'var(--accent)' : 'transparent',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          transition: 'all 200ms cubic-bezier(.2,.8,.2,1)',
+                          transform: isDone ? 'scale(1.05)' : 'scale(1)',
+                        }}>
+                          {isDone && <Icon name="check-filled" size={12} style={{ color: '#001f12' }}/>}
+                        </span>
+                        <span style={{ flex: 1, color: isDone ? 'var(--text-subdued)' : 'var(--text-base)', textDecoration: isDone ? 'line-through' : 'none', transition: 'all 200ms' }}>{item}</span>
                       </div>
                     );
                   })}

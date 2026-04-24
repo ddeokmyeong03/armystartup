@@ -13,7 +13,11 @@ async function bootstrap() {
   app.useGlobalInterceptors(new TransformInterceptor());
   app.useGlobalFilters(new AllExceptionsFilter());
 
-  const allowedOrigins = process.env.FRONTEND_URL?.split(',') ?? ['http://localhost:5173'];
+  const allowedOrigins = [
+    ...(process.env.FRONTEND_URL?.split(',') ?? ['http://localhost:5173']),
+    'https://millog-admin.onrender.com',
+    'https://millog-frontend.onrender.com',
+  ];
   app.enableCors({ origin: allowedOrigins, credentials: false });
 
   if (process.env.NODE_ENV !== 'production') {

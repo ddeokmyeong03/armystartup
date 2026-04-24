@@ -29,7 +29,7 @@ export default function GoalsPage() {
   const handleToggleActive = async (g: GoalItem) => {
     try {
       const updated = await apiUpdateGoal(g.id, { isActive: !g.isActive });
-      setGoals(prev => prev.map(x => x.id === g.id ? updated : x));
+      if (updated) setGoals(prev => prev.map(x => x.id === g.id ? updated : x));
     } catch {}
   };
 
@@ -91,11 +91,11 @@ export default function GoalsPage() {
               <div className="t-subdued">아직 목표가 없어요</div>
               <button onClick={() => setShowNew(true)} style={{ marginTop: 12, color: 'var(--accent)', fontWeight: 700 }}>첫 목표 추가하기 +</button>
             </div>
-          ) : list.map(g => (
+          ) : list.filter(g => g && g.id).map(g => (
             <GoalCard key={g.id} g={g}
               onToggle={() => handleToggleActive(g)}
               onDelete={() => handleDelete(g.id)}
-              onUpdate={(updated) => setGoals(prev => prev.map(x => x.id === updated.id ? updated : x))}
+              onUpdate={(updated) => { if (updated) setGoals(prev => prev.map(x => x.id === updated.id ? updated : x)); }}
             />
           ))}
         </div>
@@ -221,8 +221,8 @@ function NewGoalSheet({ onClose, onCreated }: { onClose: () => void; onCreated: 
 
   return (
     <>
-      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 35 }}/>
-      <div className="sheet" style={{ zIndex: 40 }}>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 55 }}/>
+      <div className="sheet" style={{ zIndex: 60 }}>
         <div className="sheet-handle"/>
         <div style={{ padding: '4px 20px 0' }}>
           <div className="t-title" style={{ fontSize: 20, marginBottom: 4 }}>새 목표</div>
