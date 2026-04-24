@@ -304,40 +304,6 @@ input, textarea { font-family: inherit; }
 }
 
 /* ==================== Roadmap node (dot style) ==================== */
-.roadmap-rail {
-  position: relative;
-  padding-left: 32px;
-}
-.roadmap-rail::before {
-  content: '';
-  position: absolute;
-  left: 11px; top: 8px; bottom: 8px;
-  width: 2px;
-  background: linear-gradient(180deg, var(--accent) 0%, var(--accent) 30%, var(--border-default) 30%);
-}
-.roadmap-node {
-  position: relative;
-  padding-bottom: 16px;
-}
-.roadmap-node::before {
-  content: '';
-  position: absolute;
-  left: -26px; top: 6px;
-  width: 12px; height: 12px;
-  border-radius: 50%;
-  background: var(--bg-base);
-  border: 2px solid var(--border-default);
-}
-.roadmap-node.done::before {
-  background: var(--accent);
-  border-color: var(--accent);
-  box-shadow: 0 0 0 4px var(--accent-soft);
-}
-.roadmap-node.current::before {
-  background: var(--bg-base);
-  border-color: var(--accent);
-  box-shadow: 0 0 0 4px var(--accent-soft);
-}
 
 /* ==================== Page transitions ==================== */
 .page-enter { animation: pageIn 320ms cubic-bezier(.2,.8,.2,1); }

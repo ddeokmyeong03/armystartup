@@ -129,6 +129,11 @@ export async function apiGenerateRoadmap(goalId: number) {
   return res.data.data as RoadmapItem;
 }
 
+export async function apiCheckRoadmapItem(roadmapId: number, stageIndex: number, itemIndex: number, checked: boolean) {
+  const res = await apiClient.patch(`/api/roadmap/${roadmapId}/check-item`, { stageIndex, itemIndex, checked });
+  return res.data.data as RoadmapItem;
+}
+
 // ── Notifications ─────────────────────────────────────────────────────────────
 
 export async function apiGetNotifications() {

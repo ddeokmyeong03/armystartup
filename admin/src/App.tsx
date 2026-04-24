@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { apiVerifyAdmin } from './api/index';
 import OverviewPage from './pages/OverviewPage';
 import GoalsPage from './pages/GoalsPage';
 import CoursesPage from './pages/CoursesPage';
@@ -18,6 +19,27 @@ const NAV: { id: Page; label: string; emoji: string }[] = [
 function LoginScreen({ onLogin }: { onLogin: (email: string, pw: string) => void }) {
   const [email, setEmail] = useState('');
   const [pw, setPw] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!email || !pw) return;
+    setLoading(true);
+    setError('');
+    try {
+      const ok = await apiVerifyAdmin(email, pw);
+      if (ok) {
+        onLogin(email, pw);
+      } else {
+        setError('이메일 또는 비밀번호가 올바르지 않습니다.');
+      }
+    } catch {
+      setError('서버에 연결할 수 없습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)' }}>
       <div style={{ width: 360, padding: 40, background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16 }}>
@@ -27,11 +49,12 @@ function LoginScreen({ onLogin }: { onLogin: (email: string, pw: string) => void
           <input value={email} onChange={e => setEmail(e.target.value)} placeholder="관리자 이메일"
             style={{ height: 44, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface-hi)', color: 'var(--text)', padding: '0 14px', fontSize: 14 }}/>
           <input type="password" value={pw} onChange={e => setPw(e.target.value)} placeholder="비밀번호"
-            onKeyDown={e => e.key === 'Enter' && onLogin(email, pw)}
+            onKeyDown={e => e.key === 'Enter' && handleSubmit()}
             style={{ height: 44, borderRadius: 8, border: '1px solid var(--border)', background: 'var(--surface-hi)', color: 'var(--text)', padding: '0 14px', fontSize: 14 }}/>
-          <button onClick={() => onLogin(email, pw)}
-            style={{ height: 44, borderRadius: 8, background: 'var(--accent)', color: '#001f12', fontWeight: 800, fontSize: 15 }}>
-            로그인
+          {error && <div style={{ fontSize: 13, color: '#ef4444', textAlign: 'center' }}>{error}</div>}
+          <button onClick={handleSubmit} disabled={loading}
+            style={{ height: 44, borderRadius: 8, background: 'var(--accent)', color: '#001f12', fontWeight: 800, fontSize: 15, opacity: loading ? 0.6 : 1 }}>
+            {loading ? '확인 중...' : '로그인'}
           </button>
         </div>
       </div>

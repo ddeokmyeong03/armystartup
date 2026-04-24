@@ -4,7 +4,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../common/decorators/current-user.decorator';
 import { RoadmapService } from './roadmap.service';
-import { GenerateRoadmapDto, UpdateStageDto } from './dto/roadmap.dto';
+import { GenerateRoadmapDto, UpdateStageDto, CheckItemDto } from './dto/roadmap.dto';
 
 @ApiTags('Roadmap')
 @ApiBearerAuth()
@@ -39,5 +39,15 @@ export class RoadmapController {
     @Body() dto: UpdateStageDto,
   ) {
     return this.roadmapService.updateStage(user.userId, id, dto.stageIndex, dto.status);
+  }
+
+  @Patch(':id/check-item')
+  @ApiOperation({ summary: '로드맵 세부 항목 체크/해제' })
+  checkItem(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CheckItemDto,
+  ) {
+    return this.roadmapService.checkItem(user.userId, id, dto.stageIndex, dto.itemIndex, dto.checked);
   }
 }

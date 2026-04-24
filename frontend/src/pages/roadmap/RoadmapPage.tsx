@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import TabBar from '../../shared/components/TabBar';
 import PageHeader from '../../shared/components/PageHeader';
 import { Icon } from '../../shared/components/Icon';
-import { apiGetRoadmaps, apiGenerateRoadmap, apiGetGoals, apiAiChat } from '../../shared/api/index';
+import { apiGetRoadmaps, apiGenerateRoadmap, apiGetGoals, apiAiChat, apiCheckRoadmapItem } from '../../shared/api/index';
 import type { RoadmapItem, RoadmapStage } from '../../shared/api/index';
 
 export default function RoadmapPage() {
@@ -32,7 +32,6 @@ function RoadmapView({ navigate }: { navigate: ReturnType<typeof useNavigate> })
   const [goals, setGoals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-  const [checked, setChecked] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     Promise.all([apiGetRoadmaps(), apiGetGoals()])
@@ -41,9 +40,21 @@ function RoadmapView({ navigate }: { navigate: ReturnType<typeof useNavigate> })
       .finally(() => setLoading(false));
   }, []);
 
-  const toggleCheck = (roadmapId: number, week: string, idx: number) => {
-    const key = `${roadmapId}-${week}-${idx}`;
-    setChecked(s => { const next = new Set(s); next.has(key) ? next.delete(key) : next.add(key); return next; });
+  const toggleCheck = async (roadmapId: number, stageIndex: number, itemIndex: number, currentlyChecked: boolean) => {
+    setRoadmaps(prev => prev.map(r => {
+      if (r.id !== roadmapId) return r;
+      const stages = r.stages.map((s, si) => {
+        if (si !== stageIndex) return s;
+        const set = new Set(s.checkedItems ?? []);
+        currentlyChecked ? set.delete(itemIndex) : set.add(itemIndex);
+        return { ...s, checkedItems: Array.from(set) };
+      });
+      return { ...r, stages };
+    }));
+    try {
+      const updated = await apiCheckRoadmapItem(roadmapId, stageIndex, itemIndex, !currentlyChecked);
+      if (updated) setRoadmaps(prev => prev.map(r => r.id === roadmapId ? updated : r));
+    } catch {}
   };
 
   const handleGenerate = async (goalId: number) => {
@@ -116,10 +127,9 @@ function RoadmapView({ navigate }: { navigate: ReturnType<typeof useNavigate> })
       </div>
 
       <div style={{ padding: '0 20px' }}>
-        <div className="roadmap-rail" style={{ paddingLeft: 36 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {rm.stages.map((stage: RoadmapStage) => (
-            <div key={stage.week} className={`roadmap-node ${stage.status === 'completed' ? 'done' : stage.status === 'in_progress' ? 'current' : ''}`}
-              style={{ paddingBottom: 18 }}>
+            <div key={stage.week} style={{ paddingBottom: 2 }}>
               <div style={{
                 background: stage.status === 'in_progress' ? 'var(--bg-card)' : 'var(--bg-surface)',
                 borderRadius: 12, padding: 14,
@@ -135,10 +145,10 @@ function RoadmapView({ navigate }: { navigate: ReturnType<typeof useNavigate> })
                 <div style={{ fontSize: 15, fontWeight: 700, marginTop: 4, color: 'var(--text-bright)' }}>{stage.title}</div>
                 <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {stage.items.map((item, j) => {
-                    const key = `${rm.id}-${stage.week}-${j}`;
-                    const isDone = checked.has(key) || (stage.checkedItems ?? []).includes(j);
+                    const stageIdx = rm.stages.indexOf(stage);
+                    const isDone = (stage.checkedItems ?? []).includes(j);
                     return (
-                      <div key={j} onClick={() => toggleCheck(rm.id, stage.week, j)}
+                      <div key={j} onClick={() => toggleCheck(rm.id, stageIdx, j, isDone)}
                         style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: 'pointer', padding: '4px 0', borderRadius: 6, transition: 'background 150ms' }}
                         onMouseDown={e => (e.currentTarget.style.background = 'rgba(34,255,178,0.06)')}
                         onMouseUp={e => (e.currentTarget.style.background = 'transparent')}

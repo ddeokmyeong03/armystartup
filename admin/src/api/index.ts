@@ -13,6 +13,14 @@ async function get<T>(path: string): Promise<T> {
   return json.data as T;
 }
 
+export async function apiVerifyAdmin(email: string, password: string): Promise<boolean> {
+  const header = `Basic ${btoa(`${email}:${password}`)}`;
+  const res = await fetch(`${BASE}/api/admin/analytics/overview`, {
+    headers: { Authorization: header, 'Content-Type': 'application/json' },
+  });
+  return res.ok;
+}
+
 export const apiOverview = () => get<any>('/admin/analytics/overview');
 export const apiGoalsAnalytics = () => get<any>('/admin/analytics/goals');
 export const apiCoursesAnalytics = () => get<any>('/admin/analytics/courses');

@@ -8,6 +8,7 @@ export interface RoadmapStage {
   title: string;
   status: 'completed' | 'in_progress' | 'pending';
   items: string[];
+  checkedItems?: number[];
 }
 
 @Injectable()
@@ -63,18 +64,26 @@ export class RoadmapService {
       where: { userId, goalId, status: 'COMPLETED' },
     });
 
+    const deadline = goal.deadline ? new Date(goal.deadline) : null;
+    const daysLeft = deadline ? Math.ceil((deadline.getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 84;
+    const weeksLeft = Math.max(1, Math.ceil(daysLeft / 7));
+    const planWeeks = Math.min(weeksLeft, 12);
+    const stageCount = Math.max(1, Math.ceil(planWeeks / 2));
+    const weeksPerStage = Math.ceil(planWeeks / stageCount);
+
     const prompt = `군 병사의 자기개발 로드맵을 생성해주세요.
 
 목표: ${goal.title}
 목표 유형: ${goal.type}
 목표 설명: ${goal.targetDescription ?? '없음'}
+마감일까지 남은 기간: ${daysLeft}일 (${planWeeks}주)
 주당 학습 빈도: ${goal.preferredSessionsPerWeek}회
 1회 학습 시간: ${goal.preferredMinutesPerSession}분
 완료한 학습 세션 수: ${completedPlans}개
 현재 진행률: ${goal.progressPercent}%
 
-위 정보를 바탕으로 6단계 학습 로드맵을 JSON으로 생성해주세요.
-각 단계는 2주 분량이며, 총 12주로 구성해주세요.
+위 정보를 바탕으로 ${stageCount}단계 학습 로드맵을 JSON으로 생성해주세요.
+각 단계는 ${weeksPerStage}주 분량이며, 총 ${planWeeks}주로 구성해주세요. 마감일에 맞게 기간을 조정하세요.
 각 단계에는 구체적인 학습 항목 3-4개를 포함하고, 참고할 수 있는 무료 리소스(책명, 유튜브, 앱, 사이트 등)를 1개 포함하세요.
 완료된 세션 수(${completedPlans}개)와 현재 진행률(${goal.progressPercent}%)을 고려하여 진행 상태(completed/in_progress/pending)를 적절히 설정하세요.
 주당 ${goal.preferredSessionsPerWeek}회, 1회 ${goal.preferredMinutesPerSession}분 학습 일정에 맞게 현실적으로 구성하세요.
@@ -82,10 +91,10 @@ export class RoadmapService {
 응답 형식 (JSON만 출력, 다른 텍스트 없이):
 {
   "title": "로드맵 제목",
-  "totalWeeks": 12,
+  "totalWeeks": ${planWeeks},
   "stages": [
     {
-      "week": "1-2주차",
+      "week": "1-${weeksPerStage}주차",
       "title": "단계 제목",
       "status": "completed",
       "items": ["세부 학습 항목 1", "세부 학습 항목 2", "세부 학습 항목 3", "📚 참고: 리소스명"]
@@ -94,7 +103,7 @@ export class RoadmapService {
 }`;
 
     let title = `${goal.title} 플랜`;
-    let totalWeeks = 12;
+    let totalWeeks = planWeeks;
     let stages: RoadmapStage[] = this.getFallbackStages(goal.type);
 
     try {
@@ -176,6 +185,28 @@ export class RoadmapService {
       message: '단계 상태가 업데이트되었습니다.',
       data: { ...updated, stages },
     };
+  }
+
+  /** 개별 항목 체크/해제 및 저장 */
+  async checkItem(userId: number, roadmapId: number, stageIndex: number, itemIndex: number, checked: boolean) {
+    const roadmap = await this.prisma.roadmap.findFirst({ where: { id: roadmapId, userId } });
+    if (!roadmap) throw new NotFoundException('로드맵을 찾을 수 없습니다.');
+
+    const stages: RoadmapStage[] = JSON.parse(roadmap.stages);
+    if (stageIndex < 0 || stageIndex >= stages.length) throw new NotFoundException('유효하지 않은 단계입니다.');
+
+    const stage = stages[stageIndex];
+    const checkedSet = new Set(stage.checkedItems ?? []);
+    checked ? checkedSet.add(itemIndex) : checkedSet.delete(itemIndex);
+    stage.checkedItems = Array.from(checkedSet).sort((a, b) => a - b);
+
+    const progressPercent = this.calcProgress(stages);
+    const updated = await this.prisma.roadmap.update({
+      where: { id: roadmapId },
+      data: { stages: JSON.stringify(stages), progressPercent },
+    });
+
+    return { message: '체크 상태가 저장되었습니다.', data: { ...updated, stages } };
   }
 
   /** 진행률 계산: completed 단계 비율 */
