@@ -147,7 +147,7 @@ export async function apiMarkNotificationRead(id: number) {
 // ── AI Chat ───────────────────────────────────────────────────────────────────
 
 export async function apiAiChat(message: string, history: { role: string; content: string }[]) {
-  const res = await apiClient.post('/api/ai-chat/chat', { message, history });
+  const res = await apiClient.post('/api/ai/chat', { message, history });
   return res.data.data as { reply: string };
 }
 
