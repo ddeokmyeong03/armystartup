@@ -38,6 +38,7 @@ export default function App() {
 
         {/* 서브 페이지 */}
         <Route path="/schedule" element={<ProtectedRoute><ScheduleCreatePage /></ProtectedRoute>} />
+        <Route path="/schedule/new" element={<ProtectedRoute><ScheduleCreatePage /></ProtectedRoute>} />
         <Route path="/profile/edit" element={<ProtectedRoute><ProfileEditPage /></ProtectedRoute>} />
         <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
         <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />

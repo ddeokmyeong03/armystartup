@@ -5,15 +5,19 @@ import { apiGetNotifications, apiMarkAllNotificationsRead, apiMarkNotificationRe
 import type { NotificationItem } from '../../shared/api/index';
 
 const TYPE_COLOR: Record<string, string> = {
-  goal:     '#8b5cf6',
-  ai:       'var(--accent)',
-  schedule: '#f59e0b',
-  course:   '#3b82f6',
-  system:   '#10b981',
+  goal:     '#8b5cf6', GOAL:     '#8b5cf6',
+  ai:       'var(--accent)', AI: 'var(--accent)',
+  schedule: '#f59e0b', SCHEDULE: '#f59e0b',
+  course:   '#3b82f6', COURSE:   '#3b82f6',
+  system:   '#10b981', SYSTEM:   '#10b981',
 };
 
 const TYPE_EMOJI: Record<string, string> = {
-  goal: '🎯', ai: '🤖', schedule: '📅', course: '📚', system: '⚡',
+  goal: '🎯', GOAL: '🎯',
+  ai: '🤖', AI: '🤖',
+  schedule: '📅', SCHEDULE: '📅',
+  course: '📚', COURSE: '📚',
+  system: '⚡', SYSTEM: '⚡',
 };
 
 const PAGE_PATH: Record<string, string> = {

@@ -55,12 +55,12 @@ export default function CoursesPage() {
         <div style={{ padding: '0 20px 12px' }}>
           <div className="h-scroll" style={{ padding: 0, marginBottom: 8 }}>
             {cats.map(c => (
-              <button key={c.id} className="chip" style={{ padding: '8px 14px', background: cat === c.id ? 'rgba(255,255,255,0.12)' : undefined, color: cat === c.id ? 'var(--text-bright)' : undefined, border: cat === c.id ? '1px solid rgba(255,255,255,0.2)' : '1px solid transparent' }} onClick={() => setCat(c.id)}>{c.label}</button>
+              <button key={c.id} className="chip" style={{ padding: '8px 14px', background: cat === c.id ? 'rgba(80,80,80,0.55)' : undefined, color: cat === c.id ? 'var(--text-bright)' : undefined, border: cat === c.id ? '1px solid rgba(140,140,140,0.35)' : '1px solid transparent' }} onClick={() => setCat(c.id)}>{c.label}</button>
             ))}
           </div>
           <div className="h-scroll" style={{ padding: 0 }}>
             {durations.map(d => (
-              <button key={d.id} className="chip chip-outline" style={{ padding: '6px 12px', fontSize: 11, display: 'flex', alignItems: 'center', gap: 4, background: duration === d.id ? 'rgba(255,255,255,0.1)' : 'transparent', color: duration === d.id ? 'var(--text-bright)' : undefined }} onClick={() => setDuration(d.id)}>
+              <button key={d.id} className="chip chip-outline" style={{ padding: '6px 12px', fontSize: 11, display: 'flex', alignItems: 'center', gap: 4, background: duration === d.id ? 'rgba(80,80,80,0.55)' : 'transparent', color: duration === d.id ? 'var(--text-bright)' : undefined }} onClick={() => setDuration(d.id)}>
                 <IconClock size={12}/>{d.label}
               </button>
             ))}

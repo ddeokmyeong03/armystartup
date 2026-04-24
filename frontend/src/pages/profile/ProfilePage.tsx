@@ -27,7 +27,8 @@ export default function ProfilePage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const nickname = user?.nickname ?? localStorage.getItem('nickname') ?? '장병';
+  const rawNick = user?.nickname || localStorage.getItem('nickname');
+  const nickname = (rawNick && rawNick !== 'undefined') ? rawNick : '장병';
   const rank = profile?.rankName ?? '';
   const branch = profile?.branch ?? '';
   const unit = profile?.unitName ?? '';

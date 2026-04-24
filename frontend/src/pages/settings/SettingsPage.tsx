@@ -27,6 +27,7 @@ function SetToggle({ label, sub, value, onChange, disabled = false, last = false
         background: (value && !disabled) ? 'var(--accent)' : 'var(--bg-surface-hi)',
         position: 'relative', transition: 'background 200ms ease-out',
         cursor: disabled ? 'default' : 'pointer',
+        padding: 0, overflow: 'hidden',
       }}>
         <div style={{
           position: 'absolute', top: 3, left: (value && !disabled) ? 25 : 3,

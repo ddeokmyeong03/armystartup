@@ -92,7 +92,11 @@ export default function GoalsPage() {
               <button onClick={() => setShowNew(true)} style={{ marginTop: 12, color: 'var(--accent)', fontWeight: 700 }}>첫 목표 추가하기 +</button>
             </div>
           ) : list.map(g => (
-            <GoalCard key={g.id} g={g} onToggle={() => handleToggleActive(g)} onDelete={() => handleDelete(g.id)}/>
+            <GoalCard key={g.id} g={g}
+              onToggle={() => handleToggleActive(g)}
+              onDelete={() => handleDelete(g.id)}
+              onUpdate={(updated) => setGoals(prev => prev.map(x => x.id === updated.id ? updated : x))}
+            />
           ))}
         </div>
 
@@ -120,9 +124,22 @@ export default function GoalsPage() {
   );
 }
 
-function GoalCard({ g, onToggle, onDelete }: { g: GoalItem; onToggle: () => void; onDelete: () => void }) {
+function GoalCard({ g, onToggle, onDelete, onUpdate }: { g: GoalItem; onToggle: () => void; onDelete: () => void; onUpdate: (g: GoalItem) => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const [progress, setProgress] = useState(g.progressPercent);
+  const [saving, setSaving] = useState(false);
+
   const catColor = CAT_COLORS[g.category] ?? '#6b7280';
   const daysLeft = g.deadline ? Math.ceil((new Date(g.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : null;
+
+  const handleProgressSave = async () => {
+    setSaving(true);
+    try {
+      const updated = await apiUpdateGoal(g.id, { progressPercent: progress });
+      onUpdate(updated);
+    } catch {} finally { setSaving(false); }
+  };
+
   return (
     <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: 16, position: 'relative', opacity: g.isActive ? 1 : 0.65 }}>
       {g.pinned && <div style={{ position: 'absolute', top: 12, right: 12, fontSize: 10, color: 'var(--accent)', fontWeight: 800 }}>📌 PINNED</div>}
@@ -131,7 +148,12 @@ function GoalCard({ g, onToggle, onDelete }: { g: GoalItem; onToggle: () => void
         <span style={{ fontSize: 11, fontWeight: 700, color: catColor, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{g.category}</span>
         {!g.isActive && <span style={{ fontSize: 10, color: '#f59e0b', fontWeight: 700, marginLeft: 4 }}>일시중지</span>}
       </div>
-      <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-bright)', lineHeight: 1.3 }}>{g.title}</div>
+      <button style={{ width: '100%', textAlign: 'left', color: 'var(--text-bright)' }} onClick={() => setExpanded(e => !e)}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 16, fontWeight: 700, lineHeight: 1.3, flex: 1 }}>{g.title}</span>
+          <Icon name="chevron-right" size={16} style={{ color: 'var(--text-subdued)', flexShrink: 0, transform: expanded ? 'rotate(-90deg)' : 'rotate(90deg)', transition: 'transform 200ms' }}/>
+        </div>
+      </button>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14, marginBottom: 6 }}>
         <div style={{ fontSize: 12, color: 'var(--text-subdued)' }}>진행률</div>
         <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--accent)' }}>{g.progressPercent}%</div>
@@ -139,6 +161,30 @@ function GoalCard({ g, onToggle, onDelete }: { g: GoalItem; onToggle: () => void
       <div className="progress-track">
         <div className="progress-fill" style={{ width: `${g.progressPercent}%`, background: catColor }}/>
       </div>
+
+      {expanded && (
+        <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--border-default)' }}>
+          {g.targetDescription && (
+            <div style={{ marginBottom: 12, fontSize: 13, color: 'var(--text-subdued)', lineHeight: 1.6 }}>{g.targetDescription}</div>
+          )}
+          <div style={{ marginBottom: 8 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-subdued)' }}>진행률 업데이트</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--accent)' }}>{progress}%</div>
+            </div>
+            <input type="range" min={0} max={100} step={5} value={progress}
+              onChange={e => setProgress(Number(e.target.value))}
+              style={{ width: '100%', accentColor: catColor }}/>
+            {progress !== g.progressPercent && (
+              <button className="btn btn-primary btn-full" style={{ marginTop: 8, height: 40, fontSize: 13 }}
+                onClick={handleProgressSave} disabled={saving}>
+                {saving ? '저장 중...' : '진행률 저장'}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
         {g.deadline ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: daysLeft !== null && daysLeft < 30 ? '#f59e0b' : 'var(--text-subdued)' }}>
@@ -148,10 +194,10 @@ function GoalCard({ g, onToggle, onDelete }: { g: GoalItem; onToggle: () => void
           <div style={{ fontSize: 12, color: 'var(--text-subdued)' }}>상시 목표</div>
         )}
         <div style={{ display: 'flex', gap: 6 }}>
-          <button className="chip" style={{ padding: '4px 10px', fontSize: 11 }} onClick={onToggle}>
-            {g.isActive ? '일시중지' : '재개'}
+          <button className="chip" style={{ padding: '4px 10px', fontSize: 11 }} onClick={e => { e.stopPropagation(); onToggle(); }}>
+            {g.isActive ? '⏸ 중지' : '▶ 재개'}
           </button>
-          <button className="chip" style={{ padding: '4px 10px', fontSize: 11, background: 'rgba(239,68,68,0.15)', color: '#ff8888' }} onClick={onDelete}>삭제</button>
+          <button className="chip" style={{ padding: '4px 10px', fontSize: 11, background: 'rgba(239,68,68,0.15)', color: '#ff8888' }} onClick={e => { e.stopPropagation(); onDelete(); }}>삭제</button>
         </div>
       </div>
     </div>
