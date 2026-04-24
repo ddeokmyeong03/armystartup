@@ -24,26 +24,32 @@ export default function FatiguePage() {
       <div className="grid-2" style={{ marginBottom: 24 }}>
         <div className="card">
           <div className="section-title">근무 종류별 일정 등록 수</div>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={data.schedulesByCategory} layout="vertical" margin={{ left: 10, right: 20 }}>
-              <XAxis type="number" tick={{ fill: 'var(--text-sub)', fontSize: 11 }}/>
-              <YAxis dataKey="category" type="category" width={70} tick={{ fill: 'var(--text-sub)', fontSize: 11 }}/>
-              <Tooltip contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }}/>
-              <Bar dataKey="count" radius={[0, 6, 6, 0]}>
-                {data.schedulesByCategory.map((_: any, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]}/>)}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          {(data.schedulesByCategory ?? []).length > 0 ? (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={data.schedulesByCategory} layout="vertical" margin={{ left: 10, right: 20 }}>
+                <XAxis type="number" tick={{ fill: 'var(--text-sub)', fontSize: 11 }}/>
+                <YAxis dataKey="category" type="category" width={70} tick={{ fill: 'var(--text-sub)', fontSize: 11 }}/>
+                <Tooltip contentStyle={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }}/>
+                <Bar dataKey="count" radius={[0, 6, 6, 0]}>
+                  {(data.schedulesByCategory ?? []).map((_: any, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]}/>)}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 200, color: 'var(--text-sub)', fontSize: 14 }}>
+              일정 데이터가 아직 없습니다
+            </div>
+          )}
         </div>
 
         <div className="card">
-          <div className="section-title">피로도 구간 분포 (최근 20개 일정)</div>
-          {data.fatigueDistribution.length > 0 ? (
+          <div className="section-title">피로도 구간 분포</div>
+          {(data.fatigueDistribution ?? []).length > 0 ? (
             <ResponsiveContainer width="100%" height={280}>
               <PieChart>
                 <Pie data={data.fatigueDistribution} dataKey="count" nameKey="bucket" cx="50%" cy="50%" outerRadius={100}
-                  label={({ bucket, percent }) => `${bucket} ${(percent * 100).toFixed(0)}%`}>
-                  {data.fatigueDistribution.map((d: any, i: number) => (
+                  label={({ bucket, percent }: any) => `${bucket} ${(percent * 100).toFixed(0)}%`}>
+                  {(data.fatigueDistribution ?? []).map((d: any, i: number) => (
                     <Cell key={i} fill={FATIGUE_COLORS[d.bucket] ?? COLORS[i]}/>
                   ))}
                 </Pie>

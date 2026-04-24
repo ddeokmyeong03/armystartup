@@ -1,14 +1,16 @@
-import { IsString, IsInt, IsOptional, IsEnum, Min, Max } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsInt, IsOptional, Min, Max } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpsertProfileDto {
-  @ApiProperty({ example: '06:30' })
+  @ApiPropertyOptional({ example: '06:30' })
+  @IsOptional()
   @IsString()
-  wakeUpTime: string;
+  wakeUpTime?: string;
 
-  @ApiProperty({ example: '23:00' })
+  @ApiPropertyOptional({ example: '23:00' })
+  @IsOptional()
   @IsString()
-  sleepTime: string;
+  sleepTime?: string;
 
   @ApiPropertyOptional({ example: 120 })
   @IsOptional()
@@ -27,18 +29,33 @@ export class UpsertProfileDto {
   @IsString()
   memo?: string;
 
-  @ApiPropertyOptional({ example: '2025-10-15', description: '전역 예정일 (YYYY-MM-DD)' })
+  @ApiPropertyOptional({ example: '2025-10-15' })
   @IsOptional()
   @IsString()
   dischargeDate?: string;
 
-  @ApiPropertyOptional({ example: '00사단 00대대', description: '소속 부대' })
+  @ApiPropertyOptional({ example: '2024-03-05' })
+  @IsOptional()
+  @IsString()
+  enlistedAt?: string;
+
+  @ApiPropertyOptional({ example: '00사단 00대대' })
   @IsOptional()
   @IsString()
   unitName?: string;
 
-  @ApiPropertyOptional({ example: '일병', description: '계급' })
+  @ApiPropertyOptional({ example: '일병' })
   @IsOptional()
   @IsString()
   rankName?: string;
+
+  @ApiPropertyOptional({ example: '육군' })
+  @IsOptional()
+  @IsString()
+  branch?: string;
+
+  @ApiPropertyOptional({ example: '["cert","lang"]' })
+  @IsOptional()
+  @IsString()
+  interests?: string;
 }
