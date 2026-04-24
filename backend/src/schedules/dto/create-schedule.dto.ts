@@ -23,9 +23,9 @@ export class CreateScheduleDto {
   @IsEnum(['NONE', 'DAILY', 'WEEKLY', 'MONTHLY'])
   repeatType?: string;
 
-  @ApiPropertyOptional({ enum: ['DUTY', 'TRAINING', 'ROLLCALL', 'PERSONAL', 'STUDY', 'REST', 'OTHER'], default: 'PERSONAL' })
+  @ApiPropertyOptional({ example: 'PERSONAL', description: 'DUTY/TRAINING/ROLLCALL/PERSONAL/STUDY/REST/OTHER 또는 guard-night 등 프론트엔드 타입' })
   @IsOptional()
-  @IsEnum(['DUTY', 'TRAINING', 'ROLLCALL', 'PERSONAL', 'STUDY', 'REST', 'OTHER'])
+  @IsString()
   category?: string;
 
   @ApiPropertyOptional({ example: '생활관 점호' })
