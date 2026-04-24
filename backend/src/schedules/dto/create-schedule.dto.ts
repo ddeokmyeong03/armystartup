@@ -32,4 +32,14 @@ export class CreateScheduleDto {
   @IsOptional()
   @IsString()
   memo?: string;
+
+  @ApiPropertyOptional({ example: '2026-04-03', description: '익일 종료 시 종료 날짜' })
+  @IsOptional()
+  @IsString()
+  endDate?: string;
+
+  @ApiPropertyOptional({ example: 'guard-night' })
+  @IsOptional()
+  @IsString()
+  fatigueType?: string;
 }

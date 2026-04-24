@@ -1,140 +1,183 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import apiClient from '../../shared/lib/apiClient';
+import { useNavigate, useLocation } from 'react-router-dom';
+import PageHeader from '../../shared/components/PageHeader';
+import { Icon, IconSparkle } from '../../shared/components/Icon';
+import { apiGetMe, apiGetProfile, apiUpdateMe, apiUpsertProfile } from '../../shared/api/index';
 
-type UserInfo = {
-  email: string;
-  nickname: string;
-  phoneNumber?: string;
+const INTEREST_LIST = [
+  { id: 'cert',    label: '자격증',     accent: '#8b5cf6' },
+  { id: 'lang',    label: '어학',       accent: '#f59e0b' },
+  { id: 'job',     label: '취업/진로',  accent: '#10b981' },
+  { id: 'hobby',   label: '취미',       accent: '#ef4444' },
+  { id: 'read',    label: '독서',       accent: '#3b82f6' },
+  { id: 'health',  label: '체력',       accent: '#06b6d4' },
+  { id: 'finance', label: '금융/재테크', accent: '#22FFB2' },
+  { id: 'it',      label: '개발/IT',    accent: '#a855f7' },
+];
+
+const inputSt: React.CSSProperties = {
+  width: '100%', height: 48, background: 'var(--bg-surface)',
+  border: '1px solid var(--border-default)', borderRadius: 8,
+  padding: '0 14px', fontSize: 15, color: 'var(--text-base)',
+  outline: 'none', fontFamily: 'inherit',
 };
+
+function EditField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="t-caption" style={{ marginBottom: 8 }}>{label}</div>
+      {children}
+    </div>
+  );
+}
 
 export default function ProfileEditPage() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ nickname: '', phoneNumber: '' });
-  const [email, setEmail] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
+  const location = useLocation();
+  const initTab = (location.state as any)?.tab ?? 'profile';
+  const [tab, setTab] = useState<'profile' | 'interests'>(initTab);
+  const [form, setForm] = useState({ nickname: '', rank: '상병', branch: '육군', unit: '', enlistedAt: '', dischargeDate: '' });
+  const [interests, setInterests] = useState<string[]>([]);
+  const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    apiClient
-      .get<{ data: UserInfo }>('/api/users/me')
-      .then((res) => {
-        setEmail(res.data.data.email);
+    Promise.all([apiGetMe().catch(() => null), apiGetProfile().catch(() => null)])
+      .then(([u, p]) => {
         setForm({
-          nickname: res.data.data.nickname ?? '',
-          phoneNumber: res.data.data.phoneNumber ?? '',
+          nickname: u?.nickname ?? '',
+          rank: p?.rankName ?? u?.rankName ?? '상병',
+          branch: p?.branch ?? u?.branch ?? '육군',
+          unit: p?.unitName ?? u?.unitName ?? '',
+          enlistedAt: p?.enlistedAt ?? '',
+          dischargeDate: p?.dischargeDate ?? '',
         });
-      })
-      .catch(() => setError('정보를 불러오지 못했습니다.'))
-      .finally(() => setLoading(false));
+        try { setInterests(JSON.parse(p?.interests ?? '[]')); } catch { setInterests([]); }
+      });
   }, []);
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-    setError('');
-  }
+  const update = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
+  const toggleInterest = (id: string) =>
+    setInterests(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.nickname.trim()) {
-      setError('닉네임을 입력해주세요.');
-      return;
-    }
-    setSaving(true);
+  const handleSave = async () => {
+    setLoading(true);
     try {
-      await apiClient.patch('/api/users/me', {
-        nickname: form.nickname.trim(),
-        phoneNumber: form.phoneNumber.trim() || undefined,
+      await apiUpdateMe({ nickname: form.nickname });
+      await apiUpsertProfile({
+        rankName: form.rank,
+        branch: form.branch,
+        unitName: form.unit || undefined,
+        enlistedAt: form.enlistedAt || undefined,
+        dischargeDate: form.dischargeDate || undefined,
+        interests: JSON.stringify(interests),
       });
-      // Update localStorage nickname
-      localStorage.setItem('nickname', form.nickname.trim());
-      navigate(-1);
-    } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setError(msg ?? '저장 중 오류가 발생했습니다.');
-    } finally {
-      setSaving(false);
-    }
-  }
+      localStorage.setItem('nickname', form.nickname);
+      setSaved(true);
+      setTimeout(() => navigate(-1), 900);
+    } catch {} finally { setLoading(false); }
+  };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#F8F8F6] flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-[#111111] border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  const initial = form.nickname[0] ?? '?';
 
   return (
-    <div className="min-h-screen bg-[#F8F8F6] flex flex-col">
-      {/* 헤더 */}
-      <div className="flex items-center gap-3 px-5 pt-12 pb-4 bg-[#F8F8F6]">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-9 h-9 flex items-center justify-center"
-          aria-label="뒤로가기"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-        </button>
-        <h1 className="text-[17px] font-semibold text-[#111111]">프로필 수정</h1>
+    <div className="page page-enter" style={{ display: 'flex', flexDirection: 'column', position: 'fixed', inset: 0 }}>
+      <div className="page-gradient"/>
+      <div style={{ height: 8, flexShrink: 0 }}/>
+      <PageHeader title="내 정보 수정" showBack/>
+
+      <div style={{ padding: '0 20px 12px', position: 'relative', zIndex: 1 }}>
+        <div className="segmented">
+          <button className={tab === 'profile' ? 'active' : ''} onClick={() => setTab('profile')}>프로필 정보</button>
+          <button className={tab === 'interests' ? 'active' : ''} onClick={() => setTab('interests')}>자기개발 설정</button>
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-12 px-5">
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 pt-2">
-          {/* 이메일 (읽기 전용) */}
-          <div className="flex flex-col gap-1">
-            <label className="text-[12px] font-semibold text-[#8E8E93] pl-1">이메일</label>
-            <div className="h-[50px] bg-[#EFEFEF] rounded-[14px] px-4 flex items-center">
-              <span className="text-[15px] text-[#8E8E93]">{email}</span>
+      <div className="scroll-area" style={{ padding: '4px 20px 48px', position: 'relative', zIndex: 1 }}>
+
+        {tab === 'profile' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '8px 0 4px' }}>
+              <div style={{
+                width: 80, height: 80, borderRadius: '50%',
+                background: 'linear-gradient(135deg, var(--accent), #0ec98a)',
+                color: '#001f12', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: 'var(--font-title)', fontWeight: 800, fontSize: 30,
+                boxShadow: '0 10px 30px -10px var(--accent-glow)',
+              }}>{initial}</div>
             </div>
-            <p className="text-[11px] text-[#C7C7CC] pl-1">이메일은 변경할 수 없습니다.</p>
+
+            <EditField label="닉네임">
+              <input className="input" value={form.nickname} onChange={e => update('nickname', e.target.value)} style={inputSt}/>
+            </EditField>
+
+            <EditField label="계급">
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {['이병','일병','상병','병장'].map(r => (
+                  <button key={r} className={`chip ${form.rank === r ? 'active' : ''}`} onClick={() => update('rank', r)}>{r}</button>
+                ))}
+              </div>
+            </EditField>
+
+            <EditField label="군종">
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {['육군','해군','공군','해병'].map(b => (
+                  <button key={b} className={`chip ${form.branch === b ? 'active' : ''}`} onClick={() => update('branch', b)}>{b}</button>
+                ))}
+              </div>
+            </EditField>
+
+            <EditField label="소속 부대">
+              <input className="input" value={form.unit} onChange={e => update('unit', e.target.value)} placeholder="예: 제00보병사단" style={inputSt}/>
+            </EditField>
+
+            <EditField label="입대일">
+              <input type="date" value={form.enlistedAt} onChange={e => update('enlistedAt', e.target.value)} style={inputSt}/>
+            </EditField>
+
+            <EditField label="전역 예정일">
+              <input type="date" value={form.dischargeDate} onChange={e => update('dischargeDate', e.target.value)} style={inputSt}/>
+            </EditField>
+
+            <button className="btn btn-primary btn-full" style={{ height: 52, marginTop: 4, opacity: saved ? 0.7 : 1 }}
+              onClick={handleSave} disabled={loading}>
+              {saved ? '✓ 저장됨' : loading ? '저장 중...' : '저장'}
+            </button>
           </div>
+        )}
 
-          {/* 닉네임 */}
-          <div className="flex flex-col gap-1">
-            <label className="text-[12px] font-semibold text-[#8E8E93] pl-1">닉네임 *</label>
-            <input
-              type="text"
-              name="nickname"
-              value={form.nickname}
-              onChange={handleChange}
-              placeholder="닉네임을 입력하세요"
-              required
-              maxLength={20}
-              className="h-[50px] bg-white rounded-[14px] px-4 text-[15px] text-[#111111] placeholder:text-[#C7C7CC] outline-none"
-            />
+        {tab === 'interests' && (
+          <div>
+            <div style={{ marginBottom: 16, padding: '10px 14px', background: 'var(--accent-soft)', border: '1px solid var(--accent)', borderRadius: 10, display: 'flex', gap: 10 }}>
+              <IconSparkle size={18} style={{ color: 'var(--accent)', flexShrink: 0, marginTop: 1 }}/>
+              <div style={{ fontSize: 13, color: 'var(--text-base)', lineHeight: 1.5 }}>
+                관심 분야를 업데이트하면 AI가 맞춤 로드맵을 재생성합니다.
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 24 }}>
+              {INTEREST_LIST.map(it => {
+                const on = interests.includes(it.id);
+                return (
+                  <button key={it.id} onClick={() => toggleInterest(it.id)} style={{
+                    padding: '16px 14px', borderRadius: 10,
+                    background: on ? 'var(--accent-soft)' : 'var(--bg-surface)',
+                    border: on ? '1px solid var(--accent)' : '1px solid transparent',
+                    color: 'var(--text-base)', textAlign: 'left', fontWeight: 600, fontSize: 14,
+                    display: 'flex', alignItems: 'center', gap: 10,
+                  }}>
+                    <span style={{ width: 10, height: 10, borderRadius: '50%', background: it.accent, flexShrink: 0 }}/>
+                    <span style={{ flex: 1 }}>{it.label}</span>
+                    {on && <Icon name="check" size={16} style={{ color: 'var(--accent)' }}/>}
+                  </button>
+                );
+              })}
+            </div>
+            <button className="btn btn-primary btn-full" style={{ height: 52, opacity: saved ? 0.7 : 1 }}
+              onClick={handleSave} disabled={loading}>
+              {saved ? '✓ 저장됨' : loading ? '저장 중...' : '저장 & 로드맵 재생성'}
+            </button>
           </div>
-
-          {/* 전화번호 */}
-          <div className="flex flex-col gap-1">
-            <label className="text-[12px] font-semibold text-[#8E8E93] pl-1">전화번호 (선택)</label>
-            <input
-              type="tel"
-              name="phoneNumber"
-              value={form.phoneNumber}
-              onChange={handleChange}
-              placeholder="010-0000-0000"
-              maxLength={13}
-              className="h-[50px] bg-white rounded-[14px] px-4 text-[15px] text-[#111111] placeholder:text-[#C7C7CC] outline-none"
-            />
-          </div>
-
-          {error && (
-            <p className="text-[13px] text-[#E05C5C] pl-1">{error}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={saving}
-            className="h-[52px] bg-[#111111] text-white rounded-[16px] text-[15px] font-semibold disabled:opacity-50 mt-2"
-          >
-            {saving ? '저장 중...' : '저장'}
-          </button>
-        </form>
+        )}
       </div>
     </div>
   );

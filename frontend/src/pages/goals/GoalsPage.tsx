@@ -1,223 +1,208 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import apiClient from '../../shared/lib/apiClient';
-import BottomNavBar from '../../shared/ui/BottomNavBar';
-import EmptyState from '../../shared/ui/EmptyState';
+import TabBar from '../../shared/components/TabBar';
+import PageHeader from '../../shared/components/PageHeader';
+import { Icon, IconSparkle, IconClock } from '../../shared/components/Icon';
+import { apiGetGoals, apiCreateGoal, apiUpdateGoal, apiDeleteGoal } from '../../shared/api/index';
+import type { GoalItem } from '../../shared/api/index';
 
-type Goal = {
-  id: number;
-  title: string;
-  type: string;
-  targetDescription?: string;
-  preferredMinutesPerSession: number;
-  preferredSessionsPerWeek: number;
-  isActive: boolean;
-};
-
-const GOAL_TYPE_LABELS: Record<string, string> = {
-  STUDY: '공부',
-  CERTIFICATE: '자격증',
-  EXERCISE: '운동',
-  READING: '독서',
-  CODING: '코딩',
-  OTHER: '기타',
-};
-
-const GOAL_TYPE_COLORS: Record<string, string> = {
-  STUDY: 'bg-[#DCE8F8] text-[#4A7BAF]',
-  CERTIFICATE: 'bg-[#FDE8F0] text-[#C05080]',
-  EXERCISE: 'bg-[#E8F4E8] text-[#3A7D44]',
-  READING: 'bg-[#FFF3DC] text-[#B07830]',
-  CODING: 'bg-[#EDE8F8] text-[#6040A0]',
-  OTHER: 'bg-[#EFEFEF] text-[#8E8E93]',
-};
+const CAT_COLORS: Record<string, string> = { '자격증': '#8b5cf6', '어학': '#f59e0b', '취업': '#10b981', '취미': '#ef4444', '기타': '#6b7280' };
 
 export default function GoalsPage() {
   const navigate = useNavigate();
-  const [goals, setGoals] = useState<Goal[]>([]);
+  const [filter, setFilter] = useState('all');
+  const [goals, setGoals] = useState<GoalItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [showNew, setShowNew] = useState(false);
 
-  const fetchGoals = useCallback(() => {
+  const load = () => {
     setLoading(true);
-    apiClient
-      .get<{ data: Goal[] }>('/api/goals')
-      .then((res) => setGoals(res.data.data))
-      .catch(() => setGoals([]))
-      .finally(() => setLoading(false));
-  }, []);
+    apiGetGoals().then(setGoals).catch(() => {}).finally(() => setLoading(false));
+  };
 
-  useEffect(() => {
-    fetchGoals();
-  }, [fetchGoals]);
+  useEffect(() => { load(); }, []);
 
-  async function handleToggleActive(goal: Goal) {
-    setTogglingId(goal.id);
+  const cats = ['all', '자격증', '어학', '취업', '취미', '기타'];
+  const list = filter === 'all' ? goals : goals.filter(g => g.category === filter);
+  const overall = goals.length ? goals.reduce((s, g) => s + g.progressPercent, 0) / goals.length / 100 : 0;
+
+  const handleToggleActive = async (g: GoalItem) => {
     try {
-      await apiClient.patch(`/api/goals/${goal.id}`, { isActive: !goal.isActive });
-      setGoals((prev) =>
-        prev.map((g) => (g.id === goal.id ? { ...g, isActive: !g.isActive } : g)),
-      );
-    } catch {
-      // ignore
-    } finally {
-      setTogglingId(null);
-    }
-  }
+      const updated = await apiUpdateGoal(g.id, { isActive: !g.isActive });
+      setGoals(prev => prev.map(x => x.id === g.id ? updated : x));
+    } catch {}
+  };
 
-  async function handleDelete(goalId: number) {
-    if (!confirm('이 목표를 삭제하시겠어요?')) return;
+  const handleDelete = async (id: number) => {
+    if (!confirm('목표를 삭제하시겠습니까?')) return;
     try {
-      await apiClient.delete(`/api/goals/${goalId}`);
-      setGoals((prev) => prev.filter((g) => g.id !== goalId));
-    } catch {
-      // ignore
-    }
-  }
-
-  const activeGoals = goals.filter((g) => g.isActive);
-  const inactiveGoals = goals.filter((g) => !g.isActive);
+      await apiDeleteGoal(id);
+      setGoals(prev => prev.filter(x => x.id !== id));
+    } catch {}
+  };
 
   return (
-    <div className="min-h-screen bg-[#F8F8F6] flex flex-col">
-      {/* 헤더 */}
-      <div className="px-5 pt-12 pb-4 bg-[#F8F8F6]">
-        <h1 className="text-[20px] font-bold text-[#111111]">목표 관리</h1>
-        <p className="text-[13px] text-[#8E8E93] mt-0.5">자기개발 목표를 설정하고 관리하세요</p>
-      </div>
+    <div className="page page-enter">
+      <div className="page-gradient"/>
+      <div style={{ height: 8 }}/>
+      <PageHeader title="목표 관리" subtitle={`${goals.length}개 진행 중`}
+        right={
+          <button onClick={() => setShowNew(true)} style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--accent)', color: '#001f12', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="plus" size={18}/>
+          </button>
+        }
+      />
 
-      {/* 스크롤 영역 */}
-      <div className="flex-1 overflow-y-auto pb-24 px-5">
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="w-6 h-6 border-2 border-[#111111] border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : goals.length === 0 ? (
-          <div className="pt-8">
-            <EmptyState
-              message="아직 목표가 없어요."
-              subMessage="+ 버튼으로 첫 번째 목표를 추가해보세요."
-            />
-          </div>
-        ) : (
-          <div className="flex flex-col gap-4">
-            {/* 활성 목표 */}
-            {activeGoals.length > 0 && (
-              <div>
-                <p className="text-[12px] font-semibold text-[#8E8E93] mb-2 pl-1">
-                  진행 중 ({activeGoals.length})
-                </p>
-                <div className="flex flex-col gap-2">
-                  {activeGoals.map((goal) => (
-                    <GoalCard
-                      key={goal.id}
-                      goal={goal}
-                      isToggling={togglingId === goal.id}
-                      onToggle={() => handleToggleActive(goal)}
-                      onDelete={() => handleDelete(goal.id)}
-                    />
-                  ))}
-                </div>
+      <div className="scroll-area" style={{ padding: '4px 0 24px', position: 'relative', zIndex: 1 }}>
+        <div style={{ padding: '0 20px 16px' }}>
+          <div className="card" style={{ padding: 18, display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div className="ring-wrap" style={{ width: 84, height: 84, flexShrink: 0 }}>
+              <svg width="84" height="84">
+                <circle className="ring-track" cx="42" cy="42" r="36" strokeWidth="8"/>
+                <circle className="ring-fill" cx="42" cy="42" r="36" strokeWidth="8"
+                  strokeDasharray={`${2 * Math.PI * 36}`}
+                  strokeDashoffset={`${2 * Math.PI * 36 * (1 - overall)}`}/>
+              </svg>
+              <div className="ring-center"><div style={{ fontSize: 22, fontWeight: 800, color: 'var(--text-bright)' }}>{Math.round(overall * 100)}%</div></div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div className="t-eyebrow">전체 진행률</div>
+              <div className="t-title" style={{ fontSize: 18, marginTop: 4 }}>
+                {goals.filter(g => g.progressPercent >= 100).length}개 완료 / {goals.length}개 진행 중
               </div>
-            )}
+            </div>
+          </div>
+        </div>
 
-            {/* 비활성 목표 */}
-            {inactiveGoals.length > 0 && (
+        <div className="h-scroll" style={{ padding: '0 20px', marginBottom: 14 }}>
+          {cats.map(c => (
+            <button key={c} className={`chip ${filter === c ? 'active' : ''}`} style={{ padding: '8px 14px' }} onClick={() => setFilter(c)}>
+              {c === 'all' ? '전체' : c}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {loading ? (
+            <div className="t-subdued" style={{ textAlign: 'center', padding: '40px 0' }}>불러오는 중...</div>
+          ) : list.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px 0' }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>🎯</div>
+              <div className="t-subdued">아직 목표가 없어요</div>
+              <button onClick={() => setShowNew(true)} style={{ marginTop: 12, color: 'var(--accent)', fontWeight: 700 }}>첫 목표 추가하기 +</button>
+            </div>
+          ) : list.map(g => (
+            <GoalCard key={g.id} g={g} onToggle={() => handleToggleActive(g)} onDelete={() => handleDelete(g.id)}/>
+          ))}
+        </div>
+
+        {goals.length > 0 && (
+          <div style={{ padding: '20px 20px 0' }}>
+            <div style={{ background: 'var(--accent-soft)', border: '1px solid var(--accent)', borderRadius: 12, padding: 14, display: 'flex', gap: 10 }}>
+              <IconSparkle size={20} style={{ color: 'var(--accent)', flexShrink: 0, marginTop: 2 }}/>
               <div>
-                <p className="text-[12px] font-semibold text-[#8E8E93] mb-2 pl-1">
-                  일시 중지 ({inactiveGoals.length})
-                </p>
-                <div className="flex flex-col gap-2 opacity-60">
-                  {inactiveGoals.map((goal) => (
-                    <GoalCard
-                      key={goal.id}
-                      goal={goal}
-                      isToggling={togglingId === goal.id}
-                      onToggle={() => handleToggleActive(goal)}
-                      onDelete={() => handleDelete(goal.id)}
-                    />
-                  ))}
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-bright)' }}>AI 로드맵으로 계획을 세워보세요</div>
+                <div style={{ fontSize: 12, color: 'var(--text-subdued)', marginTop: 4, lineHeight: 1.5 }}>
+                  목표를 기반으로 AI가 맞춤형 학습 로드맵을 생성해드립니다.
                 </div>
+                <button onClick={() => navigate('/roadmap')} style={{ marginTop: 10, color: 'var(--accent)', fontSize: 12, fontWeight: 700 }}>
+                  AI 로드맵에서 보기 →
+                </button>
               </div>
-            )}
+            </div>
           </div>
         )}
       </div>
 
-      {/* 목표 추가 FAB */}
-      <button
-        onClick={() => navigate('/goals/new')}
-        className="fixed bottom-[72px] right-5 w-12 h-12 bg-[#111111] rounded-full flex items-center justify-center shadow-lg z-40"
-        aria-label="목표 추가"
-      >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-      </button>
-
-      <BottomNavBar />
+      {showNew && <NewGoalSheet onClose={() => setShowNew(false)} onCreated={load}/>}
+      <TabBar/>
     </div>
   );
 }
 
-type GoalCardProps = {
-  goal: Goal;
-  isToggling: boolean;
-  onToggle: () => void;
-  onDelete: () => void;
-};
-
-function GoalCard({ goal, isToggling, onToggle, onDelete }: GoalCardProps) {
-  const navigate = useNavigate();
-  const typeColor = GOAL_TYPE_COLORS[goal.type] ?? GOAL_TYPE_COLORS.OTHER;
-  const typeLabel = GOAL_TYPE_LABELS[goal.type] ?? goal.type;
-
+function GoalCard({ g, onToggle, onDelete }: { g: GoalItem; onToggle: () => void; onDelete: () => void }) {
+  const catColor = CAT_COLORS[g.category] ?? '#6b7280';
+  const daysLeft = g.deadline ? Math.ceil((new Date(g.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : null;
   return (
-    <div
-      className="bg-white rounded-[16px] px-4 py-4 cursor-pointer active:scale-[0.99] transition-transform"
-      onClick={() => navigate(`/goals/${goal.id}`)}
-    >
-      <div className="flex items-start gap-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${typeColor}`}>
-              {typeLabel}
-            </span>
-            {!goal.isActive && (
-              <span className="text-[11px] font-medium text-[#C7C7CC]">일시 중지</span>
-            )}
+    <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: 16, position: 'relative', opacity: g.isActive ? 1 : 0.65 }}>
+      {g.pinned && <div style={{ position: 'absolute', top: 12, right: 12, fontSize: 10, color: 'var(--accent)', fontWeight: 800 }}>📌 PINNED</div>}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+        <span style={{ width: 8, height: 8, borderRadius: 2, background: catColor }}/>
+        <span style={{ fontSize: 11, fontWeight: 700, color: catColor, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{g.category}</span>
+        {!g.isActive && <span style={{ fontSize: 10, color: '#f59e0b', fontWeight: 700, marginLeft: 4 }}>일시중지</span>}
+      </div>
+      <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-bright)', lineHeight: 1.3 }}>{g.title}</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14, marginBottom: 6 }}>
+        <div style={{ fontSize: 12, color: 'var(--text-subdued)' }}>진행률</div>
+        <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--accent)' }}>{g.progressPercent}%</div>
+      </div>
+      <div className="progress-track">
+        <div className="progress-fill" style={{ width: `${g.progressPercent}%`, background: catColor }}/>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12 }}>
+        {g.deadline ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: daysLeft !== null && daysLeft < 30 ? '#f59e0b' : 'var(--text-subdued)' }}>
+            <IconClock size={14}/> {daysLeft !== null ? `D-${daysLeft}` : ''} · {g.deadline}
           </div>
-          <p className="text-[15px] font-semibold text-[#111111] truncate">{goal.title}</p>
-          {goal.targetDescription && (
-            <p className="text-[12px] text-[#8E8E93] mt-0.5 line-clamp-2">{goal.targetDescription}</p>
-          )}
-          <p className="text-[12px] text-[#8E8E93] mt-1.5">
-            회당 {goal.preferredMinutesPerSession}분 · 주 {goal.preferredSessionsPerWeek}회
-          </p>
-        </div>
-
-        {/* 더보기 메뉴 */}
-        <div className="flex flex-col items-end gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-          <button
-            onClick={onToggle}
-            disabled={isToggling}
-            className={`text-[11px] font-medium px-3 py-1 rounded-full transition-colors disabled:opacity-50 ${
-              goal.isActive
-                ? 'bg-[#EFEFEF] text-[#8E8E93]'
-                : 'bg-[#111111] text-white'
-            }`}
-          >
-            {goal.isActive ? '중지' : '재개'}
+        ) : (
+          <div style={{ fontSize: 12, color: 'var(--text-subdued)' }}>상시 목표</div>
+        )}
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button className="chip" style={{ padding: '4px 10px', fontSize: 11 }} onClick={onToggle}>
+            {g.isActive ? '일시중지' : '재개'}
           </button>
-          <button
-            onClick={onDelete}
-            className="text-[11px] font-medium text-[#E05C5C] px-3 py-1"
-          >
-            삭제
-          </button>
+          <button className="chip" style={{ padding: '4px 10px', fontSize: 11, background: 'rgba(239,68,68,0.15)', color: '#ff8888' }} onClick={onDelete}>삭제</button>
         </div>
       </div>
     </div>
+  );
+}
+
+function NewGoalSheet({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+  const [title, setTitle] = useState('');
+  const [cat, setCat] = useState('자격증');
+  const [deadline, setDeadline] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSave = async () => {
+    if (!title.trim()) return;
+    setLoading(true);
+    try {
+      await apiCreateGoal({ title, category: cat, deadline: deadline || undefined, pinned: false });
+      onCreated(); onClose();
+    } catch {} finally { setLoading(false); }
+  };
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 35 }}/>
+      <div className="sheet" style={{ zIndex: 40 }}>
+        <div className="sheet-handle"/>
+        <div style={{ padding: '4px 20px 0' }}>
+          <div className="t-title" style={{ fontSize: 20, marginBottom: 4 }}>새 목표</div>
+          <div className="t-subdued" style={{ marginBottom: 16 }}>달성하고 싶은 목표를 설정해보세요</div>
+          <div><div className="t-caption" style={{ marginBottom: 8 }}>목표</div>
+            <input className="input" placeholder="예: 정보처리기사 필기 합격" value={title} onChange={e => setTitle(e.target.value)}
+              style={{ background: 'var(--bg-base)', border: '1px solid var(--border-default)', borderRadius: 8 }}/></div>
+          <div style={{ marginTop: 12 }}><div className="t-caption" style={{ marginBottom: 8 }}>카테고리</div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {['자격증','어학','취업','취미','독서','체력','기타'].map(c => (
+                <button key={c} className={`chip ${cat === c ? 'active' : ''}`} onClick={() => setCat(c)}>{c}</button>
+              ))}
+            </div>
+          </div>
+          <div style={{ marginTop: 12 }}><div className="t-caption" style={{ marginBottom: 8 }}>마감일 (선택)</div>
+            <input className="input" type="date" value={deadline} onChange={e => setDeadline(e.target.value)}
+              style={{ background: 'var(--bg-base)', border: '1px solid var(--border-default)', borderRadius: 8 }}/></div>
+          <div style={{ marginTop: 20, padding: 14, background: 'var(--accent-soft)', borderRadius: 10, display: 'flex', gap: 10 }}>
+            <IconSparkle size={20} style={{ color: 'var(--accent)', flexShrink: 0 }}/>
+            <div style={{ fontSize: 12, lineHeight: 1.5 }}>목표를 저장하면 AI가 전역일까지 맞춤 로드맵을 만들어드려요.</div>
+          </div>
+          <button className="btn btn-primary btn-full" style={{ marginTop: 16, height: 52 }} onClick={handleSave} disabled={loading || !title.trim()}>
+            {loading ? '저장 중...' : '목표 저장'}
+          </button>
+        </div>
+      </div>
+    </>
   );
 }

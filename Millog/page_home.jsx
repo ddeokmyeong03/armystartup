@@ -6,11 +6,9 @@ const HomePage = () => {
   const [sleep, setSleep] = useState(7);   // hours
   const [meals, setMeals] = useState(2);   // hours total
   const [personal, setPersonal] = useState(1);
-  const [showSheet, setShowSheet] = useState(false);
 
   const duties = todayDuties.map(id => DUTY_TYPES.find(d => d.id === id)).filter(Boolean);
-  const dutyHours = duties.reduce((sum, d, i) => {
-    // approximate: assume 4h per non-night duty, 2h for night-guard
+  const dutyHours = duties.reduce((sum, d) => {
     const w = d.id === 'guard-night' ? 2 : d.id === 'duty-night' ? 6 : d.id === 'training' ? 9 : 4;
     return sum + w;
   }, 0);
@@ -81,7 +79,7 @@ const HomePage = () => {
         <div style={{ padding: '0 20px', marginBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
             <div className="t-section">오늘의 일과</div>
-            <button onClick={() => setShowSheet(true)} style={{ color: 'var(--accent)', fontSize: 13, fontWeight: 700 }}>자세히 입력 →</button>
+            <button onClick={() => goto('schedule')} style={{ color: 'var(--accent)', fontSize: 13, fontWeight: 700 }}>일정 추가 +</button>
           </div>
           <div className="segmented" style={{ marginBottom: 14 }}>
             <button className={tab === 'quick' ? 'active' : ''} onClick={() => setTab('quick')}>퀵 입력</button>
@@ -124,7 +122,6 @@ const HomePage = () => {
             <div className="card" style={{ padding: 14 }}>
               <div style={{ display: 'flex', gap: 4 }}>
                 {WEEK.map((d, i) => {
-                  const color = d.items[0] ? DUTY_TYPES.find(x => x.id === d.items[0].type)?.color : null;
                   return (
                     <div key={i} style={{
                       flex: 1,
@@ -270,7 +267,6 @@ const HomePage = () => {
         </div>
       </div>
 
-      {showSheet && <DetailSheet onClose={() => setShowSheet(false)}/>}
     </div>
   );
 };
@@ -327,43 +323,6 @@ function StackedDay({ sleep, meals, personal, dutyHours, avail }) {
         <span>24:00 취침</span>
       </div>
     </div>
-  );
-}
-
-function DetailSheet({ onClose }) {
-  return (
-    <>
-      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 35, animation: 'fadeIn 200ms ease-out' }}/>
-      <div className="sheet">
-        <div className="sheet-handle"/>
-        <div style={{ padding: '4px 20px 0' }}>
-          <div className="t-title" style={{ fontSize: 20, marginBottom: 4 }}>상세 일과 입력</div>
-          <div className="t-subdued" style={{ marginBottom: 14 }}>시간대별로 근무를 추가해보세요</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {[
-              { t: '06:00 – 08:00', l: '기상 / 아침점호', c: '#6b7280' },
-              { t: '09:00 – 12:00', l: '주간 당직 (오전)', c: '#f59e0b' },
-              { t: '12:00 – 13:00', l: '점심 / 개인정비', c: '#6b7280' },
-              { t: '13:00 – 18:00', l: '주간 당직 (오후)', c: '#f59e0b' },
-              { t: '22:00 – 24:00', l: '불침번 1번초', c: '#8b5cf6' },
-            ].map((it, i) => (
-              <div key={i} className="row" style={{ background: 'var(--bg-surface-hi)' }}>
-                <span style={{ width: 4, height: 32, borderRadius: 2, background: it.c }}/>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>{it.l}</div>
-                  <div className="t-caption">{it.t}</div>
-                </div>
-                <button style={{ color: 'var(--text-subdued)' }}><Icon name="more" size={18}/></button>
-              </div>
-            ))}
-            <button className="btn btn-ghost btn-full" style={{ marginTop: 8 }}>
-              <Icon name="plus" size={16}/> 시간대 추가
-            </button>
-          </div>
-          <button className="btn btn-primary btn-full" style={{ marginTop: 16, height: 52 }} onClick={onClose}>저장</button>
-        </div>
-      </div>
-    </>
   );
 }
 

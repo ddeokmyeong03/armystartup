@@ -12,6 +12,8 @@ import { CalendarModule } from './calendar/calendar.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { AiChatModule } from './ai-chat/ai-chat.module';
 import { RoadmapModule } from './roadmap/roadmap.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { RoadmapModule } from './roadmap/roadmap.module';
     DashboardModule,
     AiChatModule,
     RoadmapModule,
+    NotificationsModule,
+    AdminModule,
   ],
   controllers: [],
   providers: [],

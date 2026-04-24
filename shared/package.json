@@ -1,0 +1,9 @@
+{
+  "name": "@millog/shared",
+  "version": "1.0.0",
+  "description": "Shared types and constants for Millog web and mobile",
+  "main": "index.ts",
+  "scripts": {},
+  "keywords": [],
+  "private": true
+}

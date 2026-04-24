@@ -1,467 +1,224 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import apiClient from '../../shared/lib/apiClient';
-import BottomNavBar from '../../shared/ui/BottomNavBar';
-
-// ─── 타입 ─────────────────────────────────────────────────────────────────────
-
-type RoadmapStage = {
-  week: string;
-  title: string;
-  status: 'completed' | 'in_progress' | 'pending';
-  items: string[];
-};
-
-type Goal = {
-  id: number;
-  title: string;
-  type: string;
-  progressPercent: number;
-};
-
-type Roadmap = {
-  id: number;
-  goalId: number;
-  title: string;
-  totalWeeks: number;
-  stages: RoadmapStage[];
-  progressPercent: number;
-  updateCount: number;
-  nextUpdateDate: string | null;
-  goal?: { title: string; type: string; progressPercent: number };
-};
-
-// ─── 상수 ─────────────────────────────────────────────────────────────────────
-
-const GOAL_TYPE_LABEL: Record<string, string> = {
-  CERTIFICATE: '자격증',
-  STUDY: '학습',
-  CODING: '코딩',
-  LANGUAGE: '어학',
-  FITNESS: '체력',
-  OTHER: '기타',
-};
-
-const STATUS_CONFIG = {
-  completed: { label: '완료', color: 'bg-[#E8F4E8] text-[#3A7D44]', dot: 'bg-[#3A7D44]' },
-  in_progress: { label: '진행 중', color: 'bg-[#DCE8F8] text-[#4A7BAF]', dot: 'bg-[#4A7BAF]' },
-  pending: { label: '예정', color: 'bg-[#F8F8F6] text-[#8E8E93]', dot: 'bg-[#C7C7CC]' },
-};
-
-// ─── 서브컴포넌트 ──────────────────────────────────────────────────────────────
-
-function StageCard({
-  stage,
-  index,
-  roadmapId,
-  onStatusChange,
-}: {
-  stage: RoadmapStage;
-  index: number;
-  roadmapId: number;
-  onStatusChange: (stageIndex: number, status: RoadmapStage['status']) => void;
-}) {
-  const [open, setOpen] = useState(stage.status === 'in_progress');
-  const [updating, setUpdating] = useState(false);
-  const cfg = STATUS_CONFIG[stage.status];
-
-  async function handleCheck() {
-    const nextStatus: RoadmapStage['status'] =
-      stage.status === 'completed' ? 'pending' : 'completed';
-    setUpdating(true);
-    try {
-      await apiClient.patch(`/api/roadmap/${roadmapId}/stage`, {
-        stageIndex: index,
-        status: nextStatus,
-      });
-      onStatusChange(index, nextStatus);
-    } catch {
-      //
-    } finally {
-      setUpdating(false);
-    }
-  }
-
-  return (
-    <div className="bg-white rounded-[18px] overflow-hidden">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-3 px-4 py-4 text-left"
-      >
-        {/* Step number */}
-        <div
-          className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-[13px] font-bold ${
-            stage.status === 'completed'
-              ? 'bg-[#3A7D44] text-white'
-              : stage.status === 'in_progress'
-              ? 'bg-[#4A7BAF] text-white'
-              : 'bg-[#EFEFEF] text-[#8E8E93]'
-          }`}
-        >
-          {stage.status === 'completed' ? (
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          ) : (
-            index + 1
-          )}
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[15px] font-semibold text-[#111111]">{stage.title}</span>
-            <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${cfg.color}`}>
-              {cfg.label}
-            </span>
-          </div>
-          <p className="text-[12px] text-[#8E8E93] mt-0.5">{stage.week}</p>
-        </div>
-
-        {/* 완료 체크 버튼 */}
-        <button
-          onClick={(e) => { e.stopPropagation(); handleCheck(); }}
-          disabled={updating}
-          className={`shrink-0 w-7 h-7 rounded-full border-2 flex items-center justify-center transition-colors disabled:opacity-50 ${
-            stage.status === 'completed'
-              ? 'bg-[#3A7D44] border-[#3A7D44]'
-              : 'border-[#C7C7CC] bg-white'
-          }`}
-          aria-label={stage.status === 'completed' ? '완료 취소' : '완료 표시'}
-        >
-          {stage.status === 'completed' && (
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          )}
-        </button>
-
-        <svg
-          width="16" height="16" viewBox="0 0 24 24" fill="none"
-          stroke="#C7C7CC" strokeWidth="2"
-          className={`shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
-        >
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
-      </button>
-
-      {open && (
-        <div className="px-4 pb-4">
-          <div className="h-px bg-[#F0F0F0] mb-3" />
-          <div className="flex flex-col gap-2">
-            {stage.items.map((item, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <div className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${cfg.dot}`} />
-                <p className="text-[13px] text-[#333333] leading-relaxed">{item}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function RoadmapCard({
-  roadmap,
-  onGenerate,
-  generating,
-  onStageUpdate,
-}: {
-  roadmap: Roadmap;
-  onGenerate: (goalId: number) => void;
-  generating: boolean;
-  onStageUpdate: (roadmapId: number, stageIndex: number, status: RoadmapStage['status']) => void;
-}) {
-  const completedCount = roadmap.stages.filter((s) => s.status === 'completed').length;
-
-  return (
-    <div className="flex flex-col gap-3">
-      {/* 헤더 카드 */}
-      <div className="bg-white rounded-[20px] px-5 py-5">
-        <div className="flex items-start justify-between gap-2 mb-3">
-          <div className="flex-1 min-w-0">
-            <p className="text-[11px] font-semibold text-[#8E8E93] mb-1">
-              {roadmap.goal ? GOAL_TYPE_LABEL[roadmap.goal.type] ?? roadmap.goal.type : ''}
-            </p>
-            <h3 className="text-[17px] font-bold text-[#111111] leading-snug">{roadmap.title}</h3>
-          </div>
-          <button
-            onClick={() => onGenerate(roadmap.goalId)}
-            disabled={generating}
-            className="shrink-0 h-8 px-3 bg-[#111111] text-white rounded-[10px] text-[12px] font-semibold disabled:opacity-50 flex items-center gap-1"
-          >
-            {generating ? (
-              <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <polyline points="1 4 1 10 7 10" />
-                  <path d="M3.51 15a9 9 0 1 0 .49-4.5" />
-                </svg>
-                업데이트
-              </>
-            )}
-          </button>
-        </div>
-
-        {/* 진행률 바 */}
-        <div className="flex items-center gap-3">
-          <div className="flex-1 h-2 bg-[#F0F0F0] rounded-full overflow-hidden">
-            <div
-              className="h-full bg-[#4A7BAF] rounded-full transition-all"
-              style={{ width: `${roadmap.progressPercent}%` }}
-            />
-          </div>
-          <span className="text-[13px] font-semibold text-[#4A7BAF] shrink-0">
-            {roadmap.progressPercent}%
-          </span>
-        </div>
-
-        <div className="flex items-center gap-4 mt-3">
-          <span className="text-[12px] text-[#8E8E93]">
-            {completedCount}/{roadmap.stages.length} 단계 완료
-          </span>
-          <span className="text-[12px] text-[#8E8E93]">총 {roadmap.totalWeeks}주</span>
-          {roadmap.updateCount > 0 && (
-            <span className="text-[12px] text-[#8E8E93]">업데이트 {roadmap.updateCount}회</span>
-          )}
-        </div>
-
-        {roadmap.nextUpdateDate && (
-          <div className="mt-3 flex items-center gap-1.5 bg-[#FFF3DC] rounded-[10px] px-3 py-2">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#B07830" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-            <p className="text-[12px] text-[#B07830] font-medium">
-              다음 업데이트 권장: {roadmap.nextUpdateDate}
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* 단계 목록 */}
-      <div className="flex flex-col gap-2">
-        {roadmap.stages.map((stage, i) => (
-          <StageCard
-            key={i}
-            stage={stage}
-            index={i}
-            roadmapId={roadmap.id}
-            onStatusChange={(idx, status) => onStageUpdate(roadmap.id, idx, status)}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ─── 메인 페이지 ──────────────────────────────────────────────────────────────
+import TabBar from '../../shared/components/TabBar';
+import PageHeader from '../../shared/components/PageHeader';
+import { Icon } from '../../shared/components/Icon';
+import { apiGetRoadmaps, apiGenerateRoadmap, apiGetGoals, apiAiChat } from '../../shared/api/index';
+import type { RoadmapItem, RoadmapStage } from '../../shared/api/index';
 
 export default function RoadmapPage() {
   const navigate = useNavigate();
-  const [roadmaps, setRoadmaps] = useState<Roadmap[]>([]);
-  const [goals, setGoals] = useState<Goal[]>([]);
+  const [tab, setTab] = useState<'roadmap' | 'ai'>('roadmap');
+
+  return (
+    <div className="page page-enter">
+      <div className="page-gradient"/>
+      <div style={{ height: 8 }}/>
+      <PageHeader title="자기개발 로드맵" subtitle="AI가 매주 업데이트해요"/>
+      <div style={{ padding: '0 20px 12px', position: 'relative', zIndex: 1 }}>
+        <div className="segmented">
+          <button className={tab === 'roadmap' ? 'active' : ''} onClick={() => setTab('roadmap')}>로드맵</button>
+          <button className={tab === 'ai' ? 'active' : ''} onClick={() => setTab('ai')}>AI 코치</button>
+        </div>
+      </div>
+      {tab === 'roadmap' ? <RoadmapView navigate={navigate}/> : <AIChatView/>}
+      <TabBar/>
+    </div>
+  );
+}
+
+function RoadmapView({ navigate }: { navigate: ReturnType<typeof useNavigate> }) {
+  const [roadmaps, setRoadmaps] = useState<RoadmapItem[]>([]);
+  const [goals, setGoals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [generatingGoalId, setGeneratingGoalId] = useState<number | null>(null);
-  const [selectedRoadmapId, setSelectedRoadmapId] = useState<number | null>(null);
+  const [generating, setGenerating] = useState(false);
+  const [checked, setChecked] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    Promise.all([
-      apiClient.get<{ data: Roadmap[] }>('/api/roadmap'),
-      apiClient.get<{ data: Goal[] }>('/api/goals'),
-    ])
-      .then(([rmRes, goalRes]) => {
-        const rm = rmRes.data.data;
-        setRoadmaps(rm);
-        if (rm.length > 0) setSelectedRoadmapId(rm[0].id);
-        setGoals(Array.isArray(goalRes.data.data) ? goalRes.data.data : []);
-      })
-      .catch(() => {
-        setRoadmaps([]);
-        setGoals([]);
-      })
+    Promise.all([apiGetRoadmaps(), apiGetGoals()])
+      .then(([rm, gl]) => { setRoadmaps(rm); setGoals(gl); })
+      .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
-  function handleStageUpdate(roadmapId: number, stageIndex: number, status: RoadmapStage['status']) {
-    setRoadmaps((prev) =>
-      prev.map((rm) => {
-        if (rm.id !== roadmapId) return rm;
-        const stages = rm.stages.map((s, i) =>
-          i === stageIndex ? { ...s, status } : s,
-        );
-        const completedCount = stages.filter((s) => s.status === 'completed').length;
-        const progressPercent = Math.round((completedCount / stages.length) * 100);
-        return { ...rm, stages, progressPercent };
-      }),
+  const toggleCheck = (roadmapId: number, week: string, idx: number) => {
+    const key = `${roadmapId}-${week}-${idx}`;
+    setChecked(s => { const next = new Set(s); next.has(key) ? next.delete(key) : next.add(key); return next; });
+  };
+
+  const handleGenerate = async (goalId: number) => {
+    setGenerating(true);
+    try {
+      const rm = await apiGenerateRoadmap(goalId);
+      setRoadmaps(prev => {
+        const exists = prev.findIndex(r => r.goalId === goalId);
+        return exists >= 0 ? prev.map((r, i) => i === exists ? rm : r) : [...prev, rm];
+      });
+    } catch {} finally { setGenerating(false); }
+  };
+
+  if (loading) return <div className="scroll-area" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}><div className="t-subdued">불러오는 중...</div></div>;
+
+  if (roadmaps.length === 0) {
+    return (
+      <div className="scroll-area" style={{ padding: '20px', position: 'relative', zIndex: 1 }}>
+        <div style={{ textAlign: 'center', padding: '40px 0' }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🗺️</div>
+          <div className="t-title" style={{ fontSize: 20 }}>아직 로드맵이 없어요</div>
+          <div className="t-subdued" style={{ marginTop: 8 }}>목표를 기반으로 AI 로드맵을 생성하세요</div>
+        </div>
+        {goals.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div className="t-section" style={{ marginBottom: 4 }}>목표 선택</div>
+            {goals.map((g: any) => (
+              <button key={g.id} className="card" style={{ textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12 }}
+                onClick={() => handleGenerate(g.id)} disabled={generating}>
+                <span style={{ flex: 1, fontSize: 14, fontWeight: 600 }}>{g.title}</span>
+                <span style={{ color: 'var(--accent)', fontSize: 12, fontWeight: 700 }}>{generating ? '생성 중...' : '생성 →'}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        {goals.length === 0 && (
+          <button className="btn btn-primary btn-full" style={{ marginTop: 20, height: 52 }} onClick={() => navigate('/goals')}>
+            목표 먼저 추가하기
+          </button>
+        )}
+      </div>
     );
   }
 
-  async function handleGenerate(goalId: number) {
-    setGeneratingGoalId(goalId);
-    try {
-      const res = await apiClient.post<{ data: Roadmap }>('/api/roadmap/generate', { goalId });
-      const updated = res.data.data;
-      setRoadmaps((prev) => {
-        const existing = prev.find((r) => r.goalId === goalId);
-        if (existing) return prev.map((r) => (r.goalId === goalId ? updated : r));
-        return [updated, ...prev];
-      });
-      setSelectedRoadmapId(updated.id);
-    } catch {
-      //
-    } finally {
-      setGeneratingGoalId(null);
-    }
-  }
-
-  const selectedRoadmap = roadmaps.find((r) => r.id === selectedRoadmapId) ?? roadmaps[0];
-  const goalsWithoutRoadmap = goals.filter((g) => !roadmaps.some((r) => r.goalId === g.id));
-
+  const rm = roadmaps[0];
   return (
-    <div className="min-h-screen bg-[#F8F8F6] flex flex-col">
-      {/* 헤더 */}
-      <div className="px-5 pt-12 pb-3 bg-[#F8F8F6]">
-        <h1 className="text-[20px] font-bold text-[#111111]">학습 로드맵</h1>
-        <p className="text-[13px] text-[#8E8E93] mt-0.5">AI가 목표 기반 학습 경로를 설계해드려요</p>
+    <div className="scroll-area" style={{ padding: '4px 0 24px', position: 'relative', zIndex: 1 }}>
+      <div style={{ padding: '0 20px 16px' }}>
+        <div className="hero-gradient">
+          <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', opacity: 0.7 }}>PRIMARY GOAL</div>
+          <div style={{ fontSize: 20, fontWeight: 800, marginTop: 6, lineHeight: 1.25 }}>{rm.goal.title}</div>
+          <div style={{ display: 'flex', gap: 10, marginTop: 14, fontSize: 12 }}>
+            <span style={{ background: 'rgba(0,0,0,0.2)', padding: '4px 10px', borderRadius: 999, fontWeight: 700 }}>{rm.totalWeeks}주 플랜</span>
+            <span style={{ background: 'rgba(0,0,0,0.2)', padding: '4px 10px', borderRadius: 999, fontWeight: 700 }}>진행률 {rm.progressPercent}%</span>
+            <span style={{ background: 'rgba(255,255,255,0.25)', padding: '4px 10px', borderRadius: 999, fontWeight: 700 }}>v{rm.updateCount}</span>
+          </div>
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto pb-24 px-5">
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="w-6 h-6 border-2 border-[#111111] border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : roadmaps.length === 0 ? (
-          /* 로드맵 없음 — 빈 상태 */
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col items-center justify-center py-12 gap-3">
-              <div className="w-16 h-16 rounded-full bg-[#DCE8F8] flex items-center justify-center">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#4A7BAF" strokeWidth="1.8">
-                  <path d="M3 3h7v7H3z" />
-                  <path d="M14 3h7v7h-7z" />
-                  <path d="M3 14h7v7H3z" />
-                  <circle cx="17.5" cy="17.5" r="3.5" />
-                </svg>
-              </div>
-              <p className="text-[17px] font-bold text-[#111111]">로드맵이 없어요</p>
-              <p className="text-[13px] text-[#8E8E93] text-center">
-                목표를 등록하고 AI 로드맵을 생성해보세요
-              </p>
-            </div>
-
-            {goals.length === 0 ? (
-              <button
-                onClick={() => navigate('/goals/new')}
-                className="w-full h-[52px] bg-[#111111] text-white rounded-[16px] text-[15px] font-semibold flex items-center justify-center gap-2"
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-                목표 등록하기
-              </button>
-            ) : (
-              <div className="flex flex-col gap-2">
-                <p className="text-[13px] font-semibold text-[#8E8E93] px-1">목표 선택 후 로드맵 생성</p>
-                {goals.map((g) => (
-                  <button
-                    key={g.id}
-                    onClick={() => handleGenerate(g.id)}
-                    disabled={generatingGoalId === g.id}
-                    className="w-full bg-white rounded-[16px] px-4 py-4 flex items-center gap-3 text-left disabled:opacity-60"
-                  >
-                    <div className="w-9 h-9 rounded-full bg-[#DCE8F8] flex items-center justify-center shrink-0">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4A7BAF" strokeWidth="2">
-                        <circle cx="12" cy="12" r="10" />
-                        <circle cx="12" cy="12" r="6" />
-                        <circle cx="12" cy="12" r="2" fill="#4A7BAF" stroke="none" />
-                      </svg>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[15px] font-semibold text-[#111111] truncate">{g.title}</p>
-                      <p className="text-[12px] text-[#8E8E93]">
-                        {GOAL_TYPE_LABEL[g.type] ?? g.type} · {g.progressPercent}% 진행
-                      </p>
-                    </div>
-                    {generatingGoalId === g.id ? (
-                      <div className="w-5 h-5 border-2 border-[#4A7BAF] border-t-transparent rounded-full animate-spin shrink-0" />
-                    ) : (
-                      <span className="text-[12px] font-semibold text-[#4A7BAF] shrink-0">생성</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="flex flex-col gap-4">
-            {/* 로드맵 탭 선택 (여러 로드맵) */}
-            {roadmaps.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-                {roadmaps.map((rm) => (
-                  <button
-                    key={rm.id}
-                    onClick={() => setSelectedRoadmapId(rm.id)}
-                    className={`shrink-0 h-9 px-4 rounded-full text-[13px] font-semibold transition-colors ${
-                      selectedRoadmapId === rm.id
-                        ? 'bg-[#111111] text-white'
-                        : 'bg-white text-[#8E8E93]'
-                    }`}
-                  >
-                    {rm.goal?.title ?? rm.title}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* 선택된 로드맵 */}
-            {selectedRoadmap && (
-              <RoadmapCard
-                roadmap={selectedRoadmap}
-                onGenerate={handleGenerate}
-                generating={generatingGoalId === selectedRoadmap.goalId}
-                onStageUpdate={handleStageUpdate}
-              />
-            )}
-
-            {/* 로드맵 없는 목표 → 생성 버튼 */}
-            {goalsWithoutRoadmap.length > 0 && (
-              <div className="flex flex-col gap-2 mt-2">
-                <p className="text-[13px] font-semibold text-[#8E8E93] px-1">다른 목표 로드맵 생성</p>
-                {goalsWithoutRoadmap.map((g) => (
-                  <button
-                    key={g.id}
-                    onClick={() => handleGenerate(g.id)}
-                    disabled={generatingGoalId === g.id}
-                    className="w-full bg-white rounded-[16px] px-4 py-4 flex items-center gap-3 text-left disabled:opacity-60"
-                  >
-                    <div className="w-9 h-9 rounded-full bg-[#F8F8F6] flex items-center justify-center shrink-0">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2">
-                        <circle cx="12" cy="12" r="10" />
-                        <circle cx="12" cy="12" r="6" />
-                        <circle cx="12" cy="12" r="2" fill="#8E8E93" stroke="none" />
-                      </svg>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[15px] font-semibold text-[#111111] truncate">{g.title}</p>
-                      <p className="text-[12px] text-[#8E8E93]">{GOAL_TYPE_LABEL[g.type] ?? g.type}</p>
-                    </div>
-                    {generatingGoalId === g.id ? (
-                      <div className="w-5 h-5 border-2 border-[#4A7BAF] border-t-transparent rounded-full animate-spin shrink-0" />
-                    ) : (
-                      <span className="text-[12px] font-semibold text-[#4A7BAF] shrink-0">+ 생성</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+      <div style={{ padding: '0 20px 10px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div className="t-section">주차별 계획</div>
+        {goals.length > 0 && (
+          <button onClick={() => handleGenerate(rm.goalId)} disabled={generating}
+            style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 700, opacity: generating ? 0.5 : 1 }}>
+            {generating ? '재생성 중...' : '업데이트'}
+          </button>
         )}
       </div>
 
-      <BottomNavBar />
+      <div style={{ padding: '0 20px' }}>
+        <div className="roadmap-rail" style={{ paddingLeft: 36 }}>
+          {rm.stages.map((stage: RoadmapStage) => (
+            <div key={stage.week} className={`roadmap-node ${stage.status === 'completed' ? 'done' : stage.status === 'in_progress' ? 'current' : ''}`}
+              style={{ paddingBottom: 18 }}>
+              <div style={{
+                background: stage.status === 'in_progress' ? 'var(--bg-card)' : 'var(--bg-surface)',
+                borderRadius: 12, padding: 14,
+                border: stage.status === 'in_progress' ? '1px solid var(--accent)' : '1px solid transparent',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: stage.status === 'completed' ? 'var(--accent)' : 'var(--text-subdued)' }}>{stage.week}</span>
+                  <span style={{ fontSize: 11, color: 'var(--text-subdued)' }}>·</span>
+                  <span style={{ fontSize: 11, color: 'var(--text-subdued)' }}>
+                    {stage.status === 'completed' ? '완료' : stage.status === 'in_progress' ? '진행 중' : '예정'}
+                  </span>
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 700, marginTop: 4, color: 'var(--text-bright)' }}>{stage.title}</div>
+                <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {stage.items.map((item, j) => {
+                    const key = `${rm.id}-${stage.week}-${j}`;
+                    const isDone = checked.has(key) || (stage.checkedItems ?? []).includes(j);
+                    const canToggle = stage.status !== 'pending';
+                    return (
+                      <div key={j} onClick={() => canToggle && toggleCheck(rm.id, stage.week, j)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: canToggle ? 'pointer' : 'default', padding: '2px 0' }}>
+                        {isDone ? (
+                          <span style={{ color: 'var(--accent)', flexShrink: 0 }}><Icon name="check-filled" size={16}/></span>
+                        ) : (
+                          <span style={{ width: 16, height: 16, borderRadius: '50%', flexShrink: 0, border: `1.5px solid ${canToggle ? 'var(--accent)' : 'var(--border-default)'}`, display: 'inline-block' }}/>
+                        )}
+                        <span style={{ flex: 1, color: isDone ? 'var(--text-subdued)' : 'var(--text-base)', textDecoration: isDone ? 'line-through' : 'none' }}>{item}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                {stage.status === 'in_progress' && (
+                  <div style={{ display: 'flex', gap: 8, marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border-default)' }}>
+                    <button onClick={() => navigate('/courses')} className="chip" style={{ background: 'var(--accent)', color: '#001f12' }}>
+                      <Icon name="play" size={12}/> 추천 강의
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
+  );
+}
+
+type Msg = { role: 'user' | 'ai'; kind: 'text' | 'plan'; text: string; plan?: { time: string; task: string; tag: string }[] };
+
+function AIChatView() {
+  const [messages, setMessages] = useState<Msg[]>([
+    { role: 'ai', kind: 'text', text: '안녕하세요! 저는 Millog AI 코치입니다. 학습 계획, 로드맵 조정, 강의 추천 등 자기개발에 관한 무엇이든 물어보세요 👋' },
+  ]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [messages]);
+
+  const send = async (text: string) => {
+    if (!text.trim() || loading) return;
+    const userMsg: Msg = { role: 'user', kind: 'text', text };
+    setMessages(m => [...m, userMsg]);
+    setInput('');
+    setLoading(true);
+    try {
+      const history = messages.map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.text }));
+      const res = await apiAiChat(text, history);
+      setMessages(m => [...m, { role: 'ai', kind: 'text', text: res.reply }]);
+    } catch {
+      setMessages(m => [...m, { role: 'ai', kind: 'text', text: 'AI 연결에 실패했습니다. 잠시 후 다시 시도해주세요.' }]);
+    } finally { setLoading(false); }
+  };
+
+  return (
+    <>
+      <div ref={scrollRef} className="scroll-area" style={{ padding: '12px 16px 16px', position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {messages.map((m, i) => (
+          m.role === 'user'
+            ? <div key={i} className="bubble bubble-user">{m.text}</div>
+            : <div key={i} className="bubble bubble-ai">{m.text}</div>
+        ))}
+        {loading && <div className="bubble bubble-ai" style={{ opacity: 0.6 }}>답변 생성 중...</div>}
+      </div>
+
+      <div style={{ padding: '0 16px 8px', display: 'flex', gap: 6, overflowX: 'auto', flexShrink: 0 }}>
+        {['약점 진단', '일정 조정', '이번 주 요약', '강의 추천'].map(p => (
+          <button key={p} className="chip chip-outline" style={{ flexShrink: 0 }} onClick={() => send(p)}>{p}</button>
+        ))}
+      </div>
+
+      <div style={{ padding: '8px 16px 14px', display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0, borderTop: '1px solid var(--border-default)' }}>
+        <input className="input" style={{ height: 44, flex: 1, background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 8 }}
+          placeholder="AI 코치에게 물어보기..." value={input}
+          onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && send(input)}/>
+        <button className="btn-icon-circle" style={{ width: 44, height: 44, flexShrink: 0 }} onClick={() => send(input)}>
+          <Icon name="arrow-right" size={18}/>
+        </button>
+      </div>
+    </>
   );
 }

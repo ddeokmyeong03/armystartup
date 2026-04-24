@@ -11,4 +11,6 @@ export class UpdateScheduleDto {
   @ApiPropertyOptional({ enum: ['MILITARY', 'SELF_DEV', 'PERSONAL', 'REST', 'OTHER'] })
   @IsOptional() @IsEnum(['MILITARY', 'SELF_DEV', 'PERSONAL', 'REST', 'OTHER']) category?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() memo?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() endDate?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() fatigueType?: string;
 }

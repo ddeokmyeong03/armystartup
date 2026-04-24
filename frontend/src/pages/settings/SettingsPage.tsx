@@ -1,121 +1,112 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import BottomNavBar from '../../shared/ui/BottomNavBar';
+import PageHeader from '../../shared/components/PageHeader';
+import { Icon } from '../../shared/components/Icon';
+import { logout } from '../../shared/lib/auth';
 
-function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+function SetGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <button
-      onClick={() => onChange(!value)}
-      className={`w-11 h-6 rounded-full transition-colors relative ${value ? 'bg-[#111111]' : 'bg-[#D1D1D6]'}`}
-    >
-      <span
-        className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
-          value ? 'translate-x-[22px]' : 'translate-x-0.5'
-        }`}
-      />
+    <div style={{ marginBottom: 24 }}>
+      <div className="t-eyebrow" style={{ marginBottom: 10 }}>{label}</div>
+      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>{children}</div>
+    </div>
+  );
+}
+
+function SetToggle({ label, sub, value, onChange, disabled = false, last = false }: {
+  label: string; sub?: string; value: boolean; onChange: () => void; disabled?: boolean; last?: boolean;
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderBottom: last ? 'none' : '1px solid var(--border-default)', opacity: disabled ? 0.42 : 1 }}>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-base)' }}>{label}</div>
+        {sub && <div className="t-caption" style={{ marginTop: 2 }}>{sub}</div>}
+      </div>
+      <button onClick={disabled ? undefined : onChange} style={{
+        width: 50, height: 28, borderRadius: 14, flexShrink: 0,
+        background: (value && !disabled) ? 'var(--accent)' : 'var(--bg-surface-hi)',
+        position: 'relative', transition: 'background 200ms ease-out',
+        cursor: disabled ? 'default' : 'pointer',
+      }}>
+        <div style={{
+          position: 'absolute', top: 3, left: (value && !disabled) ? 25 : 3,
+          width: 22, height: 22, borderRadius: '50%',
+          background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.28)',
+          transition: 'left 200ms cubic-bezier(.2,.8,.2,1)',
+        }}/>
+      </button>
+    </div>
+  );
+}
+
+function SetLink({ label, onPress, last = false }: { label: string; onPress?: () => void; last?: boolean }) {
+  return (
+    <button onClick={onPress} style={{
+      width: '100%', display: 'flex', alignItems: 'center', padding: '14px 16px',
+      borderBottom: last ? 'none' : '1px solid var(--border-default)',
+      textAlign: 'left', color: 'var(--text-base)',
+    }}>
+      <span style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{label}</span>
+      <Icon name="chevron-right" size={16} style={{ color: 'var(--text-subdued)' }}/>
     </button>
   );
 }
 
-type SettingRowProps = {
-  label: string;
-  description?: string;
-  right: React.ReactNode;
-  onClick?: () => void;
-};
-
-function SettingRow({ label, description, right, onClick }: SettingRowProps) {
+function SetInfo({ label, value, last = false }: { label: string; value: string; last?: boolean }) {
   return (
-    <button
-      onClick={onClick}
-      disabled={!onClick && typeof right !== 'undefined'}
-      className="w-full flex items-center justify-between px-5 py-4 text-left border-b border-[#F0F0F0] last:border-0"
-    >
-      <div>
-        <p className="text-[15px] font-medium text-[#111111]">{label}</p>
-        {description && <p className="text-[12px] text-[#8E8E93] mt-0.5">{description}</p>}
-      </div>
-      <div className="shrink-0 ml-3">{right}</div>
-    </button>
+    <div style={{ display: 'flex', alignItems: 'center', padding: '14px 16px', borderBottom: last ? 'none' : '1px solid var(--border-default)' }}>
+      <span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: 'var(--text-base)' }}>{label}</span>
+      <span style={{ fontSize: 13, color: 'var(--text-subdued)' }}>{value}</span>
+    </div>
   );
 }
 
 export default function SettingsPage() {
   const navigate = useNavigate();
-  const [pushEnabled, setPushEnabled] = useState(true);
-  const [scheduleReminder, setScheduleReminder] = useState(true);
-  const [courseAlert, setCourseAlert] = useState(true);
-  const [goalReminder, setGoalReminder] = useState(false);
+  const [notif, setNotif] = useState({ push: true, schedule: true, course: false, goalReminder: true });
+  const [app, setApp] = useState({ autoLogin: true, dataShare: true });
 
-  const chevron = (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C7C7CC" strokeWidth="2">
-      <polyline points="9 18 15 12 9 6" />
-    </svg>
-  );
+  const handleLogout = () => { logout(); navigate('/login'); };
 
   return (
-    <div className="min-h-screen bg-[#F8F8F6] flex flex-col">
-      {/* 헤더 */}
-      <div className="flex items-center gap-3 px-5 pt-12 pb-2">
-        <button onClick={() => navigate(-1)} className="w-9 h-9 flex items-center justify-center" aria-label="뒤로가기">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
-        </button>
-        <h1 className="text-[17px] font-semibold text-[#111111]">설정</h1>
-      </div>
+    <div className="page page-enter" style={{ display: 'flex', flexDirection: 'column', position: 'fixed', inset: 0 }}>
+      <div className="page-gradient"/>
+      <div style={{ height: 8, flexShrink: 0 }}/>
+      <PageHeader title="설정" showBack/>
 
-      <div className="flex-1 overflow-y-auto px-5 py-3 pb-28 flex flex-col gap-4">
-        {/* 알림 설정 */}
-        <div className="bg-white rounded-[20px] overflow-hidden">
-          <p className="px-5 pt-4 pb-2 text-[12px] font-semibold text-[#8E8E93] uppercase tracking-wide">알림</p>
-          <SettingRow
-            label="푸시 알림"
-            description="모든 알림을 켜거나 끕니다"
-            right={<Toggle value={pushEnabled} onChange={setPushEnabled} />}
-          />
-          <SettingRow
-            label="일정 알림"
-            description="일정 30분 전에 알려드려요"
-            right={<Toggle value={scheduleReminder} onChange={setScheduleReminder} />}
-          />
-          <SettingRow
-            label="강의 추천 알림"
-            description="새로운 AI 추천 강의가 도착하면 알려드려요"
-            right={<Toggle value={courseAlert} onChange={setCourseAlert} />}
-          />
-          <SettingRow
-            label="목표 리마인더"
-            description="매일 저녁 목표 현황을 알려드려요"
-            right={<Toggle value={goalReminder} onChange={setGoalReminder} />}
-          />
-        </div>
+      <div className="scroll-area" style={{ padding: '8px 20px 48px', position: 'relative', zIndex: 1 }}>
 
-        {/* 계정 설정 */}
-        <div className="bg-white rounded-[20px] overflow-hidden">
-          <p className="px-5 pt-4 pb-2 text-[12px] font-semibold text-[#8E8E93] uppercase tracking-wide">계정</p>
-          <SettingRow
-            label="프로필 수정"
-            right={chevron}
-            onClick={() => navigate('/profile/edit')}
-          />
-          <SettingRow
-            label="비밀번호 변경"
-            right={chevron}
-            onClick={() => navigate('/settings/password')}
-          />
-        </div>
+        <SetGroup label="알림 설정">
+          <SetToggle label="푸시 알림" sub="모든 앱 알림 허용" value={notif.push} onChange={() => setNotif(s => ({ ...s, push: !s.push }))}/>
+          <SetToggle label="일정 알림" sub="근무 1시간 전 알림" value={notif.push && notif.schedule} onChange={() => setNotif(s => ({ ...s, schedule: !s.schedule }))} disabled={!notif.push}/>
+          <SetToggle label="강의 추천 알림" sub="새 추천 강의 도착 시" value={notif.push && notif.course} onChange={() => setNotif(s => ({ ...s, course: !s.course }))} disabled={!notif.push}/>
+          <SetToggle label="목표 리마인더" sub="주 1회 목표 진행 알림" value={notif.push && notif.goalReminder} onChange={() => setNotif(s => ({ ...s, goalReminder: !s.goalReminder }))} disabled={!notif.push} last/>
+        </SetGroup>
 
-        {/* 앱 정보 */}
-        <div className="bg-white rounded-[20px] overflow-hidden">
-          <p className="px-5 pt-4 pb-2 text-[12px] font-semibold text-[#8E8E93] uppercase tracking-wide">앱 정보</p>
-          <SettingRow label="버전" right={<span className="text-[14px] text-[#8E8E93]">v1.0.0</span>} />
-          <SettingRow label="개인정보처리방침" right={chevron} onClick={() => {}} />
-          <SettingRow label="서비스 이용약관" right={chevron} onClick={() => {}} />
+        <SetGroup label="계정">
+          <SetLink label="프로필 수정" onPress={() => navigate('/profile/edit', { state: { tab: 'profile' } })}/>
+          <SetLink label="자기개발 설정 수정" onPress={() => navigate('/profile/edit', { state: { tab: 'interests' } })}/>
+          <SetLink label="비밀번호 변경" onPress={() => navigate('/settings/password')}/>
+          <SetToggle label="자동 로그인" value={app.autoLogin} onChange={() => setApp(s => ({ ...s, autoLogin: !s.autoLogin }))} last/>
+        </SetGroup>
+
+        <SetGroup label="개인정보 & 약관">
+          <SetToggle label="데이터 및 피드백 공유" sub="서비스 개선에 사용됩니다" value={app.dataShare} onChange={() => setApp(s => ({ ...s, dataShare: !s.dataShare }))}/>
+          <SetLink label="개인정보 처리방침"/>
+          <SetLink label="서비스 이용약관" last/>
+        </SetGroup>
+
+        <SetGroup label="앱 정보">
+          <SetInfo label="버전" value="2.0.0"/>
+          <SetInfo label="빌드" value="2026.04.24" last/>
+        </SetGroup>
+
+        <div className="card" style={{ padding: 0, overflow: 'hidden', marginBottom: 8 }}>
+          <button onClick={handleLogout} style={{ width: '100%', padding: '16px', textAlign: 'center', fontSize: 14, fontWeight: 700, color: '#ef4444' }}>
+            로그아웃
+          </button>
         </div>
       </div>
-
-      <BottomNavBar />
     </div>
   );
 }

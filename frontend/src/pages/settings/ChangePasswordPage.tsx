@@ -1,156 +1,144 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import apiClient from '../../shared/lib/apiClient';
+import PageHeader from '../../shared/components/PageHeader';
+import { apiChangePassword } from '../../shared/api/index';
+
+function strengthScore(pw: string) {
+  let s = 0;
+  if (pw.length >= 8) s++;
+  if (/[A-Za-z]/.test(pw)) s++;
+  if (/[0-9]/.test(pw)) s++;
+  if (/[^A-Za-z0-9]/.test(pw)) s++;
+  return s;
+}
+function strengthColor(pw: string) {
+  const s = strengthScore(pw);
+  return s <= 1 ? '#ef4444' : s === 2 ? '#f59e0b' : s === 3 ? '#3b82f6' : 'var(--accent)';
+}
+function strengthLabel(pw: string) {
+  const s = strengthScore(pw);
+  return s <= 1 ? '취약' : s === 2 ? '보통' : s === 3 ? '강함' : '매우 강함';
+}
+
+function PwField({ label, value, onChange, placeholder, hint, hintOk }: {
+  label: string; value: string; onChange: (v: string) => void;
+  placeholder: string; hint?: string | null; hintOk?: boolean;
+}) {
+  const [show, setShow] = useState(false);
+  return (
+    <div>
+      <div className="t-caption" style={{ marginBottom: 8 }}>{label}</div>
+      <div style={{ position: 'relative' }}>
+        <input
+          type={show ? 'text' : 'password'} value={value}
+          onChange={e => onChange(e.target.value)} placeholder={placeholder}
+          style={{
+            width: '100%', height: 48, background: 'var(--bg-surface)',
+            border: `1px solid ${hint && !hintOk ? '#ef4444' : hint && hintOk ? 'var(--accent)' : 'var(--border-default)'}`,
+            borderRadius: 8, padding: '0 52px 0 14px',
+            fontSize: 15, color: 'var(--text-base)', outline: 'none', fontFamily: 'inherit',
+            transition: 'border-color 200ms',
+          }}
+        />
+        <button onClick={() => setShow(s => !s)} style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-subdued)', fontSize: 12, fontWeight: 700 }}>
+          {show ? '숨김' : '표시'}
+        </button>
+      </div>
+      {hint && <div style={{ marginTop: 6, fontSize: 12, fontWeight: 600, color: hintOk ? 'var(--accent)' : '#ef4444' }}>{hint}</div>}
+    </div>
+  );
+}
 
 export default function ChangePasswordPage() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
-  const [error, setError] = useState('');
+  const [current, setCurrent] = useState('');
+  const [next, setNext] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
-    setError('');
-  }
+  const lenOk = next.length >= 8;
+  const matchOk = next === confirm && confirm.length > 0;
+  const valid = current.length > 0 && lenOk && matchOk;
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError('');
-
-    if (form.newPassword.length < 8) {
-      setError('새 비밀번호는 8자 이상이어야 합니다.');
-      return;
-    }
-    if (form.newPassword !== form.confirmPassword) {
-      setError('새 비밀번호와 확인 비밀번호가 일치하지 않습니다.');
-      return;
-    }
-
-    setLoading(true);
+  const handleChange = async () => {
+    if (!valid) return;
+    setLoading(true); setError('');
     try {
-      await apiClient.patch('/api/users/password', {
-        currentPassword: form.currentPassword,
-        newPassword: form.newPassword,
-      });
-      setSuccess(true);
-    } catch (err: unknown) {
-      const msg =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
-      setError(msg ?? '비밀번호 변경 중 오류가 발생했습니다.');
-    } finally {
-      setLoading(false);
-    }
-  }
+      await apiChangePassword(current, next);
+      setDone(true);
+    } catch {
+      setError('현재 비밀번호가 올바르지 않거나 변경에 실패했습니다.');
+    } finally { setLoading(false); }
+  };
 
-  if (success) {
+  if (done) {
     return (
-      <div className="min-h-screen bg-[#F8F8F6] flex flex-col items-center justify-center px-5 gap-5">
-        <div className="w-16 h-16 rounded-full bg-[#E8F4E8] flex items-center justify-center">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#3A7D44" strokeWidth="2.5">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
+      <div className="page page-enter" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', position: 'fixed', inset: 0 }}>
+        <div style={{ textAlign: 'center', padding: '0 40px' }}>
+          <div style={{ fontSize: 64, marginBottom: 20 }}>🔐</div>
+          <div className="t-title">비밀번호 변경 완료</div>
+          <div className="t-subdued" style={{ marginTop: 10, lineHeight: 1.6 }}>다음 로그인 시 새 비밀번호를 사용하세요.</div>
+          <button className="btn btn-primary btn-full" style={{ marginTop: 36, height: 52 }} onClick={() => navigate(-1)}>확인</button>
         </div>
-        <div className="text-center">
-          <p className="text-[18px] font-bold text-[#111111]">비밀번호 변경 완료</p>
-          <p className="text-[13px] text-[#8E8E93] mt-1">새 비밀번호로 변경되었습니다.</p>
-        </div>
-        <button
-          onClick={() => navigate(-1)}
-          className="h-[52px] w-full bg-[#111111] text-white rounded-[16px] text-[15px] font-semibold"
-        >
-          확인
-        </button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F8F6] flex flex-col">
-      {/* 헤더 */}
-      <div className="flex items-center gap-3 px-5 pt-12 pb-4 bg-[#F8F8F6]">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-9 h-9 flex items-center justify-center"
-          aria-label="뒤로가기"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#111111" strokeWidth="2">
-            <polyline points="15 18 9 12 15 6" />
-          </svg>
+    <div className="page page-enter" style={{ display: 'flex', flexDirection: 'column', position: 'fixed', inset: 0 }}>
+      <div className="page-gradient"/>
+      <div style={{ height: 8, flexShrink: 0 }}/>
+      <PageHeader title="비밀번호 변경" showBack/>
+
+      <div className="scroll-area" style={{ padding: '16px 20px 48px', position: 'relative', zIndex: 1 }}>
+        <div style={{ marginBottom: 24, padding: '12px 14px', background: 'var(--bg-surface)', borderRadius: 12, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+          <span style={{ color: 'var(--accent)', flexShrink: 0, marginTop: 1, fontSize: 16 }}>🔒</span>
+          <div style={{ fontSize: 13, color: 'var(--text-subdued)', lineHeight: 1.55 }}>
+            8자 이상, 영문·숫자·특수문자를 조합하면 더 안전합니다.
+          </div>
+        </div>
+
+        {error && (
+          <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 8, color: '#ff8888', fontSize: 13 }}>
+            {error}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <PwField label="현재 비밀번호" value={current} onChange={setCurrent} placeholder="현재 비밀번호 입력"/>
+          <div style={{ height: 1, background: 'var(--border-default)' }}/>
+          <PwField
+            label="새 비밀번호 (8자 이상)" value={next} onChange={setNext} placeholder="새 비밀번호"
+            hint={next.length > 0 ? (lenOk ? '✓ 길이 충족' : `${8 - next.length}자 더 필요`) : null}
+            hintOk={lenOk}
+          />
+          <PwField
+            label="새 비밀번호 확인" value={confirm} onChange={setConfirm} placeholder="비밀번호 다시 입력"
+            hint={confirm.length > 0 ? (matchOk ? '✓ 일치' : '비밀번호가 일치하지 않습니다') : null}
+            hintOk={matchOk}
+          />
+        </div>
+
+        {next.length > 0 && (
+          <div style={{ marginTop: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+              <div className="t-caption">보안 강도</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: strengthColor(next) }}>{strengthLabel(next)}</div>
+            </div>
+            <div style={{ display: 'flex', gap: 4 }}>
+              {[0,1,2,3].map(i => (
+                <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i < strengthScore(next) ? strengthColor(next) : 'var(--bg-surface-hi)', transition: 'background 300ms' }}/>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <button className="btn btn-primary btn-full" style={{ marginTop: 32, height: 52, opacity: valid ? 1 : 0.38, transition: 'opacity 200ms' }}
+          onClick={handleChange} disabled={!valid || loading}>
+          {loading ? '변경 중...' : '변경 완료'}
         </button>
-        <h1 className="text-[17px] font-semibold text-[#111111]">비밀번호 변경</h1>
-      </div>
-
-      <div className="flex-1 overflow-y-auto pb-12 px-5">
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4 pt-2">
-          {/* 현재 비밀번호 */}
-          <div className="flex flex-col gap-1">
-            <label className="text-[12px] font-semibold text-[#8E8E93] pl-1">현재 비밀번호</label>
-            <input
-              type="password"
-              name="currentPassword"
-              value={form.currentPassword}
-              onChange={handleChange}
-              placeholder="현재 비밀번호를 입력하세요"
-              required
-              className="h-[50px] bg-white rounded-[14px] px-4 text-[15px] text-[#111111] placeholder:text-[#C7C7CC] outline-none"
-            />
-          </div>
-
-          {/* 새 비밀번호 */}
-          <div className="flex flex-col gap-1">
-            <label className="text-[12px] font-semibold text-[#8E8E93] pl-1">새 비밀번호</label>
-            <input
-              type="password"
-              name="newPassword"
-              value={form.newPassword}
-              onChange={handleChange}
-              placeholder="8자 이상 입력하세요"
-              required
-              className="h-[50px] bg-white rounded-[14px] px-4 text-[15px] text-[#111111] placeholder:text-[#C7C7CC] outline-none"
-            />
-          </div>
-
-          {/* 새 비밀번호 확인 */}
-          <div className="flex flex-col gap-1">
-            <label className="text-[12px] font-semibold text-[#8E8E93] pl-1">새 비밀번호 확인</label>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={form.confirmPassword}
-              onChange={handleChange}
-              placeholder="새 비밀번호를 다시 입력하세요"
-              required
-              className="h-[50px] bg-white rounded-[14px] px-4 text-[15px] text-[#111111] placeholder:text-[#C7C7CC] outline-none"
-            />
-          </div>
-
-          {/* 비밀번호 조건 안내 */}
-          <div className="bg-[#F0F0EE] rounded-[12px] px-4 py-3">
-            <p className="text-[12px] text-[#8E8E93] font-medium mb-1">비밀번호 조건</p>
-            <ul className="text-[12px] text-[#8E8E93] space-y-0.5">
-              <li className={`flex items-center gap-1.5 ${form.newPassword.length >= 8 ? 'text-[#3A7D44]' : ''}`}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                  stroke={form.newPassword.length >= 8 ? '#3A7D44' : '#C7C7CC'} strokeWidth="2.5">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                8자 이상
-              </li>
-            </ul>
-          </div>
-
-          {error && (
-            <p className="text-[13px] text-[#E05C5C] pl-1">{error}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="h-[52px] bg-[#111111] text-white rounded-[16px] text-[15px] font-semibold disabled:opacity-50 mt-2"
-          >
-            {loading ? '변경 중...' : '비밀번호 변경'}
-          </button>
-        </form>
       </div>
     </div>
   );

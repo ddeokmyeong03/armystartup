@@ -24,6 +24,8 @@ model User {
   aiPlans               AiPlan[]
   courseRecommendations CourseRecommendation[]
   roadmaps              Roadmap[]
+  notifications         Notification[]
+  activities            UserActivity[]
 
   @@map("users")
 }
@@ -31,14 +33,17 @@ model User {
 model UserProfile {
   id                     Int      @id @default(autoincrement())
   userId                 Int      @unique
-  wakeUpTime             String
-  sleepTime              String
+  wakeUpTime             String   @default("06:30")
+  sleepTime              String   @default("23:00")
   availableStudyMinutes  Int      @default(60)
   preferredPlanIntensity String   @default("MEDIUM")
   memo                   String?
+  enlistedAt             String?  // 입대일 "YYYY-MM-DD"
   dischargeDate          String?  // 전역 예정일 "YYYY-MM-DD"
   unitName               String?  // 소속 부대명
-  rankName               String?  // 계급
+  rankName               String?  // 계급 (이병/일병/상병/병장)
+  branch                 String?  // 군종 (육군/해군/공군/해병)
+  interests              String   @default("[]") // JSON: ["cert","lang","it"]
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 
@@ -51,11 +56,13 @@ model Schedule {
   id           Int      @id @default(autoincrement())
   userId       Int
   title        String
-  scheduleDate String
-  startTime    String
-  endTime      String
+  scheduleDate String   // 시작 날짜 "YYYY-MM-DD"
+  endDate      String?  // 종료 날짜 (익일 근무 시 다름) "YYYY-MM-DD"
+  startTime    String   // "HH:MM"
+  endTime      String   // "HH:MM"
   repeatType   String   @default("NONE")
-  category     String   @default("PERSONAL")
+  category     String   @default("PERSONAL") // DUTY/TRAINING/ROLLCALL/PERSONAL/STUDY/REST/OTHER
+  fatigueType  String?  // Millog duty type id (guard-night, duty-day 등)
   memo         String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -70,12 +77,15 @@ model Goal {
   id                         Int      @id @default(autoincrement())
   userId                     Int
   title                      String
+  category                   String   @default("기타")   // 자격증/어학/취업/취미/독서/체력/기타
   type                       String   @default("STUDY")
   targetDescription          String?
+  deadline                   String?  // 마감일 "YYYY-MM-DD"
+  pinned                     Boolean  @default(false)
   preferredMinutesPerSession Int      @default(60)
   preferredSessionsPerWeek   Int      @default(3)
   isActive                   Boolean  @default(true)
-  progressPercent            Int      @default(0)  // 진행률 0~100
+  progressPercent            Int      @default(0)
   createdAt                  DateTime @default(now())
   updatedAt                  DateTime @updatedAt
 
@@ -112,13 +122,14 @@ model Course {
   id              Int      @id @default(autoincrement())
   externalId      String?  @unique
   title           String
-  source          String
-  category        String
+  source          String   // JANGBYEONGEEUM / DEFENSE_TRANSITION / K_MOOC / CLASS101
+  category        String   // LANGUAGE / CERTIFICATE / IT / EXERCISE / READING / etc.
   targetGoalType  String?
   description     String?
   durationMinutes Int      @default(60)
   url             String?
   tags            String   @default("[]")
+  matchScore      Int      @default(80) // 0~100 매칭 점수
   isActive        Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -147,23 +158,63 @@ model CourseRecommendation {
   @@map("course_recommendations")
 }
 
-// AI 자기개발 로드맵 — Claude API로 생성, 주 1회 자동 업데이트
 model Roadmap {
-  id             Int      @id @default(autoincrement())
-  userId         Int
-  goalId         Int
-  title          String   // 예: "정보처리기사 취득 플랜"
-  totalWeeks     Int      @default(12)
-  stages         String   @default("[]") // JSON: [{week, title, status, items[]}]
-  progressPercent Float   @default(0)
-  updateCount    Int      @default(1)
-  nextUpdateDate String?  // "YYYY-MM-DD"
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  goalId          Int
+  title           String
+  totalWeeks      Int      @default(5)
+  stages          String   @default("[]") // JSON: [{week, title, status, items[], checkedItems[]}]
+  progressPercent Float    @default(0)
+  updateCount     Int      @default(1)
+  nextUpdateDate  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   goal Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("roadmaps")
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  type      String   // goal / ai / schedule / course / system
+  title     String
+  body      String
+  link      String?  // 이동할 경로 (goals, roadmap 등)
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model UserActivity {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  eventType String   // goal_created / course_viewed / fatigue_calculated 등
+  payload   String   @default("{}")
+  platform  String   @default("WEB")
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, eventType])
+  @@index([eventType, createdAt])
+  @@map("user_activities")
+}
+
+model AdminUser {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  passwordHash String
+  role         String   @default("ADMIN")
+  createdAt    DateTime @default(now())
+
+  @@map("admin_users")
 }

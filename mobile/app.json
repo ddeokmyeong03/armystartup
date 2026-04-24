@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "scheme": "millog",
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -15,18 +15,25 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.millog.app"
+      "bundleIdentifier": "com.main.millog"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#F8F8F6"
       },
-      "package": "com.millog.app",
+      "package": "com.main.millog",
       "edgeToEdgeEnabled": true
     },
     "plugins": [
       "expo-router"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "bb93947c-5ea9-417f-a5b9-b299f6ce31b6"
+      }
+    },
+    "owner": "ddeokmyeong_03"
   }
 }

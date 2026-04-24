@@ -8,7 +8,7 @@ export class GoalsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(userId: number, dto: CreateGoalDto) {
-    const goal = await this.prisma.goal.create({ data: { userId, ...dto } as any });
+    const goal = await this.prisma.goal.create({ data: { userId, isActive: true, ...dto } as any });
     return { message: '목표가 생성되었습니다.', data: goal };
   }
 
@@ -25,7 +25,8 @@ export class GoalsService {
 
   async update(userId: number, id: number, dto: UpdateGoalDto) {
     await this.findOne(userId, id);
-    const goal = await this.prisma.goal.update({ where: { id }, data: dto as any });
+    const cleanDto = Object.fromEntries(Object.entries(dto).filter(([, v]) => v !== undefined));
+    const goal = await this.prisma.goal.update({ where: { id }, data: cleanDto as any });
     return { message: '목표가 수정되었습니다.', data: goal };
   }
 

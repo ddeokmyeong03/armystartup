@@ -1,20 +1,35 @@
-import { IsString, IsOptional, IsEnum, IsInt, Min, Max } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsInt, IsBoolean, Min, Max } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateGoalDto {
-  @ApiProperty({ example: '토익 공부' })
+  @ApiProperty({ example: '정보처리기사 필기 합격' })
   @IsString()
   title: string;
 
-  @ApiPropertyOptional({ enum: ['STUDY', 'CERTIFICATE', 'EXERCISE', 'READING', 'CODING', 'OTHER'], default: 'STUDY' })
+  @ApiPropertyOptional({ example: '자격증', description: '자격증/어학/취업/취미/독서/체력/기타' })
   @IsOptional()
-  @IsEnum(['STUDY', 'CERTIFICATE', 'EXERCISE', 'READING', 'CODING', 'OTHER'])
+  @IsString()
+  category?: string;
+
+  @ApiPropertyOptional({ enum: ['STUDY','CERTIFICATE','EXERCISE','READING','CODING','OTHER'], default: 'STUDY' })
+  @IsOptional()
+  @IsEnum(['STUDY','CERTIFICATE','EXERCISE','READING','CODING','OTHER'])
   type?: string;
 
-  @ApiPropertyOptional({ example: '토익 900점 목표' })
+  @ApiPropertyOptional({ example: '2026-05-15' })
+  @IsOptional()
+  @IsString()
+  deadline?: string;
+
+  @ApiPropertyOptional({ example: '정보처리기사 필기 합격 목표' })
   @IsOptional()
   @IsString()
   targetDescription?: string;
+
+  @ApiPropertyOptional({ example: false })
+  @IsOptional()
+  @IsBoolean()
+  pinned?: boolean;
 
   @ApiPropertyOptional({ example: 60 })
   @IsOptional()

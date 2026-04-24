@@ -118,26 +118,45 @@ const ProfilePage = () => {
           </div>
         </div>
 
+        {/* 자기개발 설정 */}
+        <div style={{ padding: '0 20px 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <div className="t-section" style={{ fontSize: 16 }}>자기개발 설정</div>
+            <button onClick={() => { window.__profileEditTab = 'interests'; goto('profile-edit'); }}
+              style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent)', background: 'var(--accent-soft)', padding: '5px 12px', borderRadius: 9999 }}>
+              수정
+            </button>
+          </div>
+          <div className="card" style={{ padding: 14, display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {[
+              { label: '자격증', accent: '#8b5cf6' },
+              { label: '어학',   accent: '#f59e0b' },
+              { label: '개발/IT', accent: '#a855f7' },
+            ].map(it => (
+              <span key={it.label} className="chip" style={{ background: 'var(--bg-surface-hi)' }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: it.accent, flexShrink: 0 }}/>
+                {it.label}
+              </span>
+            ))}
+          </div>
+        </div>
+
         {/* Menu list */}
         <div style={{ padding: '0 20px' }}>
           <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
             {[
-              { icon: 'devices', label: '연결된 기기', meta: '2대' },
-              { icon: 'download', label: '다운로드한 강의', meta: '4개' },
-              { icon: 'heart', label: '찜한 강의', meta: '12개' },
-              { icon: 'equalizer', label: '학습 통계 리포트' },
-              { icon: 'volume', label: '알림 설정' },
-              { icon: 'library', label: '데이터 및 피드백 공유', meta: 'ON', metaColor: 'var(--accent)' },
+              { icon: 'download',  label: '다운로드한 강의',       meta: '4개',  link: null },
+              { icon: 'heart',     label: '찜한 강의',             meta: '12개', link: null },
+              { icon: 'equalizer', label: '학습 통계 리포트',                    link: null },
+              { icon: 'volume',    label: '알림',                               link: 'notifications' },
+              { icon: 'devices',   label: '설정',                               link: 'settings' },
+              { icon: 'library',   label: '데이터 및 피드백 공유', meta: 'ON', metaColor: 'var(--accent)', link: null },
             ].map((m, i, arr) => (
-              <button key={i} style={{
-                width: '100%',
-                padding: '14px 16px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 14,
+              <button key={i} onClick={() => m.link && goto(m.link)} style={{
+                width: '100%', padding: '14px 16px',
+                display: 'flex', alignItems: 'center', gap: 14,
                 borderBottom: i < arr.length - 1 ? '1px solid var(--border-default)' : 'none',
-                textAlign: 'left',
-                color: 'var(--text-base)',
+                textAlign: 'left', color: 'var(--text-base)',
               }}>
                 <Icon name={m.icon} size={20} style={{ color: 'var(--text-subdued)' }}/>
                 <span style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{m.label}</span>
@@ -148,7 +167,15 @@ const ProfilePage = () => {
           </div>
         </div>
 
-        <div style={{ padding: '20px 20px 0', textAlign: 'center' }}>
+        {/* 프로필 수정 버튼 */}
+        <div style={{ padding: '16px 20px 0' }}>
+          <button className="btn btn-ghost btn-full" style={{ height: 48 }}
+            onClick={() => { window.__profileEditTab = 'profile'; goto('profile-edit'); }}>
+            <IconUser size={16}/> 프로필 수정
+          </button>
+        </div>
+
+        <div style={{ padding: '16px 20px 0', textAlign: 'center' }}>
           <button onClick={() => goto('login')} style={{ fontSize: 13, color: 'var(--text-subdued)', padding: '8px 16px' }}>
             로그아웃
           </button>

@@ -22,6 +22,19 @@ const RoadmapPage = () => {
 };
 
 function RoadmapView({ goto }) {
+  const doneKeys = ROADMAP.filter(r => r.status === 'done')
+    .flatMap(r => r.items.map((_, j) => `${r.week}-${j}`));
+  const [checked, setChecked] = useState(() => new Set(doneKeys));
+
+  const toggleCheck = (week, idx) => {
+    const key = `${week}-${idx}`;
+    setChecked(s => {
+      const next = new Set(s);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  };
+
   return (
     <div className="scroll-area" style={{ padding: '4px 0 24px', position: 'relative', zIndex: 1 }}>
       {/* Current goal context */}
@@ -63,16 +76,31 @@ function RoadmapView({ goto }) {
                 </div>
                 <div style={{ fontSize: 15, fontWeight: 700, marginTop: 4, color: 'var(--text-bright)' }}>{r.title}</div>
                 <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {r.items.map((it, j) => (
-                    <div key={j} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
-                      {r.status === 'done' ? (
-                        <span style={{ color: 'var(--accent)' }}><Icon name="check-filled" size={16}/></span>
-                      ) : (
-                        <span style={{ width: 16, height: 16, borderRadius: '50%', border: '1.5px solid var(--border-default)' }}/>
-                      )}
-                      <span style={{ color: r.status === 'done' ? 'var(--text-subdued)' : 'var(--text-base)', textDecoration: r.status === 'done' ? 'line-through' : 'none' }}>{it}</span>
-                    </div>
-                  ))}
+                  {r.items.map((it, j) => {
+                    const key = `${r.week}-${j}`;
+                    const isDone = checked.has(key);
+                    const canToggle = r.status !== 'next';
+                    return (
+                      <div key={j}
+                        onClick={() => canToggle && toggleCheck(r.week, j)}
+                        style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, cursor: canToggle ? 'pointer' : 'default', padding: '2px 0', borderRadius: 4 }}>
+                        {isDone ? (
+                          <span style={{ color: 'var(--accent)', flexShrink: 0 }}><Icon name="check-filled" size={16}/></span>
+                        ) : (
+                          <span style={{
+                            width: 16, height: 16, borderRadius: '50%', flexShrink: 0,
+                            border: `1.5px solid ${canToggle ? 'var(--accent)' : 'var(--border-default)'}`,
+                            display: 'inline-block',
+                          }}/>
+                        )}
+                        <span style={{
+                          flex: 1,
+                          color: isDone ? 'var(--text-subdued)' : 'var(--text-base)',
+                          textDecoration: isDone ? 'line-through' : 'none',
+                        }}>{it}</span>
+                      </div>
+                    );
+                  })}
                 </div>
                 {r.status === 'current' && (
                   <div style={{ display: 'flex', gap: 8, marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border-default)' }}>
