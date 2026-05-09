@@ -1,6 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { isLoggedIn } from './shared/lib/auth';
+import AppLayout from './shared/components/AppLayout';
 import LoginPage from './pages/auth/LoginPage';
+import SignupPage from './pages/auth/SignupPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
+import SocialCallbackPage from './pages/auth/SocialCallbackPage';
 import HomePage from './pages/home/HomePage';
 import GoalsPage from './pages/goals/GoalsPage';
 import RoadmapPage from './pages/roadmap/RoadmapPage';
@@ -14,7 +19,7 @@ import ScheduleCreatePage from './pages/schedules/ScheduleCreatePage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!isLoggedIn()) return <Navigate to="/login" replace />;
-  return <>{children}</>;
+  return <AppLayout>{children}</AppLayout>;
 }
 
 function GuestRoute({ children }: { children: React.ReactNode }) {
@@ -28,6 +33,10 @@ export default function App() {
       <Routes>
         {/* 인증 */}
         <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
+        <Route path="/signup" element={<GuestRoute><SignupPage /></GuestRoute>} />
+        <Route path="/forgot-password" element={<GuestRoute><ForgotPasswordPage /></GuestRoute>} />
+        <Route path="/reset-password" element={<GuestRoute><ResetPasswordPage /></GuestRoute>} />
+        <Route path="/auth/callback" element={<SocialCallbackPage />} />
 
         {/* 탭 메인 화면 */}
         <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />

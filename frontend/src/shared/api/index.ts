@@ -15,6 +15,14 @@ export async function apiSignup(payload: {
   await apiClient.post('/api/auth/signup', payload);
 }
 
+export async function apiForgotPassword(email: string) {
+  await apiClient.post('/api/auth/forgot-password', { email });
+}
+
+export async function apiResetPassword(token: string, newPassword: string) {
+  await apiClient.post('/api/auth/reset-password', { token, newPassword });
+}
+
 // ── User / Profile ────────────────────────────────────────────────────────────
 
 export async function apiGetMe() {

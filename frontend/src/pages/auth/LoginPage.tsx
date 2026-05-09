@@ -1,38 +1,36 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MillogLogo, Icon } from '../../shared/components/Icon';
-import { apiLogin, apiSignup } from '../../shared/api/index';
-
-const INTERESTS = [
-  { id: 'cert',    label: '자격증',     accent: '#8b5cf6' },
-  { id: 'lang',    label: '어학',       accent: '#f59e0b' },
-  { id: 'job',     label: '취업/진로',  accent: '#10b981' },
-  { id: 'hobby',   label: '취미',       accent: '#ef4444' },
-  { id: 'read',    label: '독서',       accent: '#3b82f6' },
-  { id: 'health',  label: '체력',       accent: '#06b6d4' },
-  { id: 'finance', label: '금융/재테크', accent: '#22FFB2' },
-  { id: 'it',      label: '개발/IT',    accent: '#a855f7' },
-];
+import { MillogLogo } from '../../shared/components/Icon';
+import { apiLogin } from '../../shared/api/index';
 
 const inputSt: React.CSSProperties = {
-  background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 8,
+  background: 'var(--bg-surface)', border: '1px solid var(--border-default)',
+  borderRadius: 10, height: 52, fontSize: 16,
 };
+
+// 소셜 로그인 버튼 색상/텍스트
+const SOCIAL = [
+  { id: 'google', label: 'Google로 계속하기', bg: '#fff', color: '#1f1f1f', border: '#dadce0', logo: (
+    <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.859-3.048.859-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z"/><path fill="#FBBC05" d="M3.964 10.706A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332Z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 6.294C4.672 4.169 6.656 3.58 9 3.58Z"/></svg>
+  )},
+  { id: 'kakao', label: '카카오로 계속하기', bg: '#FEE500', color: '#191919', border: '#FEE500', logo: (
+    <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#191919" d="M9 1.5C4.858 1.5 1.5 4.134 1.5 7.385c0 2.076 1.348 3.899 3.387 4.951L4.08 15.3a.188.188 0 0 0 .285.208l3.6-2.39A9.62 9.62 0 0 0 9 13.27c4.142 0 7.5-2.634 7.5-5.885C16.5 4.134 13.142 1.5 9 1.5Z"/></svg>
+  )},
+  { id: 'naver', label: '네이버로 계속하기', bg: '#03C75A', color: '#fff', border: '#03C75A', logo: (
+    <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#fff" d="M10.215 9.27 7.5 5.25H5.25v7.5H7.785V8.73L10.5 12.75H12.75V5.25H10.215z"/></svg>
+  )},
+  { id: 'apple', label: 'Apple로 계속하기', bg: '#000', color: '#fff', border: '#000', logo: (
+    <svg width="18" height="18" viewBox="0 0 18 18"><path fill="currentColor" d="M12.438 0c.07.93-.27 1.87-.78 2.57-.53.72-1.37 1.28-2.21 1.21-.09-.92.31-1.87.81-2.51C10.8.55 11.7.02 12.438 0ZM15.5 13.07c-.35.78-.52 1.12-.97 1.79-.63.96-1.52 2.14-2.62 2.15-.98.01-1.23-.63-2.56-.62-1.32.01-1.61.64-2.59.63-1.1-.01-1.93-1.08-2.56-2.04C2.21 12.37 1.8 9.34 2.9 7.43c.78-1.35 2.12-2.14 3.39-2.14 1.26 0 2.05.63 3.09.63.99 0 1.6-.63 3.03-.63 1.14 0 2.33.62 3.11 1.7-2.73 1.47-2.29 5.31.48 6.08Z"/></svg>
+  )},
+] as const;
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
-  const [step, setStep] = useState(0);
-  const [form, setForm] = useState({
-    email: '', password: '', confirmPw: '', nickname: '',
-    rank: '상병', branch: '육군', unit: '', enlistedAt: '',
-  });
-  const [interests, setInterests] = useState<string[]>(['cert', 'lang', 'it']);
+  const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const up = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
-  const toggleInterest = (id: string) =>
-    setInterests(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
+  const up = (k: 'email' | 'password', v: string) => setForm(f => ({ ...f, [k]: v }));
 
   const handleLogin = async () => {
     if (!form.email || !form.password) { setError('이메일과 비밀번호를 입력하세요.'); return; }
@@ -50,142 +48,118 @@ export default function LoginPage() {
     }
   };
 
-  const handleSignup = async () => {
-    setLoading(true); setError('');
-    try {
-      await apiSignup({
-        email: form.email, password: form.password, nickname: form.nickname,
-        rankName: form.rank, branch: form.branch, unitName: form.unit,
-        enlistedAt: form.enlistedAt || undefined,
-      });
-      const data = await apiLogin(form.email, form.password);
-      localStorage.setItem('accessToken', data.accessToken);
-      localStorage.setItem('nickname', data.user?.nickname ?? '');
-      localStorage.setItem('userInfo', JSON.stringify(data.user ?? {}));
-      navigate('/');
-    } catch {
-      setError('회원가입에 실패했습니다. 이미 사용 중인 이메일일 수 있습니다.');
-    } finally {
-      setLoading(false);
-    }
+  const handleSocial = (provider: string) => {
+    const apiBase = import.meta.env.VITE_API_BASE_URL ?? '';
+    window.location.href = `${apiBase}/api/auth/${provider}`;
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg-base)', color: 'var(--text-base)', position: 'relative', overflowX: 'hidden' }}>
-      <div style={{ position: 'fixed', top: -120, left: '50%', transform: 'translateX(-50%)', width: 520, height: 520, borderRadius: '50%', background: 'radial-gradient(circle, var(--accent-soft) 0%, transparent 60%)', pointerEvents: 'none' }}/>
+    <div style={{
+      minHeight: '100vh', background: 'var(--bg-base)',
+      color: 'var(--text-base)', position: 'relative', overflowX: 'hidden',
+    }}>
+      <div style={{
+        position: 'fixed', top: -120, left: '50%', transform: 'translateX(-50%)',
+        width: 520, height: 520, borderRadius: '50%',
+        background: 'radial-gradient(circle, var(--accent-soft) 0%, transparent 60%)',
+        pointerEvents: 'none',
+      }} />
+
       <div style={{ padding: '24px 24px 60px', position: 'relative', maxWidth: 480, margin: '0 auto' }}>
-        <div style={{ marginTop: 48, marginBottom: 36 }}>
-          <MillogLogo size={40}/>
+        {/* 로고 + 헤드라인 */}
+        <div style={{ marginTop: 56, marginBottom: 40 }}>
+          <MillogLogo size={40} />
           <div className="t-display" style={{ marginTop: 28, fontSize: 30 }}>
-            복무의 시간을<br/><span style={{ color: 'var(--accent)' }}>성장의 시간</span>으로.
+            복무의 시간을<br /><span style={{ color: 'var(--accent)' }}>성장의 시간</span>으로.
           </div>
           <div className="t-subdued" style={{ marginTop: 10, fontSize: 14 }}>
             가용시간을 계산하고, 목표를 세우고, 로드맵을 따라가세요.
           </div>
         </div>
 
-        <div className="segmented" style={{ marginBottom: 24 }}>
-          <button className={mode === 'login' ? 'active' : ''} onClick={() => { setMode('login'); setStep(0); setError(''); }}>로그인</button>
-          <button className={mode === 'signup' ? 'active' : ''} onClick={() => { setMode('signup'); setStep(0); setError(''); }}>회원가입</button>
+        {/* 오류 */}
+        {error && (
+          <div style={{
+            marginBottom: 12, padding: '10px 14px',
+            background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.4)',
+            borderRadius: 8, color: '#ff8888', fontSize: 13,
+          }}>{error}</div>
+        )}
+
+        {/* 이메일 / 비밀번호 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <input
+            className="input"
+            type="email"
+            placeholder="이메일 주소"
+            value={form.email}
+            onChange={e => up('email', e.target.value)}
+            style={inputSt}
+            autoComplete="email"
+          />
+          <input
+            className="input"
+            type="password"
+            placeholder="비밀번호"
+            value={form.password}
+            onChange={e => up('password', e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleLogin()}
+            style={inputSt}
+            autoComplete="current-password"
+          />
         </div>
 
-        {error && <div style={{ marginBottom: 12, padding: '10px 14px', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.4)', borderRadius: 8, color: '#ff8888', fontSize: 13 }}>{error}</div>}
+        {/* 비밀번호 찾기 */}
+        <div style={{ textAlign: 'right', marginTop: 8, marginBottom: 20 }}>
+          <button
+            onClick={() => navigate('/forgot-password')}
+            style={{ fontSize: 13, color: 'var(--text-subdued)', cursor: 'pointer', background: 'none' }}
+          >비밀번호 찾기</button>
+        </div>
 
-        {mode === 'login' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <div><div className="t-caption" style={{ marginBottom: 8 }}>이메일</div>
-              <input className="input" type="email" placeholder="이메일 주소" value={form.email} onChange={e => up('email', e.target.value)} style={inputSt}/></div>
-            <div><div className="t-caption" style={{ marginBottom: 8 }}>비밀번호</div>
-              <input className="input" type="password" placeholder="비밀번호" value={form.password} onChange={e => up('password', e.target.value)} onKeyDown={e => e.key === 'Enter' && handleLogin()} style={inputSt}/></div>
-            <button className="btn btn-primary btn-full" style={{ marginTop: 20, height: 52 }} onClick={handleLogin} disabled={loading}>
-              {loading ? '로그인 중...' : '로그인'}
+        <button
+          className="btn btn-primary btn-full"
+          style={{ height: 52, fontSize: 15 }}
+          onClick={handleLogin}
+          disabled={loading}
+        >{loading ? '로그인 중...' : '로그인'}</button>
+
+        {/* 소셜 로그인 구분선 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '28px 0 20px' }}>
+          <div style={{ flex: 1, height: 1, background: 'var(--border-default)' }} />
+          <span className="t-caption">또는</span>
+          <div style={{ flex: 1, height: 1, background: 'var(--border-default)' }} />
+        </div>
+
+        {/* 소셜 버튼 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {SOCIAL.map(s => (
+            <button
+              key={s.id}
+              onClick={() => handleSocial(s.id)}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                gap: 10, height: 48, borderRadius: 10,
+                background: s.bg, color: s.color,
+                border: `1px solid ${s.border}`,
+                fontWeight: 600, fontSize: 14, cursor: 'pointer',
+                transition: 'opacity 150ms',
+              }}
+            >
+              {s.logo}
+              {s.label}
             </button>
-          </div>
-        )}
+          ))}
+        </div>
 
-        {mode === 'signup' && (
-          <div>
-            <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
-              {[0,1,2].map(i => <div key={i} style={{ flex: 1, height: 3, borderRadius: 999, background: i <= step ? 'var(--accent)' : 'var(--border-default)' }}/>)}
-            </div>
-
-            {step === 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <div className="t-section">계정 만들기</div>
-                <div><div className="t-caption" style={{ marginBottom: 8 }}>이메일</div>
-                  <input className="input" type="email" placeholder="이메일 주소" value={form.email} onChange={e => up('email', e.target.value)} style={inputSt}/></div>
-                <div><div className="t-caption" style={{ marginBottom: 8 }}>비밀번호 (8자 이상)</div>
-                  <input className="input" type="password" placeholder="비밀번호" value={form.password} onChange={e => up('password', e.target.value)} style={inputSt}/></div>
-                <div><div className="t-caption" style={{ marginBottom: 8 }}>비밀번호 확인</div>
-                  <input className="input" type="password" placeholder="비밀번호 다시 입력" value={form.confirmPw} onChange={e => up('confirmPw', e.target.value)} style={inputSt}/></div>
-                <button className="btn btn-primary btn-full" style={{ marginTop: 8, height: 52 }} onClick={() => {
-                  if (!form.email || form.password.length < 8) { setError('이메일과 8자 이상의 비밀번호를 입력하세요.'); return; }
-                  if (form.password !== form.confirmPw) { setError('비밀번호가 일치하지 않습니다.'); return; }
-                  setError(''); setStep(1);
-                }}>다음</button>
-              </div>
-            )}
-
-            {step === 1 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <div className="t-section">복무 정보</div>
-                <div><div className="t-caption" style={{ marginBottom: 8 }}>닉네임</div>
-                  <input className="input" placeholder="닉네임" value={form.nickname} onChange={e => up('nickname', e.target.value)} style={inputSt}/></div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                  <div><div className="t-caption" style={{ marginBottom: 8 }}>군종</div>
-                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                      {['육군','해군','공군','해병'].map(b => <button key={b} className={`chip ${form.branch === b ? 'active' : ''}`} onClick={() => up('branch', b)}>{b}</button>)}
-                    </div>
-                  </div>
-                  <div><div className="t-caption" style={{ marginBottom: 8 }}>계급</div>
-                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                      {['이병','일병','상병','병장'].map(r => <button key={r} className={`chip ${form.rank === r ? 'active' : ''}`} onClick={() => up('rank', r)}>{r}</button>)}
-                    </div>
-                  </div>
-                </div>
-                <div><div className="t-caption" style={{ marginBottom: 8 }}>소속 부대 (선택)</div>
-                  <input className="input" placeholder="예: 제00보병사단" value={form.unit} onChange={e => up('unit', e.target.value)} style={inputSt}/></div>
-                <div><div className="t-caption" style={{ marginBottom: 8 }}>입대일 (선택)</div>
-                  <input className="input" type="date" value={form.enlistedAt} onChange={e => up('enlistedAt', e.target.value)} style={inputSt}/></div>
-                <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-                  <button className="btn btn-ghost" style={{ flex: 1, height: 52 }} onClick={() => setStep(0)}>이전</button>
-                  <button className="btn btn-primary" style={{ flex: 2, height: 52 }} onClick={() => { if (!form.nickname) { setError('닉네임을 입력하세요.'); return; } setError(''); setStep(2); }}>다음</button>
-                </div>
-              </div>
-            )}
-
-            {step === 2 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-                <div className="t-section">관심 분야 선택</div>
-                <div className="t-subdued" style={{ marginTop: -8 }}>첫 로드맵을 만드는 데 활용됩니다.</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                  {INTERESTS.map(it => {
-                    const on = interests.includes(it.id);
-                    return (
-                      <button key={it.id} onClick={() => toggleInterest(it.id)} style={{
-                        padding: '16px 14px', borderRadius: 10,
-                        background: on ? 'var(--accent-soft)' : 'var(--bg-surface)',
-                        border: on ? '1px solid var(--accent)' : '1px solid transparent',
-                        color: 'var(--text-base)', textAlign: 'left', fontWeight: 600, fontSize: 14,
-                        display: 'flex', alignItems: 'center', gap: 10,
-                      }}>
-                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: it.accent }}/>
-                        {it.label}
-                        {on && <span style={{ marginLeft: 'auto', color: 'var(--accent)' }}><Icon name="check" size={18}/></span>}
-                      </button>
-                    );
-                  })}
-                </div>
-                <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-                  <button className="btn btn-ghost" style={{ flex: 1, height: 52 }} onClick={() => setStep(1)}>이전</button>
-                  <button className="btn btn-primary" style={{ flex: 2, height: 52 }} onClick={handleSignup} disabled={loading}>
-                    {loading ? '가입 중...' : '시작하기'}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        {/* 회원가입 */}
+        <div style={{ marginTop: 32, textAlign: 'center', fontSize: 14, color: 'var(--text-subdued)' }}>
+          아직 계정이 없으신가요?{' '}
+          <button
+            onClick={() => navigate('/signup')}
+            style={{ color: 'var(--accent)', fontWeight: 700, background: 'none', cursor: 'pointer', fontSize: 14 }}
+          >회원가입</button>
+        </div>
       </div>
     </div>
   );
