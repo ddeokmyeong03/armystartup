@@ -17,6 +17,8 @@ async function bootstrap() {
     ...(process.env.FRONTEND_URL?.split(',') ?? ['http://localhost:5173']),
     'https://millog-admin.onrender.com',
     'https://millog-frontend.onrender.com',
+    'https://millog.co.kr',
+    'https://www.millog.co.kr',
   ];
   app.enableCors({ origin: allowedOrigins, credentials: false });
 
