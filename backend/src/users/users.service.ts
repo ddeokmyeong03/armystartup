@@ -28,7 +28,7 @@ export class UsersService {
   async changePassword(userId: number, dto: ChangePasswordDto) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new NotFoundException('사용자를 찾을 수 없습니다.');
-    if (!(await bcrypt.compare(dto.currentPassword, user.password))) {
+    if (!user.password || !(await bcrypt.compare(dto.currentPassword, user.password))) {
       throw new UnauthorizedException('현재 비밀번호가 올바르지 않습니다.');
     }
     const hashed = await bcrypt.hash(dto.newPassword, 10);
