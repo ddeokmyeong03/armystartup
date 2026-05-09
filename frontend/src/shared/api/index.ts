@@ -15,6 +15,11 @@ export async function apiSignup(payload: {
   await apiClient.post('/api/auth/signup', payload);
 }
 
+export async function apiCheckEmail(email: string): Promise<{ available: boolean }> {
+  const res = await apiClient.post('/api/auth/check-email', { email });
+  return res.data;
+}
+
 export async function apiForgotPassword(email: string) {
   await apiClient.post('/api/auth/forgot-password', { email });
 }

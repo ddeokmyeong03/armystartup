@@ -21,6 +21,11 @@ export class AuthService {
     private readonly mailService: MailService,
   ) {}
 
+  async checkEmail(email: string): Promise<{ available: boolean }> {
+    const existing = await this.prisma.user.findUnique({ where: { email } });
+    return { available: !existing };
+  }
+
   async signup(dto: SignupDto): Promise<void> {
     const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
     if (existing) throw new ConflictException('이미 사용 중인 이메일입니다.');

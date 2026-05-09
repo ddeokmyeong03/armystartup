@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Icon } from '../../shared/components/Icon';
-import { apiLogin, apiSignup, apiUpsertProfile } from '../../shared/api/index';
+import { apiLogin, apiSignup, apiUpsertProfile, apiCheckEmail } from '../../shared/api/index';
 
 const INTERESTS = [
   { id: 'cert',    label: '자격증',     accent: '#8b5cf6' },
@@ -32,6 +32,7 @@ interface StepProps {
   up: (k: keyof FormState, v: string) => void;
   error: string;
   onNext: () => void;
+  checking?: boolean;
 }
 
 function ErrorMsg({ msg }: { msg: string }) {
@@ -45,7 +46,7 @@ function ErrorMsg({ msg }: { msg: string }) {
   );
 }
 
-function Step1({ form, up, error, onNext }: StepProps) {
+function Step1({ form, up, error, onNext, checking }: StepProps) {
   const ref = useRef<HTMLInputElement>(null);
   useEffect(() => { ref.current?.focus(); }, []);
   const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email);
@@ -61,15 +62,15 @@ function Step1({ form, up, error, onNext }: StepProps) {
         placeholder="example@email.com"
         value={form.email}
         onChange={e => up('email', e.target.value)}
-        onKeyDown={e => e.key === 'Enter' && valid && onNext()}
+        onKeyDown={e => e.key === 'Enter' && valid && !checking && onNext()}
         autoComplete="email"
       />
       <ErrorMsg msg={error} />
       <button
         className="btn btn-primary btn-full signup-next-btn"
         onClick={onNext}
-        disabled={!valid}
-      >다음</button>
+        disabled={!valid || checking}
+      >{checking ? '확인 중...' : '다음'}</button>
     </>
   );
 }
@@ -256,6 +257,7 @@ export default function SignupPage() {
   });
   const [interests, setInterests] = useState<string[]>(['cert', 'lang', 'it']);
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(false);
   const [error, setError] = useState('');
 
   const up = (k: keyof FormState, v: string) => setForm(f => ({ ...f, [k]: v }));
@@ -265,12 +267,25 @@ export default function SignupPage() {
   const goNext = (n: number) => { setDir('forward'); setError(''); setStep(n); };
   const goBack = (n: number) => { setDir('back'); setError(''); setStep(n); };
 
-  const handleStep1 = () => {
+  const handleStep1 = async () => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
       setError('올바른 이메일 주소를 입력하세요.');
       return;
     }
-    goNext(2);
+    setChecking(true);
+    setError('');
+    try {
+      const { available } = await apiCheckEmail(form.email);
+      if (!available) {
+        setError('이미 사용 중인 이메일입니다. 다른 이메일을 입력해주세요.');
+        return;
+      }
+      goNext(2);
+    } catch {
+      goNext(2); // 네트워크 오류 시 가입 진행 (signup 단계에서 재검증)
+    } finally {
+      setChecking(false);
+    }
   };
 
   const handleStep2 = () => {
@@ -319,13 +334,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'var(--bg-base)',
-      color: 'var(--text-base)',
-      position: 'relative',
-      overflowX: 'hidden',
-    }}>
+    <div className="auth-page">
       {/* 배경 그라디언트 */}
       <div style={{
         position: 'fixed', top: -80, left: '50%', transform: 'translateX(-50%)',
@@ -375,7 +384,7 @@ export default function SignupPage() {
         }}
       >
         {step === 1 && (
-          <Step1 form={form} up={up} error={error} onNext={handleStep1} />
+          <Step1 form={form} up={up} error={error} onNext={handleStep1} checking={checking} />
         )}
         {step === 2 && (
           <Step2 form={form} up={up} error={error} onNext={handleStep2} />

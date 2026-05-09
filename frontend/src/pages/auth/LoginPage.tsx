@@ -54,10 +54,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{
-      minHeight: '100vh', background: 'var(--bg-base)',
-      color: 'var(--text-base)', position: 'relative', overflowX: 'hidden',
-    }}>
+    <div className="auth-page">
       <div style={{
         position: 'fixed', top: -120, left: '50%', transform: 'translateX(-50%)',
         width: 520, height: 520, borderRadius: '50%',

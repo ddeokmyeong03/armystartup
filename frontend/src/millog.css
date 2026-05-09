@@ -50,6 +50,17 @@ html, body, #root {
 button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; padding: 0; }
 input, textarea { font-family: inherit; }
 
+/* ==================== Auth pages (non-shell scroll) ==================== */
+.auth-page {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  background: var(--bg-base);
+  color: var(--text-base);
+  position: relative;
+}
+
 /* ==================== Page shell ==================== */
 .page {
   position: absolute;

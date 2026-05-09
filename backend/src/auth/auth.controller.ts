@@ -18,6 +18,13 @@ const FRONTEND_URL = () =>
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  @Post('check-email')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: '이메일 사용 가능 여부 확인' })
+  async checkEmail(@Body() dto: ForgotPasswordDto) {
+    return this.authService.checkEmail(dto.email);
+  }
+
   @Post('signup')
   @ApiOperation({ summary: '회원가입' })
   async signup(@Body() dto: SignupDto) {
