@@ -10,6 +10,14 @@ import { NaverStrategy } from './strategies/naver.strategy';
 import { AppleAuthStrategy } from './strategies/apple.strategy';
 import { MailService } from '../mail/mail.service';
 
+// 환경변수가 설정된 경우에만 해당 소셜 전략을 등록
+const socialProviders = [
+  ...(process.env.GOOGLE_CLIENT_ID ? [GoogleStrategy] : []),
+  ...(process.env.KAKAO_CLIENT_ID ? [KakaoStrategy] : []),
+  ...(process.env.NAVER_CLIENT_ID ? [NaverStrategy] : []),
+  ...(process.env.APPLE_CLIENT_ID ? [AppleAuthStrategy] : []),
+];
+
 @Module({
   imports: [
     PassportModule,
@@ -21,11 +29,8 @@ import { MailService } from '../mail/mail.service';
   providers: [
     AuthService,
     JwtStrategy,
-    GoogleStrategy,
-    KakaoStrategy,
-    NaverStrategy,
-    AppleAuthStrategy,
     MailService,
+    ...socialProviders,
   ],
   controllers: [AuthController],
   exports: [JwtModule],
