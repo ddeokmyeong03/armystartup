@@ -34,24 +34,6 @@ interface StepProps {
   onNext: () => void;
 }
 
-function StepShell({
-  step, total, onBack, children,
-}: {
-  step: number; total: number; onBack: () => void; children: React.ReactNode;
-}) {
-  return (
-    <div className="signup-shell">
-      <button className="signup-back-btn" onClick={onBack} aria-label="뒤로">
-        <Icon name="chevron-left" size={24} />
-      </button>
-      <div className="signup-progress-bar">
-        <div className="signup-progress-fill" style={{ width: `${(step / total) * 100}%` }} />
-      </div>
-      <div className="signup-body">{children}</div>
-    </div>
-  );
-}
-
 function ErrorMsg({ msg }: { msg: string }) {
   if (!msg) return null;
   return (
