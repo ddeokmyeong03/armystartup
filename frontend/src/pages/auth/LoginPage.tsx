@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MillogLogo } from '../../shared/components/Icon';
 import { apiLogin } from '../../shared/api/index';
 
 const inputSt: React.CSSProperties = {
@@ -65,7 +64,7 @@ export default function LoginPage() {
       <div style={{ padding: '24px 24px 60px', position: 'relative', maxWidth: 480, margin: '0 auto' }}>
         {/* 로고 + 헤드라인 */}
         <div style={{ marginTop: 56, marginBottom: 40 }}>
-          <MillogLogo size={40} />
+          <img src="/millog-icon.png" alt="Millog" style={{ width: 48, height: 48, borderRadius: 12 }} />
           <div className="t-display" style={{ marginTop: 28, fontSize: 30 }}>
             복무의 시간을<br /><span style={{ color: 'var(--accent)' }}>성장의 시간</span>으로.
           </div>
