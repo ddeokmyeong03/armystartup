@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '../hooks/useIsMobile';
 import DesktopSidebar from './DesktopSidebar';
-import { Icon } from './Icon';
+
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
@@ -23,9 +23,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           className="desktop-user-chip"
           onClick={() => navigate('/notifications')}
           title="알림"
-          style={{ display: 'flex', alignItems: 'center', gap: 6 }}
         >
-          <Icon name="bell" size={16} />
           <span style={{ fontSize: 13 }}>알림</span>
         </button>
       </header>
