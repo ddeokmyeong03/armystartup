@@ -102,11 +102,12 @@ export class AuthService {
       }
     } else {
       // 신규 사용자 생성
+      const socialPw = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
       user = await this.prisma.user.create({
         data: {
           email,
           nickname: nickname.slice(0, 20),
-          password: null,
+          password: socialPw,
           provider,
         },
       });
