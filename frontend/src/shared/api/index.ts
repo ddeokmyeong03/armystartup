@@ -17,7 +17,7 @@ export async function apiSignup(payload: {
 
 export async function apiCheckEmail(email: string): Promise<{ available: boolean }> {
   const res = await apiClient.post('/api/auth/check-email', { email });
-  return res.data;
+  return res.data.data ?? res.data;
 }
 
 export async function apiForgotPassword(email: string) {

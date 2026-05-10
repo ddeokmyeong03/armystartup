@@ -56,7 +56,7 @@ export default function LandingPage() {
             <button
               className="btn btn-primary btn-full"
               style={{ height: 54, fontSize: 16, fontWeight: 700 }}
-              onClick={() => navigate('/signup')}
+              onClick={() => navigate('/signup', { state: { from: 'landing' } })}
             >
               무료로 시작하기
             </button>
@@ -127,9 +127,9 @@ export default function LandingPage() {
           <button
             className="btn btn-primary btn-full"
             style={{ height: 50, fontWeight: 700 }}
-            onClick={() => navigate('/signup')}
+            onClick={() => navigate('/signup', { state: { from: 'landing' } })}
           >
-            밀로그 시작하기
+            Millog 시작하기
           </button>
         </div>
       </div>

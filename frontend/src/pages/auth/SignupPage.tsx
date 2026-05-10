@@ -1,7 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Icon } from '../../shared/components/Icon';
 import { apiLogin, apiSignup, apiUpsertProfile, apiCheckEmail } from '../../shared/api/index';
+
+const SOCIAL_METHODS = [
+  { id: 'google', label: 'Google로 시작하기', bg: '#fff', color: '#1f1f1f', border: '#dadce0', logo: (
+    <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.859-3.048.859-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z"/><path fill="#FBBC05" d="M3.964 10.706A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332Z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 6.294C4.672 4.169 6.656 3.58 9 3.58Z"/></svg>
+  )},
+  { id: 'kakao', label: '카카오로 시작하기', bg: '#FEE500', color: '#191919', border: '#FEE500', logo: (
+    <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#191919" d="M9 1.5C4.858 1.5 1.5 4.134 1.5 7.385c0 2.076 1.348 3.899 3.387 4.951L4.08 15.3a.188.188 0 0 0 .285.208l3.6-2.39A9.62 9.62 0 0 0 9 13.27c4.142 0 7.5-2.634 7.5-5.885C16.5 4.134 13.142 1.5 9 1.5Z"/></svg>
+  )},
+  { id: 'naver', label: '네이버로 시작하기', bg: '#03C75A', color: '#fff', border: '#03C75A', logo: (
+    <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#fff" d="M10.215 9.27 7.5 5.25H5.25v7.5H7.785V8.73L10.5 12.75H12.75V5.25H10.215z"/></svg>
+  )},
+] as const;
 
 const INTERESTS = [
   { id: 'cert',    label: '자격증',     accent: '#8b5cf6' },
@@ -249,7 +261,9 @@ function Step4({
 
 export default function SignupPage() {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
+  const location = useLocation();
+  const fromPage = (location.state as any)?.from ?? 'landing';
+  const [step, setStep] = useState(0);
   const [dir, setDir] = useState<'forward' | 'back'>('forward');
   const [form, setForm] = useState<FormState>({
     email: '', password: '', confirmPw: '', nickname: '',
@@ -328,8 +342,13 @@ export default function SignupPage() {
     }
   };
 
+  const handleSocial = (provider: string) => {
+    const apiBase = import.meta.env.VITE_API_BASE_URL ?? '';
+    window.location.href = `${apiBase}/api/auth/${provider}`;
+  };
+
   const handleBack = () => {
-    if (step === 1) navigate('/login');
+    if (step === 0) navigate(fromPage === 'login' ? '/login' : '/');
     else goBack(step - 1);
   };
 
@@ -358,19 +377,21 @@ export default function SignupPage() {
         <Icon name="chevron-left" size={20} />
       </button>
 
-      {/* 진행 바 */}
-      <div style={{
-        position: 'fixed', top: 0, left: 0, right: 0, height: 3,
-        background: 'var(--bg-surface-hi)', zIndex: 10,
-      }}>
+      {/* 진행 바 (step 0은 표시 안 함) */}
+      {step > 0 && (
         <div style={{
-          height: '100%',
-          width: `${(step / TOTAL_STEPS) * 100}%`,
-          background: 'var(--accent)',
-          borderRadius: '0 9999px 9999px 0',
-          transition: 'width 400ms cubic-bezier(.2,.8,.2,1)',
-        }} />
-      </div>
+          position: 'fixed', top: 0, left: 0, right: 0, height: 3,
+          background: 'var(--bg-surface-hi)', zIndex: 10,
+        }}>
+          <div style={{
+            height: '100%',
+            width: `${(step / TOTAL_STEPS) * 100}%`,
+            background: 'var(--accent)',
+            borderRadius: '0 9999px 9999px 0',
+            transition: 'width 400ms cubic-bezier(.2,.8,.2,1)',
+          }} />
+        </div>
+      )}
 
       {/* 스텝 콘텐츠 */}
       <div
@@ -383,6 +404,43 @@ export default function SignupPage() {
           animation: `${dir === 'forward' ? 'stepSlideRight' : 'stepSlideLeft'} 280ms cubic-bezier(.2,.8,.2,1)`,
         }}
       >
+        {step === 0 && (
+          <>
+            <div style={{ marginBottom: 32 }}>
+              <img src="/millog-icon.png" alt="Millog" style={{ width: 48, height: 48, borderRadius: 12, marginBottom: 20 }} />
+              <div className="signup-step-title">회원가입</div>
+              <div className="signup-step-sub">시작할 방법을 선택해주세요</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <button
+                className="btn btn-primary btn-full"
+                style={{ height: 52, fontSize: 15, fontWeight: 700 }}
+                onClick={() => goNext(1)}
+              >이메일로 회원가입</button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '4px 0' }}>
+                <div style={{ flex: 1, height: 1, background: 'var(--border-default)' }} />
+                <span className="t-caption">또는</span>
+                <div style={{ flex: 1, height: 1, background: 'var(--border-default)' }} />
+              </div>
+              {SOCIAL_METHODS.map(s => (
+                <button
+                  key={s.id}
+                  onClick={() => handleSocial(s.id)}
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    gap: 10, height: 52, borderRadius: 10,
+                    background: s.bg, color: s.color,
+                    border: `1px solid ${s.border}`,
+                    fontWeight: 600, fontSize: 14, cursor: 'pointer',
+                  }}
+                >
+                  {s.logo}
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
         {step === 1 && (
           <Step1 form={form} up={up} error={error} onNext={handleStep1} checking={checking} />
         )}

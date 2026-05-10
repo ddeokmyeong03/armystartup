@@ -18,9 +18,6 @@ const SOCIAL = [
   { id: 'naver', label: '네이버로 계속하기', bg: '#03C75A', color: '#fff', border: '#03C75A', logo: (
     <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#fff" d="M10.215 9.27 7.5 5.25H5.25v7.5H7.785V8.73L10.5 12.75H12.75V5.25H10.215z"/></svg>
   )},
-  { id: 'apple', label: 'Apple로 계속하기', bg: '#000', color: '#fff', border: '#000', logo: (
-    <svg width="18" height="18" viewBox="0 0 18 18"><path fill="currentColor" d="M12.438 0c.07.93-.27 1.87-.78 2.57-.53.72-1.37 1.28-2.21 1.21-.09-.92.31-1.87.81-2.51C10.8.55 11.7.02 12.438 0ZM15.5 13.07c-.35.78-.52 1.12-.97 1.79-.63.96-1.52 2.14-2.62 2.15-.98.01-1.23-.63-2.56-.62-1.32.01-1.61.64-2.59.63-1.1-.01-1.93-1.08-2.56-2.04C2.21 12.37 1.8 9.34 2.9 7.43c.78-1.35 2.12-2.14 3.39-2.14 1.26 0 2.05.63 3.09.63.99 0 1.6-.63 3.03-.63 1.14 0 2.33.62 3.11 1.7-2.73 1.47-2.29 5.31.48 6.08Z"/></svg>
-  )},
 ] as const;
 
 export default function LoginPage() {
@@ -152,7 +149,7 @@ export default function LoginPage() {
         <div style={{ marginTop: 32, textAlign: 'center', fontSize: 14, color: 'var(--text-subdued)' }}>
           아직 계정이 없으신가요?{' '}
           <button
-            onClick={() => navigate('/signup')}
+            onClick={() => navigate('/signup', { state: { from: 'login' } })}
             style={{ color: 'var(--accent)', fontWeight: 700, background: 'none', cursor: 'pointer', fontSize: 14 }}
           >회원가입</button>
         </div>

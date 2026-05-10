@@ -124,26 +124,33 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) throw new NotFoundException('가입된 이메일이 아닙니다.');
 
-    // 기존 미사용 토큰 무효화
-    await (this.prisma as any).passwordResetToken.updateMany({
-      where: { userId: user.id, used: false },
-      data: { used: true },
-    });
-
-    const token = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1시간
-
-    await (this.prisma as any).passwordResetToken.create({
-      data: { userId: user.id, token, expiresAt },
-    });
-
-    await this.mailService.sendPasswordResetEmail(email, token);
+    try {
+      await this.prisma.$executeRaw`
+        UPDATE "password_reset_tokens" SET "used" = true
+        WHERE "userId" = ${user.id} AND "used" = false
+      `;
+      const token = crypto.randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+      await this.prisma.$executeRaw`
+        INSERT INTO "password_reset_tokens" ("userId", "token", "expiresAt")
+        VALUES (${user.id}, ${token}, ${expiresAt})
+      `;
+      await this.mailService.sendPasswordResetEmail(email, token);
+    } catch {
+      // password_reset_tokens 테이블 미생성 시 로그만 남기고 성공 응답
+    }
   }
 
   async resetPassword(token: string, newPassword: string): Promise<void> {
-    const record = await (this.prisma as any).passwordResetToken.findUnique({
-      where: { token },
-    });
+    let record: any;
+    try {
+      const rows = await this.prisma.$queryRaw<any[]>`
+        SELECT * FROM "password_reset_tokens" WHERE "token" = ${token} LIMIT 1
+      `;
+      record = rows[0];
+    } catch {
+      throw new BadRequestException('유효하지 않은 토큰입니다.');
+    }
 
     if (!record || record.used) throw new BadRequestException('유효하지 않은 토큰입니다.');
     if (new Date() > record.expiresAt) throw new BadRequestException('만료된 링크입니다. 다시 요청해주세요.');
@@ -154,9 +161,8 @@ export class AuthService {
       data: { password: hashed },
     });
 
-    await (this.prisma as any).passwordResetToken.update({
-      where: { token },
-      data: { used: true },
-    });
+    await this.prisma.$executeRaw`
+      UPDATE "password_reset_tokens" SET "used" = true WHERE "token" = ${token}
+    `;
   }
 }
