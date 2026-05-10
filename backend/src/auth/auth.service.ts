@@ -87,33 +87,27 @@ export class AuthService {
     email: string;
     nickname: string;
   }) {
-    const { provider, socialId, email, nickname } = socialProfile;
+    const { provider, email, nickname } = socialProfile;
 
-    // 기존 소셜 계정 조회
-    let user = await this.prisma.user.findFirst({
-      where: { provider, socialId },
-    });
+    // 이메일로 기존 계정 조회
+    let user = await this.prisma.user.findUnique({ where: { email } });
 
-    // 동일 이메일 기존 계정이 있으면 소셜 연결
-    if (!user) {
-      const byEmail = await this.prisma.user.findUnique({ where: { email } });
-      if (byEmail) {
+    if (user) {
+      // 기존 계정의 provider 업데이트
+      if (user.provider !== provider) {
         user = await this.prisma.user.update({
-          where: { id: byEmail.id },
-          data: { provider, socialId },
+          where: { id: user.id },
+          data: { provider },
         });
       }
-    }
-
-    // 신규 사용자 생성
-    if (!user) {
+    } else {
+      // 신규 사용자 생성
       user = await this.prisma.user.create({
         data: {
           email,
           nickname: nickname.slice(0, 20),
           password: null,
           provider,
-          socialId,
         },
       });
       await this.prisma.userProfile.create({

@@ -14,7 +14,6 @@ model User {
   nickname    String
   phoneNumber String?
   provider    String   @default("LOCAL")
-  socialId    String?
   role        String   @default("USER")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -27,22 +26,8 @@ model User {
   roadmaps              Roadmap[]
   notifications         Notification[]
   activities            UserActivity[]
-  passwordResetTokens   PasswordResetToken[]
 
   @@map("users")
-}
-
-model PasswordResetToken {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  token     String   @unique
-  expiresAt DateTime
-  used      Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("password_reset_tokens")
 }
 
 model UserProfile {
