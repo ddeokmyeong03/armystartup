@@ -87,33 +87,42 @@ export class AuthService {
     email: string;
     nickname: string;
   }) {
-    const { provider, email, nickname } = socialProfile;
+    const { provider, socialId, email, nickname } = socialProfile;
 
-    // 이메일로 기존 계정 조회
-    let user = await this.prisma.user.findUnique({ where: { email } });
+    // 1) provider + socialId로 기존 계정 조회 (raw query, 컬럼 없으면 catch로 진입)
+    let user: any = null;
+    try {
+      const rows = await this.prisma.$queryRaw<any[]>`
+        SELECT * FROM "users" WHERE "provider" = ${provider} AND "socialId" = ${socialId} LIMIT 1
+      `;
+      user = rows[0] ?? null;
+    } catch { /* socialId 컬럼 아직 없으면 무시 */ }
+
+    // 2) 이메일로 기존 계정 조회 (fallback)
+    if (!user) {
+      user = await this.prisma.user.findUnique({ where: { email } });
+    }
 
     if (user) {
-      // 기존 계정의 provider 업데이트
-      if (user.provider !== provider) {
-        user = await this.prisma.user.update({
-          where: { id: user.id },
-          data: { provider },
-        });
-      }
+      // provider·socialId 업데이트 (raw, 컬럼 없으면 무시)
+      try {
+        await this.prisma.$executeRaw`
+          UPDATE "users" SET "provider" = ${provider}, "socialId" = ${socialId}
+          WHERE "id" = ${user.id}
+        `;
+      } catch { /* ignore */ }
     } else {
       // 신규 사용자 생성
       const socialPw = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
       user = await this.prisma.user.create({
-        data: {
-          email,
-          nickname: nickname.slice(0, 20),
-          password: socialPw,
-          provider,
-        },
+        data: { email, nickname: nickname.slice(0, 20), password: socialPw, provider },
       });
-      await this.prisma.userProfile.create({
-        data: { userId: user.id } as any,
-      });
+      try {
+        await this.prisma.$executeRaw`
+          UPDATE "users" SET "socialId" = ${socialId} WHERE "id" = ${user.id}
+        `;
+      } catch { /* ignore */ }
+      await this.prisma.userProfile.create({ data: { userId: user.id } as any });
     }
 
     const accessToken = this.jwtService.sign({ sub: user.id, email: user.email });
