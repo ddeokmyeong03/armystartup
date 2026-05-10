@@ -6,7 +6,7 @@ export default function TabBar() {
   const { pathname } = useLocation();
 
   const items = [
-    { path: '/',         label: '홈',    icon: <Icon name="home-filled" size={22}/> },
+    { path: '/home',      label: '홈',    icon: <Icon name="home-filled" size={22}/> },
     { path: '/goals',    label: '목표',  icon: <IconGoal size={22}/> },
     { path: '/roadmap',  label: '로드맵', icon: <IconMap size={22}/> },
     { path: '/courses',  label: '강의',  icon: <IconBook size={22}/> },
@@ -14,7 +14,7 @@ export default function TabBar() {
   ];
 
   const active = (path: string) => {
-    if (path === '/') return pathname === '/';
+    if (path === '/home') return pathname === '/home';
     return pathname.startsWith(path);
   };
 

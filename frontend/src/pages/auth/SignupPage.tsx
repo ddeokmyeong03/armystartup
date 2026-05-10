@@ -320,7 +320,7 @@ export default function SignupPage() {
       try {
         await apiUpsertProfile({ interests: JSON.stringify(interests) });
       } catch { /* 실패해도 가입은 완료 */ }
-      navigate('/');
+      navigate('/home');
     } catch {
       setError('회원가입에 실패했습니다. 이미 사용 중인 이메일일 수 있습니다.');
     } finally {

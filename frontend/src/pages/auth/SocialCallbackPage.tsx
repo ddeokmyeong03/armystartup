@@ -18,7 +18,7 @@ export default function SocialCallbackPage() {
     if (token) {
       localStorage.setItem('accessToken', token);
       if (nickname) localStorage.setItem('nickname', nickname);
-      navigate('/');
+      navigate('/home');
     } else {
       navigate('/login');
     }

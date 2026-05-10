@@ -2,7 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Icon, IconGoal, IconMap, IconBook, IconUser } from './Icon';
 
 const NAV_ITEMS = [
-  { path: '/',        label: '홈',     icon: <Icon name="home-filled" size={20}/> },
+  { path: '/home',    label: '홈',     icon: <Icon name="home-filled" size={20}/> },
   { path: '/goals',   label: '목표',   icon: <IconGoal size={20}/> },
   { path: '/roadmap', label: '로드맵', icon: <IconMap size={20}/> },
   { path: '/courses', label: '강의',   icon: <IconBook size={20}/> },
@@ -14,7 +14,7 @@ export default function DesktopSidebar() {
   const { pathname } = useLocation();
 
   const isActive = (path: string) =>
-    path === '/' ? pathname === '/' : pathname.startsWith(path);
+    path === '/home' ? pathname === '/home' : pathname.startsWith(path);
 
   return (
     <nav className="desktop-sidebar">

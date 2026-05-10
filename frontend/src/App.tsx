@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { isLoggedIn } from './shared/lib/auth';
 import AppLayout from './shared/components/AppLayout';
+import LandingPage from './pages/landing/LandingPage';
 import LoginPage from './pages/auth/LoginPage';
 import SignupPage from './pages/auth/SignupPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
@@ -18,12 +19,12 @@ import ChangePasswordPage from './pages/settings/ChangePasswordPage';
 import ScheduleCreatePage from './pages/schedules/ScheduleCreatePage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  if (!isLoggedIn()) return <Navigate to="/login" replace />;
+  if (!isLoggedIn()) return <Navigate to="/" replace />;
   return <AppLayout>{children}</AppLayout>;
 }
 
 function GuestRoute({ children }: { children: React.ReactNode }) {
-  if (isLoggedIn()) return <Navigate to="/" replace />;
+  if (isLoggedIn()) return <Navigate to="/home" replace />;
   return <>{children}</>;
 }
 
@@ -31,6 +32,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* 랜딩 */}
+        <Route path="/" element={<GuestRoute><LandingPage /></GuestRoute>} />
+
         {/* 인증 */}
         <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
         <Route path="/signup" element={<GuestRoute><SignupPage /></GuestRoute>} />
@@ -39,7 +43,7 @@ export default function App() {
         <Route path="/auth/callback" element={<SocialCallbackPage />} />
 
         {/* 탭 메인 화면 */}
-        <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
+        <Route path="/home" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
         <Route path="/goals" element={<ProtectedRoute><GoalsPage /></ProtectedRoute>} />
         <Route path="/roadmap" element={<ProtectedRoute><RoadmapPage /></ProtectedRoute>} />
         <Route path="/courses" element={<ProtectedRoute><CoursesPage /></ProtectedRoute>} />
@@ -53,7 +57,7 @@ export default function App() {
         <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
         <Route path="/settings/password" element={<ProtectedRoute><ChangePasswordPage /></ProtectedRoute>} />
 
-        <Route path="*" element={<Navigate to={isLoggedIn() ? '/' : '/login'} replace />} />
+        <Route path="*" element={<Navigate to={isLoggedIn() ? '/home' : '/'} replace />} />
       </Routes>
     </BrowserRouter>
   );

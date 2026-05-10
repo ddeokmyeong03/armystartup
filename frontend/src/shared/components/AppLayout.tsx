@@ -16,7 +16,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <header className="desktop-topbar">
         <button
           style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'none', cursor: 'pointer' }}
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/home')}
         >
           <MillogLogo size={28} />
           <span className="desktop-topbar-title">Millog</span>
