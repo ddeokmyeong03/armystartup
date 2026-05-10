@@ -1,13 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '../hooks/useIsMobile';
 import DesktopSidebar from './DesktopSidebar';
-import { MillogLogo, Icon } from './Icon';
-import { getNickname } from '../lib/auth';
+import { Icon } from './Icon';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
-  const nickname = getNickname();
 
   if (isMobile) return <>{children}</>;
 
@@ -18,20 +16,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'none', cursor: 'pointer' }}
           onClick={() => navigate('/home')}
         >
-          <MillogLogo size={28} />
-          <span className="desktop-topbar-title">Millog</span>
+          <img src="/millog-icon.png" alt="Millog" style={{ width: 28, height: 28, borderRadius: 7 }} />
         </button>
         <div style={{ flex: 1 }} />
         <button
           className="desktop-user-chip"
           onClick={() => navigate('/notifications')}
-          style={{ marginRight: 8 }}
           title="알림"
+          style={{ display: 'flex', alignItems: 'center', gap: 6 }}
         >
           <Icon name="bell" size={16} />
-        </button>
-        <button className="desktop-user-chip" onClick={() => navigate('/profile')}>
-          {nickname}
+          <span style={{ fontSize: 13 }}>알림</span>
         </button>
       </header>
       <div className="desktop-body">
