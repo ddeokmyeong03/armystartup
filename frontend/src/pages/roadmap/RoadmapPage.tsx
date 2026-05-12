@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 import TabBar from '../../shared/components/TabBar';
 import PageHeader from '../../shared/components/PageHeader';
 import { Icon } from '../../shared/components/Icon';
@@ -219,9 +220,17 @@ function AIChatView() {
         {messages.map((m, i) => (
           m.role === 'user'
             ? <div key={i} className="bubble bubble-user">{m.text}</div>
-            : <div key={i} className="bubble bubble-ai">{m.text}</div>
+            : <div key={i} className="bubble bubble-ai">
+                <ReactMarkdown>{m.text}</ReactMarkdown>
+              </div>
         ))}
-        {loading && <div className="bubble bubble-ai" style={{ opacity: 0.6 }}>답변 생성 중...</div>}
+        {loading && (
+          <div className="bubble bubble-ai" style={{ paddingTop: 4, paddingBottom: 4 }}>
+            <div className="typing-dots">
+              <span/><span/><span/>
+            </div>
+          </div>
+        )}
       </div>
 
       <div style={{ padding: '0 16px 8px', display: 'flex', gap: 6, overflowX: 'auto', flexShrink: 0 }}>
