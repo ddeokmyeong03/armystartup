@@ -187,7 +187,7 @@ export class RoadmapService {
     };
   }
 
-  /** 개별 항목 체크/해제 및 저장 */
+  /** 개별 항목 체크/해제 및 저장 — 전체 체크 시 단계 자동 전환 */
   async checkItem(userId: number, roadmapId: number, stageIndex: number, itemIndex: number, checked: boolean) {
     const roadmap = await this.prisma.roadmap.findFirst({ where: { id: roadmapId, userId } });
     if (!roadmap) throw new NotFoundException('로드맵을 찾을 수 없습니다.');
@@ -200,6 +200,19 @@ export class RoadmapService {
     checked ? checkedSet.add(itemIndex) : checkedSet.delete(itemIndex);
     stage.checkedItems = Array.from(checkedSet).sort((a, b) => a - b);
 
+    // 전체 체크 → 현재 단계 completed, 다음 단계 in_progress 자동 전환
+    const allChecked = stage.items.length > 0 && stage.checkedItems.length >= stage.items.length;
+    if (allChecked && stage.status !== 'completed') {
+      stage.status = 'completed';
+      if (stageIndex + 1 < stages.length && stages[stageIndex + 1].status === 'pending') {
+        stages[stageIndex + 1].status = 'in_progress';
+      }
+    }
+    // 체크 해제로 완료 상태 취소
+    if (!allChecked && stage.status === 'completed') {
+      stage.status = stageIndex === 0 || stages[stageIndex - 1].status === 'completed' ? 'in_progress' : 'pending';
+    }
+
     const progressPercent = this.calcProgress(stages);
     const updated = await this.prisma.roadmap.update({
       where: { id: roadmapId },
@@ -209,11 +222,31 @@ export class RoadmapService {
     return { message: '체크 상태가 저장되었습니다.', data: { ...updated, stages } };
   }
 
-  /** 진행률 계산: completed 단계 비율 */
+  /** 항목 텍스트 수정 */
+  async updateItem(userId: number, roadmapId: number, stageIndex: number, itemIndex: number, text: string) {
+    const roadmap = await this.prisma.roadmap.findFirst({ where: { id: roadmapId, userId } });
+    if (!roadmap) throw new NotFoundException('로드맵을 찾을 수 없습니다.');
+
+    const stages: RoadmapStage[] = JSON.parse(roadmap.stages);
+    if (stageIndex < 0 || stageIndex >= stages.length) throw new NotFoundException('유효하지 않은 단계입니다.');
+    if (itemIndex < 0 || itemIndex >= stages[stageIndex].items.length) throw new NotFoundException('유효하지 않은 항목입니다.');
+
+    stages[stageIndex].items[itemIndex] = text.trim();
+
+    const updated = await this.prisma.roadmap.update({
+      where: { id: roadmapId },
+      data: { stages: JSON.stringify(stages) },
+    });
+
+    return { message: '항목이 수정되었습니다.', data: { ...updated, stages } };
+  }
+
+  /** 진행률 계산: 전체 항목 대비 체크된 항목 비율 */
   private calcProgress(stages: RoadmapStage[]): number {
-    if (stages.length === 0) return 0;
-    const completed = stages.filter((s) => s.status === 'completed').length;
-    return Math.round((completed / stages.length) * 100);
+    const total = stages.reduce((s, st) => s + st.items.length, 0);
+    if (total === 0) return 0;
+    const checked = stages.reduce((s, st) => s + (st.checkedItems?.length ?? 0), 0);
+    return Math.round((checked / total) * 100);
   }
 
   /** Claude 실패 시 목표 유형별 기본 로드맵 */

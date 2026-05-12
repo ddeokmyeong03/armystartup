@@ -147,6 +147,11 @@ export async function apiCheckRoadmapItem(roadmapId: number, stageIndex: number,
   return res.data.data as RoadmapItem;
 }
 
+export async function apiUpdateRoadmapItem(roadmapId: number, stageIndex: number, itemIndex: number, text: string) {
+  const res = await apiClient.patch(`/api/roadmap/${roadmapId}/update-item`, { stageIndex, itemIndex, text });
+  return res.data.data as RoadmapItem;
+}
+
 // ── Notifications ─────────────────────────────────────────────────────────────
 
 export async function apiGetNotifications() {
