@@ -166,11 +166,45 @@ export class AnalyticsService {
 
     const totalUsers = await this.prisma.user.count();
 
+    const users = await this.prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        nickname: true,
+        provider: true,
+        role: true,
+        createdAt: true,
+        profile: {
+          select: {
+            rankName: true,
+            branch: true,
+            unitName: true,
+            enlistedAt: true,
+            dischargeDate: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
     return {
       message: '유저 분석 데이터를 조회했습니다.',
       data: {
         totalUsers,
         byMonth: usersByMonth.map(u => ({ month: u.month, count: Number(u.count) })),
+        users: users.map(u => ({
+          id: u.id,
+          email: u.email,
+          nickname: u.nickname,
+          provider: u.provider,
+          role: u.role,
+          createdAt: u.createdAt,
+          rankName: u.profile?.rankName ?? null,
+          branch: u.profile?.branch ?? null,
+          unitName: u.profile?.unitName ?? null,
+          enlistedAt: u.profile?.enlistedAt ?? null,
+          dischargeDate: u.profile?.dischargeDate ?? null,
+        })),
       },
     };
   }
