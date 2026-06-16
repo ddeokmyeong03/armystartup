@@ -1,12 +1,12 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Icon, IconGoal, IconMap, IconBook, IconUser } from './Icon';
+import { IconHome, IconRecord, IconChallenge, IconUser } from './Icon';
+import { MillogLogo } from './Icon';
 
 const NAV_ITEMS = [
-  { path: '/home',    label: '홈',     icon: <Icon name="home-filled" size={20}/> },
-  { path: '/goals',   label: '목표',   icon: <IconGoal size={20}/> },
-  { path: '/roadmap', label: '로드맵', icon: <IconMap size={20}/> },
-  { path: '/courses', label: '강의',   icon: <IconBook size={20}/> },
-  { path: '/profile', label: '프로필', icon: <IconUser size={20}/> },
+  { path: '/home',       label: '홈',     icon: <IconHome size={20}/> },
+  { path: '/records',    label: '기록',   icon: <IconRecord size={20}/> },
+  { path: '/challenges', label: '챌린지', icon: <IconChallenge size={20}/> },
+  { path: '/my',         label: '마이',   icon: <IconUser size={20}/> },
 ] as const;
 
 export default function DesktopSidebar() {
@@ -18,6 +18,9 @@ export default function DesktopSidebar() {
 
   return (
     <nav className="desktop-sidebar">
+      <div style={{ padding: '4px 14px 16px' }}>
+        <MillogLogo size={22}/>
+      </div>
       {NAV_ITEMS.map(item => (
         <button
           key={item.path}

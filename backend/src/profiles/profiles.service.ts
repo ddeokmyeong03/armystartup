@@ -7,14 +7,10 @@ export class ProfilesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async upsert(userId: number, dto: UpsertProfileDto) {
-    const data = {
-      ...dto,
-      preferredPlanIntensity: dto.preferredPlanIntensity as string | undefined,
-    };
     const profile = await this.prisma.userProfile.upsert({
       where: { userId },
-      update: data,
-      create: { userId, ...data },
+      update: { ...dto },
+      create: { userId, ...dto },
     });
     return { message: '프로필이 저장되었습니다.', data: profile };
   }

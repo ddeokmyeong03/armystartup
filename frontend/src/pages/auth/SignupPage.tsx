@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Icon } from '../../shared/components/Icon';
-import { apiLogin, apiSignup, apiUpsertProfile, apiCheckEmail } from '../../shared/api/index';
+import { apiLogin, apiSignup, apiCheckEmail } from '../../shared/api/index';
 
 const SOCIAL_METHODS = [
   { id: 'google', label: 'Google로 시작하기', bg: '#fff', color: '#1f1f1f', border: '#dadce0', logo: (
@@ -15,18 +15,7 @@ const SOCIAL_METHODS = [
   )},
 ] as const;
 
-const INTERESTS = [
-  { id: 'cert',    label: '자격증',     accent: '#8b5cf6' },
-  { id: 'lang',    label: '어학',       accent: '#f59e0b' },
-  { id: 'job',     label: '취업/진로',  accent: '#10b981' },
-  { id: 'hobby',   label: '취미',       accent: '#ef4444' },
-  { id: 'read',    label: '독서',       accent: '#3b82f6' },
-  { id: 'health',  label: '체력',       accent: '#06b6d4' },
-  { id: 'finance', label: '금융/재테크', accent: '#22FFB2' },
-  { id: 'it',      label: '개발/IT',    accent: '#a855f7' },
-];
-
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 3;
 
 interface FormState {
   email: string;
@@ -199,65 +188,11 @@ function Step3({ form, up, error, onNext }: StepProps) {
         className="btn btn-primary btn-full signup-next-btn"
         onClick={onNext}
         disabled={!form.nickname.trim()}
-      >다음</button>
+      >밀로그 시작하기</button>
     </>
   );
 }
 
-function Step4({
-  interests, toggle, loading, error, onSubmit,
-}: {
-  interests: string[];
-  toggle: (id: string) => void;
-  loading: boolean;
-  error: string;
-  onSubmit: () => void;
-}) {
-  return (
-    <>
-      <div className="signup-step-tag">4 / {TOTAL_STEPS}</div>
-      <div className="signup-step-title">관심 분야를 골라주세요</div>
-      <div className="signup-step-sub">AI 로드맵 생성에 활용됩니다 · 복수 선택 가능</div>
-
-      <div style={{
-        display: 'grid', gridTemplateColumns: '1fr 1fr',
-        gap: 10, marginTop: 8,
-      }}>
-        {INTERESTS.map(it => {
-          const on = interests.includes(it.id);
-          return (
-            <button
-              key={it.id}
-              onClick={() => toggle(it.id)}
-              style={{
-                padding: '16px 14px', borderRadius: 12,
-                background: on ? 'var(--accent-soft)' : 'var(--bg-surface)',
-                border: `1px solid ${on ? 'var(--accent)' : 'transparent'}`,
-                color: 'var(--text-base)', textAlign: 'left',
-                fontWeight: 600, fontSize: 14,
-                display: 'flex', alignItems: 'center', gap: 10,
-                transition: 'all 150ms ease-out',
-              }}
-            >
-              <span style={{ width: 10, height: 10, borderRadius: '50%', background: it.accent, flexShrink: 0 }} />
-              {it.label}
-              {on && <span style={{ marginLeft: 'auto', color: 'var(--accent)' }}><Icon name="check" size={16} /></span>}
-            </button>
-          );
-        })}
-      </div>
-
-      <ErrorMsg msg={error} />
-      <button
-        className="btn btn-primary btn-full signup-next-btn"
-        onClick={onSubmit}
-        disabled={loading || interests.length === 0}
-      >
-        {loading ? '가입 중...' : '밀로그 시작하기'}
-      </button>
-    </>
-  );
-}
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -269,15 +204,11 @@ export default function SignupPage() {
     email: '', password: '', confirmPw: '', nickname: '',
     rank: '상병', branch: '육군', unit: '', enlistedAt: '',
   });
-  const [interests, setInterests] = useState<string[]>(['cert', 'lang', 'it']);
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState('');
 
   const up = (k: keyof FormState, v: string) => setForm(f => ({ ...f, [k]: v }));
-  const toggle = (id: string) =>
-    setInterests(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
-
   const goNext = (n: number) => { setDir('forward'); setError(''); setStep(n); };
   const goBack = (n: number) => { setDir('back'); setError(''); setStep(n); };
 
@@ -310,7 +241,7 @@ export default function SignupPage() {
 
   const handleStep3 = () => {
     if (!form.nickname.trim()) { setError('닉네임을 입력하세요.'); return; }
-    goNext(4);
+    handleSignup();
   };
 
   const handleSignup = async () => {
@@ -330,10 +261,6 @@ export default function SignupPage() {
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('nickname', data.user?.nickname ?? '');
       localStorage.setItem('userInfo', JSON.stringify(data.user ?? {}));
-      // 관심사 저장
-      try {
-        await apiUpsertProfile({ interests: JSON.stringify(interests) });
-      } catch { /* 실패해도 가입은 완료 */ }
       navigate('/home');
     } catch {
       setError('회원가입에 실패했습니다. 이미 사용 중인 이메일일 수 있습니다.');
@@ -449,15 +376,6 @@ export default function SignupPage() {
         )}
         {step === 3 && (
           <Step3 form={form} up={up} error={error} onNext={handleStep3} />
-        )}
-        {step === 4 && (
-          <Step4
-            interests={interests}
-            toggle={toggle}
-            loading={loading}
-            error={error}
-            onSubmit={handleSignup}
-          />
         )}
       </div>
 

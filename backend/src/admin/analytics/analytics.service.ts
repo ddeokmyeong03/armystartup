@@ -6,37 +6,25 @@ export class AnalyticsService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getOverview() {
-    const [totalUsers, totalGoals, totalSchedules, totalCourseViews] = await Promise.all([
+    const [totalUsers, totalRecords, totalChallenges] = await Promise.all([
       this.prisma.user.count(),
-      this.prisma.goal.count(),
-      this.prisma.schedule.count(),
-      this.prisma.courseRecommendation.count(),
+      this.prisma.record.count(),
+      this.prisma.challenge.count(),
     ]);
 
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    const mauUsers = await this.prisma.user.count({
-      where: { createdAt: { gte: thirtyDaysAgo } },
-    });
+    const mauUsers = await this.prisma.user.count({ where: { createdAt: { gte: thirtyDaysAgo } } });
 
     const oneDayAgo = new Date();
     oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-    const dauUsers = await this.prisma.user.count({
-      where: { createdAt: { gte: oneDayAgo } },
-    });
+    const dauUsers = await this.prisma.user.count({ where: { createdAt: { gte: oneDayAgo } } });
 
-    const completedGoals = await this.prisma.goal.count({
-      where: { progressPercent: { gte: 100 } },
+    const recordsByCategory = await this.prisma.record.groupBy({
+      by: ['category'],
+      _count: { id: true },
+      orderBy: { _count: { id: 'desc' } },
     });
-
-    // 목표 카테고리 분포 (raw SQL — Goal.category 타입 우회)
-    const goalsByCategory = await this.prisma.$queryRaw<{ category: string; count: bigint }[]>`
-      SELECT category, COUNT(*)::bigint AS count
-      FROM goals
-      GROUP BY category
-      ORDER BY count DESC
-    `;
 
     return {
       message: '대시보드 개요를 조회했습니다.',
@@ -44,113 +32,59 @@ export class AnalyticsService {
         totalUsers,
         dauUsers,
         mauUsers,
-        totalGoals,
-        completedGoals,
-        goalCompletionRate: totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0,
-        totalSchedules,
-        totalCourseViews,
-        goalsByCategory: goalsByCategory.map(g => ({ category: g.category, count: Number(g.count) })),
+        totalRecords,
+        totalChallenges,
+        recordsByCategory: recordsByCategory.map(r => ({ category: r.category, count: r._count.id })),
       },
     };
   }
 
-  async getGoalsAnalytics(_branch?: string) {
-    // 카테고리별 목표 분포 + 평균 진행률 (raw SQL)
-    const goalsByCategory = await this.prisma.$queryRaw<
-      { category: string; count: bigint; avg_progress: number | null }[]
-    >`
-      SELECT category, COUNT(*)::bigint AS count, AVG("progressPercent") AS avg_progress
-      FROM goals
-      GROUP BY category
-      ORDER BY count DESC
-    `;
-
-    const [activeCount, inactiveCount] = await Promise.all([
-      this.prisma.goal.count({ where: { isActive: true } }),
-      this.prisma.goal.count({ where: { isActive: false } }),
-    ]);
-
-    // 최근 목표 목록 (raw SQL — category 필드 포함)
-    const recentGoals = await this.prisma.$queryRaw<
-      { id: number; title: string; category: string; progressPercent: number; isActive: boolean; createdAt: Date }[]
-    >`
-      SELECT id, title, category, "progressPercent", "isActive", "createdAt"
-      FROM goals
-      ORDER BY "createdAt" DESC
-      LIMIT 10
-    `;
-
-    return {
-      message: '목표 분석 데이터를 조회했습니다.',
-      data: {
-        byCategory: goalsByCategory.map(g => ({
-          category: g.category,
-          count: Number(g.count),
-          avgProgress: Math.round(g.avg_progress ?? 0),
-        })),
-        activeCount,
-        inactiveCount,
-        recentGoals,
-      },
-    };
-  }
-
-  async getCoursesAnalytics() {
-    const byStatus = await this.prisma.courseRecommendation.groupBy({
-      by: ['status'],
-      _count: { id: true },
-    });
-
-    const topCourses = await this.prisma.courseRecommendation.groupBy({
-      by: ['courseId'],
+  async getRecordsAnalytics() {
+    const byCategory = await this.prisma.record.groupBy({
+      by: ['category'],
       _count: { id: true },
       orderBy: { _count: { id: 'desc' } },
+    });
+
+    const verifiedCount = await this.prisma.record.count({ where: { verified: true } });
+    const selfCount = await this.prisma.record.count({ where: { verified: false } });
+
+    const recentRecords = await this.prisma.record.findMany({
+      orderBy: { createdAt: 'desc' },
       take: 10,
-    });
-
-    const topCoursesWithDetails = await Promise.all(
-      topCourses.map(async tc => {
-        const course = await this.prisma.course.findUnique({ where: { id: tc.courseId } });
-        return {
-          courseId: tc.courseId,
-          title: course?.title ?? '',
-          source: course?.source ?? '',
-          category: course?.category ?? '',
-          count: tc._count.id,
-        };
-      }),
-    );
-
-    const coursesByCategory = await this.prisma.course.groupBy({
-      by: ['category'],
-      _count: { id: true },
+      select: { id: true, category: true, title: true, verified: true, recordDate: true, createdAt: true },
     });
 
     return {
-      message: '강의 분석 데이터를 조회했습니다.',
+      message: '기록 분석 데이터를 조회했습니다.',
       data: {
-        recommendationStatus: byStatus.map(s => ({ status: s.status, count: s._count.id })),
-        topCourses: topCoursesWithDetails,
-        coursesByCategory: coursesByCategory.map(c => ({ category: c.category, count: c._count.id })),
+        byCategory: byCategory.map(r => ({ category: r.category, count: r._count.id })),
+        verifiedCount,
+        selfCount,
+        recentRecords,
       },
     };
   }
 
-  async getFatigueAnalytics() {
-    // 일정 카테고리별 분포 (근무 유형 파악)
-    const schedulesByCategory = await this.prisma.schedule.groupBy({
+  async getChallengesAnalytics() {
+    const byCategory = await this.prisma.challenge.groupBy({
       by: ['category'],
       _count: { id: true },
-      orderBy: { _count: { id: 'desc' } },
     });
 
+    const byJudgmentType = await this.prisma.challenge.groupBy({
+      by: ['judgmentType'],
+      _count: { id: true },
+    });
+
+    const totalParticipants = await this.prisma.challengeParticipant.count();
+
     return {
-      message: '피로도 분석 데이터를 조회했습니다.',
+      message: '챌린지 분석 데이터를 조회했습니다.',
       data: {
-        schedulesByCategory: schedulesByCategory.map(s => ({
-          category: s.category ?? '기타',
-          count: s._count.id,
-        })),
+        byCategory: byCategory.map(c => ({ category: c.category, count: c._count.id })),
+        byJudgmentType: byJudgmentType.map(j => ({ type: j.judgmentType, count: j._count.id })),
+        totalParticipants,
       },
     };
   }
@@ -175,13 +109,7 @@ export class AnalyticsService {
         role: true,
         createdAt: true,
         profile: {
-          select: {
-            rankName: true,
-            branch: true,
-            unitName: true,
-            enlistedAt: true,
-            dischargeDate: true,
-          },
+          select: { rankName: true, branch: true, unitName: true, enlistedAt: true, dischargeDate: true },
         },
       },
       orderBy: { createdAt: 'desc' },

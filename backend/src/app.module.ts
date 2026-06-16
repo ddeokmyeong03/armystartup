@@ -4,14 +4,9 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ProfilesModule } from './profiles/profiles.module';
-import { SchedulesModule } from './schedules/schedules.module';
-import { GoalsModule } from './goals/goals.module';
-import { CoursesModule } from './courses/courses.module';
-import { AiPlansModule } from './ai-plans/ai-plans.module';
-import { CalendarModule } from './calendar/calendar.module';
+import { RecordsModule } from './records/records.module';
+import { ChallengesModule } from './challenges/challenges.module';
 import { DashboardModule } from './dashboard/dashboard.module';
-import { AiChatModule } from './ai-chat/ai-chat.module';
-import { RoadmapModule } from './roadmap/roadmap.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AdminModule } from './admin/admin.module';
 
@@ -22,14 +17,9 @@ import { AdminModule } from './admin/admin.module';
     AuthModule,
     UsersModule,
     ProfilesModule,
-    SchedulesModule,
-    GoalsModule,
-    CoursesModule,
-    AiPlansModule,
-    CalendarModule,
+    RecordsModule,
+    ChallengesModule,
     DashboardModule,
-    AiChatModule,
-    RoadmapModule,
     NotificationsModule,
     AdminModule,
   ],

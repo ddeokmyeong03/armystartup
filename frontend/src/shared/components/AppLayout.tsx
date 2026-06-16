@@ -21,10 +21,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div style={{ flex: 1 }} />
         <button
           className="desktop-user-chip"
-          onClick={() => navigate('/notifications')}
-          title="알림"
+          onClick={() => navigate('/my')}
+          title="마이"
         >
-          <span style={{ fontSize: 13 }}>알림</span>
+          <span style={{ fontSize: 13 }}>마이</span>
         </button>
       </header>
       <div className="desktop-body">

@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBasicAuth } from '@nestjs/swagger';
 import { AnalyticsService } from './analytics.service';
 import { AdminGuard } from '../guards/admin.guard';
@@ -16,22 +16,16 @@ export class AnalyticsController {
     return this.analyticsService.getOverview();
   }
 
-  @Get('goals')
-  @ApiOperation({ summary: '목표 카테고리별 분포, 완료율' })
-  getGoals(@Query('branch') branch?: string) {
-    return this.analyticsService.getGoalsAnalytics(branch);
+  @Get('records')
+  @ApiOperation({ summary: '기록 카테고리별 분포, 인증/자가입력 현황' })
+  getRecords() {
+    return this.analyticsService.getRecordsAnalytics();
   }
 
-  @Get('courses')
-  @ApiOperation({ summary: '강의 소스별 열람수, 추천 현황' })
-  getCourses() {
-    return this.analyticsService.getCoursesAnalytics();
-  }
-
-  @Get('fatigue')
-  @ApiOperation({ summary: '근무 종류별 피로도 분포' })
-  getFatigue() {
-    return this.analyticsService.getFatigueAnalytics();
+  @Get('challenges')
+  @ApiOperation({ summary: '챌린지 카테고리별 분포, 판정 방식별 현황' })
+  getChallenges() {
+    return this.analyticsService.getChallengesAnalytics();
   }
 
   @Get('users')

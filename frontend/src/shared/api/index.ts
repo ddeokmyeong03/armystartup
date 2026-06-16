@@ -28,6 +28,10 @@ export async function apiResetPassword(token: string, newPassword: string) {
   await apiClient.post('/api/auth/reset-password', { token, newPassword });
 }
 
+export async function apiLogout() {
+  await apiClient.post('/api/auth/logout').catch(() => {});
+}
+
 // ── User / Profile ────────────────────────────────────────────────────────────
 
 export async function apiGetMe() {
@@ -49,10 +53,9 @@ export async function apiGetProfile() {
   return res.data.data;
 }
 
-export async function apiUpsertProfile(data: {
-  wakeUpTime?: string; sleepTime?: string; availableStudyMinutes?: number;
+export async function apiUpdateProfile(data: {
   rankName?: string; branch?: string; unitName?: string;
-  enlistedAt?: string; dischargeDate?: string; interests?: string;
+  enlistedAt?: string; dischargeDate?: string; goal?: string;
 }) {
   const res = await apiClient.post('/api/profiles', data);
   return res.data.data;
@@ -65,91 +68,87 @@ export async function apiGetHome() {
   return res.data.data;
 }
 
-// ── Goals ─────────────────────────────────────────────────────────────────────
+// ── Records (기록) ────────────────────────────────────────────────────────────
 
-export async function apiGetGoals() {
-  const res = await apiClient.get('/api/goals');
-  return res.data.data as GoalItem[];
+export async function apiGetRecords(category?: string) {
+  const res = await apiClient.get('/api/records', { params: category ? { category } : {} });
+  return res.data.data as RecordItem[];
 }
 
-export async function apiCreateGoal(data: {
-  title: string; category?: string; type?: string;
-  deadline?: string; targetDescription?: string; pinned?: boolean;
+export async function apiGetRecord(id: number) {
+  const res = await apiClient.get(`/api/records/${id}`);
+  return res.data.data as RecordItem;
+}
+
+export async function apiCreateRecord(data: {
+  category: string;
+  title: string;
+  content?: string;
+  recordDate: string;
+  evidenceUrl?: string;
+  meta?: Record<string, unknown>;
 }) {
-  const res = await apiClient.post('/api/goals', data);
-  return res.data.data as GoalItem;
+  const res = await apiClient.post('/api/records', data);
+  return res.data.data as RecordItem;
 }
 
-export async function apiUpdateGoal(id: number, data: Partial<GoalItem>) {
-  const res = await apiClient.patch(`/api/goals/${id}`, data);
-  return res.data.data as GoalItem;
+export async function apiUpdateRecord(id: number, data: Partial<{
+  title: string; content: string; recordDate: string; evidenceUrl: string; meta: Record<string, unknown>;
+}>) {
+  const res = await apiClient.patch(`/api/records/${id}`, data);
+  return res.data.data as RecordItem;
 }
 
-export async function apiDeleteGoal(id: number) {
-  await apiClient.delete(`/api/goals/${id}`);
+export async function apiDeleteRecord(id: number) {
+  await apiClient.delete(`/api/records/${id}`);
 }
 
-// ── Schedules ─────────────────────────────────────────────────────────────────
+// ── Challenges (챌린지) ───────────────────────────────────────────────────────
 
-export async function apiGetSchedules() {
-  const res = await apiClient.get('/api/schedules');
-  return res.data.data as ScheduleItem[];
+export async function apiGetChallenges(category?: string) {
+  const res = await apiClient.get('/api/challenges', { params: category ? { category } : {} });
+  return res.data.data as ChallengeItem[];
 }
 
-export async function apiGetSchedulesByDate(date: string) {
-  const res = await apiClient.get('/api/schedules/by-date', { params: { date } });
-  return res.data.data as ScheduleItem[];
+export async function apiGetMyChallenges() {
+  const res = await apiClient.get('/api/challenges/mine');
+  return res.data.data as ChallengeItem[];
 }
 
-export async function apiCreateSchedule(data: {
-  title: string; scheduleDate: string; startTime: string; endTime: string;
-  category?: string; endDate?: string; fatigueType?: string; memo?: string;
+export async function apiGetChallenge(id: number) {
+  const res = await apiClient.get(`/api/challenges/${id}`);
+  return res.data.data as ChallengeItem;
+}
+
+export async function apiCreateChallenge(data: {
+  title: string; description?: string; category: string;
+  judgmentType: string; startDate: string; endDate: string;
+  maxParticipants?: number; isRewarded?: boolean; entryFee?: number; prizeMoney?: number;
 }) {
-  const res = await apiClient.post('/api/schedules', data);
-  return res.data.data as ScheduleItem;
+  const res = await apiClient.post('/api/challenges', data);
+  return res.data.data as ChallengeItem;
 }
 
-export async function apiUpdateSchedule(id: number, data: Partial<ScheduleItem>) {
-  const res = await apiClient.put(`/api/schedules/${id}`, data);
-  return res.data.data as ScheduleItem;
+export async function apiJoinChallenge(id: number) {
+  const res = await apiClient.post(`/api/challenges/${id}/join`);
+  return res.data.data;
 }
 
-export async function apiDeleteSchedule(id: number) {
-  await apiClient.delete(`/api/schedules/${id}`);
+export async function apiGetChallengeParticipants(id: number) {
+  const res = await apiClient.get(`/api/challenges/${id}/participants`);
+  return res.data.data as { challenge: ChallengeItem; participants: ParticipantItem[] };
 }
 
-// ── Courses ───────────────────────────────────────────────────────────────────
-
-export async function apiGetCourses(params?: { source?: string; category?: string }) {
-  const res = await apiClient.get('/api/courses', { params });
-  return res.data.data as { courses: CourseItem[]; total: number };
+export async function apiSubmitChallengeEvidence(id: number, data: { evidenceUrl: string; comment?: string }) {
+  const res = await apiClient.post(`/api/challenges/${id}/submit`, data);
+  return res.data.data;
 }
 
-export async function apiGetRecommendedCourses() {
-  const res = await apiClient.get('/api/courses/recommend');
-  return res.data.data as { recommendations: CourseRecommendation[] };
-}
+// ── Payments (결제 내역) ──────────────────────────────────────────────────────
 
-// ── Roadmap ───────────────────────────────────────────────────────────────────
-
-export async function apiGetRoadmaps() {
-  const res = await apiClient.get('/api/roadmap');
-  return res.data.data as RoadmapItem[];
-}
-
-export async function apiGenerateRoadmap(goalId: number) {
-  const res = await apiClient.post('/api/roadmap/generate', { goalId });
-  return res.data.data as RoadmapItem;
-}
-
-export async function apiCheckRoadmapItem(roadmapId: number, stageIndex: number, itemIndex: number, checked: boolean) {
-  const res = await apiClient.patch(`/api/roadmap/${roadmapId}/check-item`, { stageIndex, itemIndex, checked });
-  return res.data.data as RoadmapItem;
-}
-
-export async function apiUpdateRoadmapItem(roadmapId: number, stageIndex: number, itemIndex: number, text: string) {
-  const res = await apiClient.patch(`/api/roadmap/${roadmapId}/update-item`, { stageIndex, itemIndex, text });
-  return res.data.data as RoadmapItem;
+export async function apiGetPayments() {
+  const res = await apiClient.get('/api/payments');
+  return res.data.data as PaymentItem[];
 }
 
 // ── Notifications ─────────────────────────────────────────────────────────────
@@ -167,77 +166,61 @@ export async function apiMarkNotificationRead(id: number) {
   await apiClient.patch(`/api/notifications/${id}/read`);
 }
 
-// ── AI Chat ───────────────────────────────────────────────────────────────────
-
-export async function apiAiChat(message: string, history: { role: string; content: string }[]) {
-  const res = await apiClient.post('/api/ai/chat', { message, history });
-  return res.data.data as { reply: string };
-}
-
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-export interface GoalItem {
+export interface RecordItem {
   id: number;
-  title: string;
+  userId: number;
   category: string;
-  type: string;
-  deadline: string | null;
-  pinned: boolean;
-  isActive: boolean;
-  progressPercent: number;
-  targetDescription: string | null;
+  title: string;
+  content?: string;
+  recordDate: string;
+  verified: boolean;
+  evidenceUrl?: string;
+  meta: Record<string, unknown>;
   createdAt: string;
+  updatedAt: string;
 }
 
-export interface ScheduleItem {
+export interface ChallengeItem {
   id: number;
+  creatorId: number;
   title: string;
-  scheduleDate: string;
-  endDate: string | null;
-  startTime: string;
-  endTime: string;
+  description?: string;
   category: string;
-  fatigueType: string | null;
-  memo: string | null;
+  judgmentType: string;
+  startDate: string;
+  endDate: string;
+  maxParticipants?: number;
+  isRewarded: boolean;
+  entryFee: number;
+  prizeMoney: number;
+  status: string;
+  participantCount?: number;
+  myParticipation?: ParticipantItem;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface CourseItem {
+export interface ParticipantItem {
   id: number;
-  title: string;
-  source: string;
-  category: string;
-  description: string | null;
-  durationMinutes: number;
-  url: string | null;
-  tags: string;
-  matchScore: number;
+  challengeId: number;
+  userId: number;
+  nickname?: string;
+  joinedAt: string;
+  status: string;
+  rank?: number;
+  passed?: boolean;
+  evidenceUrl?: string;
+  judgedAt?: string;
 }
 
-export interface CourseRecommendation {
+export interface PaymentItem {
   id: number;
-  course: CourseItem;
-  reason: string;
-  priority: number;
-}
-
-export interface RoadmapItem {
-  id: number;
-  goalId: number;
-  title: string;
-  totalWeeks: number;
-  stages: RoadmapStage[];
-  progressPercent: number;
-  updateCount: number;
-  nextUpdateDate: string | null;
-  goal: { title: string; type: string; progressPercent: number };
-}
-
-export interface RoadmapStage {
-  week: string;
-  title: string;
-  status: 'completed' | 'in_progress' | 'pending';
-  items: string[];
-  checkedItems?: number[];
+  challengeId: number;
+  challengeTitle: string;
+  amount: number;
+  paidAt: string;
 }
 
 export interface NotificationItem {
