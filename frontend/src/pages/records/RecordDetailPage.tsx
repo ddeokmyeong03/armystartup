@@ -1,14 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { IconArrowLeft, IconCheck, IconUpload } from '../../shared/components/Icon';
-import { apiGetRecord, apiDeleteRecord } from '../../shared/api/index';
+import { apiGetRecord, apiDeleteRecord, apiUpdateRecord, apiUploadFile } from '../../shared/api/index';
 
 export default function RecordDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [record, setRecord] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -27,6 +29,21 @@ export default function RecordDetailPage() {
     } catch {
       alert('삭제에 실패했습니다.');
       setDeleting(false);
+    }
+  };
+
+  const handleAddEvidence = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingFile(true);
+    try {
+      const url = await apiUploadFile(file);
+      const updated = await apiUpdateRecord(Number(id), { evidenceUrl: url });
+      setRecord(updated);
+    } catch {
+      alert('증빙 업로드에 실패했습니다.');
+    } finally {
+      setUploadingFile(false);
     }
   };
 
@@ -101,7 +118,20 @@ export default function RecordDetailPage() {
               <IconUpload size={18} style={{ color: 'var(--gray-400)' }}/>
               <div>
                 <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>증빙 없음 — 자기보고 상태</div>
-                <button style={{ fontSize: 13, color: 'var(--brand-600)', fontWeight: 600, marginTop: 4 }}>증빙 추가하기</button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".jpg,.jpeg,.png,.gif,.webp,.pdf"
+                  style={{ display: 'none' }}
+                  onChange={handleAddEvidence}
+                />
+                <button
+                  style={{ fontSize: 13, color: 'var(--brand-600)', fontWeight: 600, marginTop: 4 }}
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingFile}
+                >
+                  {uploadingFile ? '업로드 중…' : '증빙 추가하기'}
+                </button>
               </div>
             </div>
           )}

@@ -1,5 +1,16 @@
 import apiClient from '../lib/apiClient';
 
+// ── Upload ────────────────────────────────────────────────────────────────────
+
+export async function apiUploadFile(file: File): Promise<string> {
+  const form = new FormData();
+  form.append('file', file);
+  const res = await apiClient.post('/api/upload', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return res.data.data.url as string;
+}
+
 // ── Auth ─────────────────────────────────────────────────────────────────────
 
 export async function apiLogin(email: string, password: string) {

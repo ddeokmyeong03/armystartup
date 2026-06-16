@@ -9,6 +9,7 @@ import { ChallengesModule } from './challenges/challenges.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AdminModule } from './admin/admin.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { AdminModule } from './admin/admin.module';
     DashboardModule,
     NotificationsModule,
     AdminModule,
+    UploadModule,
   ],
   controllers: [],
   providers: [],
