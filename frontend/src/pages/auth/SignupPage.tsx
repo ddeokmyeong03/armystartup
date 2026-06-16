@@ -34,6 +34,7 @@ interface StepProps {
   error: string;
   onNext: () => void;
   checking?: boolean;
+  loading?: boolean;
 }
 
 function ErrorMsg({ msg }: { msg: string }) {
@@ -114,7 +115,7 @@ function Step2({ form, up, error, onNext }: StepProps) {
   );
 }
 
-function Step3({ form, up, error, onNext }: StepProps) {
+function Step3({ form, up, error, onNext, loading }: StepProps) {
   const ref = useRef<HTMLInputElement>(null);
   useEffect(() => { ref.current?.focus(); }, []);
   return (
@@ -187,8 +188,8 @@ function Step3({ form, up, error, onNext }: StepProps) {
       <button
         className="btn btn-primary btn-full signup-next-btn"
         onClick={onNext}
-        disabled={!form.nickname.trim()}
-      >밀로그 시작하기</button>
+        disabled={!form.nickname.trim() || loading}
+      >{loading ? '가입 중...' : '밀로그 시작하기'}</button>
     </>
   );
 }
@@ -375,7 +376,7 @@ export default function SignupPage() {
           <Step2 form={form} up={up} error={error} onNext={handleStep2} />
         )}
         {step === 3 && (
-          <Step3 form={form} up={up} error={error} onNext={handleStep3} />
+          <Step3 form={form} up={up} error={error} onNext={handleStep3} loading={loading} />
         )}
       </div>
 
