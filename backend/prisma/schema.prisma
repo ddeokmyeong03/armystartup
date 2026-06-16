@@ -7,6 +7,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ======================================================================
+// 사용자
+// ======================================================================
 model User {
   id          Int      @id @default(autoincrement())
   email       String   @unique
@@ -18,173 +21,119 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  profile               UserProfile?
-  schedules             Schedule[]
-  goals                 Goal[]
-  aiPlans               AiPlan[]
-  courseRecommendations CourseRecommendation[]
-  roadmaps              Roadmap[]
-  notifications         Notification[]
-  activities            UserActivity[]
+  profile              UserProfile?
+  records              Record[]
+  challengeParticipants ChallengeParticipant[]
+  challengesCreated    Challenge[]            @relation("ChallengeCreator")
+  notifications        Notification[]
+  activities           UserActivity[]
 
   @@map("users")
 }
 
+// ======================================================================
+// 군인 프로필
+// ======================================================================
 model UserProfile {
-  id                     Int      @id @default(autoincrement())
-  userId                 Int      @unique
-  wakeUpTime             String   @default("06:30")
-  sleepTime              String   @default("23:00")
-  availableStudyMinutes  Int      @default(60)
-  preferredPlanIntensity String   @default("MEDIUM")
-  memo                   String?
-  enlistedAt             String?  // 입대일 "YYYY-MM-DD"
-  dischargeDate          String?  // 전역 예정일 "YYYY-MM-DD"
-  unitName               String?  // 소속 부대명
-  rankName               String?  // 계급 (이병/일병/상병/병장)
-  branch                 String?  // 군종 (육군/해군/공군/해병)
-  interests              String   @default("[]") // JSON: ["cert","lang","it"]
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
+  id            Int      @id @default(autoincrement())
+  userId        Int      @unique
+  rankName      String?  // 계급 (이병/일병/상병/병장)
+  branch        String?  // 군종 (육군/해군/공군/해병)
+  unitName      String?  // 소속 부대명
+  enlistedAt    String?  // 입대일 "YYYY-MM-DD"
+  dischargeDate String?  // 전역 예정일 "YYYY-MM-DD" (보고서 트리거, 필수)
+  goal          String?  // 측정가능 목표 (온보딩에서 설정)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_profiles")
 }
 
-model Schedule {
-  id           Int      @id @default(autoincrement())
-  userId       Int
-  title        String
-  scheduleDate String   // 시작 날짜 "YYYY-MM-DD"
-  endDate      String?  // 종료 날짜 (익일 근무 시 다름) "YYYY-MM-DD"
-  startTime    String   // "HH:MM"
-  endTime      String   // "HH:MM"
-  repeatType   String   @default("NONE")
-  category     String   @default("PERSONAL") // DUTY/TRAINING/ROLLCALL/PERSONAL/STUDY/REST/OTHER
-  fatigueType  String?  // Millog duty type id (guard-night, duty-day 등)
-  memo         String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+// ======================================================================
+// 기록 (자격증 / 어학 / 독서 / 운동)
+// ======================================================================
+model Record {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  category    String   // 자격증 | 어학 | 독서 | 운동
+  title       String
+  content     String?  // 상세 내용 (정형 필드 JSON 또는 텍스트)
+  recordDate  String   // "YYYY-MM-DD"
+  verified    Boolean  @default(false)  // 검증 여부 (§9)
+  evidenceUrl String?  // 증빙 파일 URL
+  meta        String   @default("{}") // 카테고리별 추가 필드 JSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId, scheduleDate])
-  @@map("schedules")
+  @@index([userId, category])
+  @@index([userId, recordDate])
+  @@map("records")
 }
 
-model Goal {
-  id                         Int      @id @default(autoincrement())
-  userId                     Int
-  title                      String
-  category                   String   @default("기타")   // 자격증/어학/취업/취미/독서/체력/기타
-  type                       String   @default("STUDY")
-  targetDescription          String?
-  deadline                   String?  // 마감일 "YYYY-MM-DD"
-  pinned                     Boolean  @default(false)
-  preferredMinutesPerSession Int      @default(60)
-  preferredSessionsPerWeek   Int      @default(3)
-  isActive                   Boolean  @default(true)
-  progressPercent            Int      @default(0)
-  createdAt                  DateTime @default(now())
-  updatedAt                  DateTime @updatedAt
+// ======================================================================
+// 챌린지
+// ======================================================================
+model Challenge {
+  id             Int      @id @default(autoincrement())
+  creatorId      Int
+  title          String
+  description    String?
+  category       String   // 자격증 | 어학 | 독서 | 운동
+  judgmentType   String   @default("NON_COMPETITIVE") // RANKING | PASS_FAIL | NON_COMPETITIVE
+  startDate      String   // "YYYY-MM-DD"
+  endDate        String   // "YYYY-MM-DD"
+  maxParticipants Int?
+  isRewarded     Boolean  @default(false) // 보상형 여부 (★ 유료)
+  entryFee       Int      @default(0)     // 참가비 (원)
+  prizeMoney     Int      @default(0)     // 상금 (원)
+  status         String   @default("OPEN") // OPEN | CLOSED | JUDGING | DONE
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  aiPlans               AiPlan[]
-  courseRecommendations CourseRecommendation[]
-  roadmaps              Roadmap[]
+  creator      User                   @relation("ChallengeCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  participants ChallengeParticipant[]
 
+  @@index([status, startDate])
+  @@map("challenges")
+}
+
+// ======================================================================
+// 챌린지 참여
+// ======================================================================
+model ChallengeParticipant {
+  id          Int      @id @default(autoincrement())
+  challengeId Int
+  userId      Int
+  joinedAt    DateTime @default(now())
+  status      String   @default("JOINED") // JOINED | SUBMITTED | JUDGED | REWARDED
+  rank        Int?     // 랭킹 트랙
+  passed      Boolean? // 합불 트랙
+  evidenceUrl String?  // 판정 제출 증빙
+  judgedAt    DateTime?
+
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([challengeId, userId])
+  @@index([challengeId])
   @@index([userId])
-  @@map("goals")
+  @@map("challenge_participants")
 }
 
-model AiPlan {
-  id              Int      @id @default(autoincrement())
-  userId          Int
-  goalId          Int
-  activityTitle   String
-  recommendedDate String
-  startTime       String
-  endTime         String
-  status          String   @default("RECOMMENDED")
-  sourceType      String   @default("AI_GENERATED")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  goal Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
-
-  @@index([userId, recommendedDate])
-  @@map("ai_plans")
-}
-
-model Course {
-  id              Int      @id @default(autoincrement())
-  externalId      String?  @unique
-  title           String
-  source          String   // JANGBYEONGEEUM / DEFENSE_TRANSITION / K_MOOC / CLASS101
-  category        String   // LANGUAGE / CERTIFICATE / IT / EXERCISE / READING / etc.
-  targetGoalType  String?
-  description     String?
-  durationMinutes Int      @default(60)
-  url             String?
-  tags            String   @default("[]")
-  matchScore      Int      @default(80) // 0~100 매칭 점수
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  recommendations CourseRecommendation[]
-
-  @@index([source, category])
-  @@map("courses")
-}
-
-model CourseRecommendation {
-  id            Int      @id @default(autoincrement())
-  userId        Int
-  courseId      Int
-  goalId        Int?
-  reason        String
-  priority      Int      @default(1)
-  status        String   @default("RECOMMENDED")
-  recommendedAt DateTime @default(now())
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  goal   Goal?  @relation(fields: [goalId], references: [id])
-
-  @@index([userId, status])
-  @@map("course_recommendations")
-}
-
-model Roadmap {
-  id              Int      @id @default(autoincrement())
-  userId          Int
-  goalId          Int
-  title           String
-  totalWeeks      Int      @default(5)
-  stages          String   @default("[]") // JSON: [{week, title, status, items[], checkedItems[]}]
-  progressPercent Float    @default(0)
-  updateCount     Int      @default(1)
-  nextUpdateDate  String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  goal Goal @relation(fields: [goalId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@map("roadmaps")
-}
-
+// ======================================================================
+// 알림
+// ======================================================================
 model Notification {
   id        Int      @id @default(autoincrement())
   userId    Int
-  type      String   // goal / ai / schedule / course / system
+  type      String   // record / challenge / system
   title     String
   body      String
-  link      String?  // 이동할 경로 (goals, roadmap 등)
+  link      String?
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 
@@ -194,10 +143,13 @@ model Notification {
   @@map("notifications")
 }
 
+// ======================================================================
+// 사용자 활동 (어드민 분석용)
+// ======================================================================
 model UserActivity {
   id        Int      @id @default(autoincrement())
   userId    Int
-  eventType String   // goal_created / course_viewed / fatigue_calculated 등
+  eventType String   // record_created / challenge_joined / challenge_submitted 등
   payload   String   @default("{}")
   platform  String   @default("WEB")
   createdAt DateTime @default(now())
@@ -209,6 +161,9 @@ model UserActivity {
   @@map("user_activities")
 }
 
+// ======================================================================
+// 어드민
+// ======================================================================
 model AdminUser {
   id           Int      @id @default(autoincrement())
   email        String   @unique

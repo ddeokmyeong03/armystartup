@@ -1,16 +1,15 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Icon, IconGoal, IconMap, IconBook, IconUser } from './Icon';
+import { IconHome, IconRecord, IconChallenge, IconUser } from './Icon';
 
 export default function TabBar() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
   const items = [
-    { path: '/home',      label: '홈',    icon: <Icon name="home-filled" size={22}/> },
-    { path: '/goals',    label: '목표',  icon: <IconGoal size={22}/> },
-    { path: '/roadmap',  label: '로드맵', icon: <IconMap size={22}/> },
-    { path: '/courses',  label: '강의',  icon: <IconBook size={22}/> },
-    { path: '/profile',  label: '프로필', icon: <IconUser size={22}/> },
+    { path: '/home',       label: '홈',     icon: <IconHome size={24}/> },
+    { path: '/records',    label: '기록',   icon: <IconRecord size={24}/> },
+    { path: '/challenges', label: '챌린지', icon: <IconChallenge size={24}/> },
+    { path: '/my',         label: '마이',   icon: <IconUser size={24}/> },
   ];
 
   const active = (path: string) => {
@@ -25,10 +24,10 @@ export default function TabBar() {
           key={it.path}
           className={`tab-item ${active(it.path) ? 'active' : ''}`}
           onClick={() => navigate(it.path)}
+          aria-label={it.label}
         >
           {it.icon}
           <div className="tab-label">{it.label}</div>
-          <div className="tab-dot"/>
         </button>
       ))}
     </div>
